@@ -62,5 +62,7 @@ git submodule add -f https://github.com/psliwka/vim-smoothie.git pack/plugins/st
 
 git submodule add -f https://github.com/akinsho/bufferline.nvim.git pack/plugins/start/bufferline.nvim
 
+git submodule add -f https://github.com/TovarishFin/vim-solidity.git pack/plugins/start/vim-solidity
+
 git submodule update --recursive --remote
 

@@ -85,3 +85,6 @@
 [submodule "zsh/submodules/powerlevel10k"]
 	path = zsh/submodules/powerlevel10k
 	url = https://github.com/romkatv/powerlevel10k.git
+[submodule "vim/pack/plugins/start/vim-solidity"]
+	path = vim/pack/plugins/start/vim-solidity
+	url = https://github.com/TovarishFin/vim-solidity.git
