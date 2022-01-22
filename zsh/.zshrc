@@ -16,6 +16,8 @@ export PATH="/home/linuxbrew/.linuxbrew/opt/node@16/bin:$PATH"
 export PATH="/home/linuxbrew/.linuxbrew/opt/openjdk@11/bin:$PATH"
 export PATH="/home/linuxbrew/.linuxbrew/opt/nvim/bin:$PATH"
 export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+export PATH="$PATH:$(go env GOPATH)/bin"
+export FZF_DEFAULT_OPTS='--hidden --preview "bat --style=numbers --color=always --line-range :500 {}"'
 
 [ -z "$PS1" ] && return
 
@@ -29,9 +31,8 @@ function vim {
 
 # ZSH_THEME="robbyrussell"
 
-export PATH="$PATH:$(go env GOPATH)/bin"
-
 zstyle ':omz:update' mode auto      # update automatically without asking
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 plugins=(
     git
@@ -45,8 +46,6 @@ plugins=(
     vi-mode
 )
 
-export FZF_DEFAULT_OPTS='--preview "bat --style=numbers --color=always --line-range :500 {}"'
-
 source $ZSH/oh-my-zsh.sh
 
 source ~/.zsh/submodules/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
@@ -55,9 +54,8 @@ source ~/.zsh/submodules/powerlevel10k/powerlevel10k.zsh-theme
 
 fpath=("${ZSH_PREFIX}"/submodules/zsh-completions/src $fpath)
 
-export EDITOR=/usr/bin/vim
+export EDITOR=/home/linuxbrew/.linuxbrew/bin/nvim
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

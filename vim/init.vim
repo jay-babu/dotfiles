@@ -35,6 +35,12 @@ let mapleader = "\<Space>"
 let g:dashboard_default_executive = 'telescope'
 let mapleader = " "
 " let g:winresizer_start_key = "<leader>w"
+
+
+" Theme
+colorscheme onedark
+highlight Normal ctermbg=None
+
 nnoremap <leader>v <cmd>CHADopen<cr>
 nnoremap <leader>ff <cmd>Telescope find_files<cr>
 nnoremap <leader>fg <cmd>Telescope live_grep<cr>
