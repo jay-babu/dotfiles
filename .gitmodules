@@ -1,0 +1,87 @@
+[submodule "vim/pack/plugins/start/vim-devicons"]
+	path = vim/pack/plugins/start/vim-devicons
+	url = https://github.com/ryanoasis/vim-devicons.git
+[submodule "vim/pack/plugins/start/onedark.nvim"]
+	path = vim/pack/plugins/start/onedark.nvim
+	url = https://github.com/navarasu/onedark.nvim.git
+[submodule "vim/pack/plugins/start/winresizer"]
+	path = vim/pack/plugins/start/winresizer
+	url = https://github.com/simeji/winresizer.git
+[submodule "vim/pack/plugins/start/surround.nvim"]
+	path = vim/pack/plugins/start/surround.nvim
+	url = https://github.com/blackCauldron7/surround.nvim.git
+[submodule "vim/pack/plugins/start/chadtree"]
+	path = vim/pack/plugins/start/chadtree
+	url = https://github.com/ms-jpq/chadtree.git
+[submodule "vim/pack/lsp/start/nvim-lspconfig"]
+	path = vim/pack/lsp/start/nvim-lspconfig
+	url = https://github.com/neovim/nvim-lspconfig.git
+[submodule "vim/pack/lsp/start/coq_nvim"]
+	path = vim/pack/lsp/start/coq_nvim
+	url = https://github.com/ms-jpq/coq_nvim.git
+[submodule "vim/pack/lsp/start/coq.artifacts"]
+	path = vim/pack/lsp/start/coq.artifacts
+	url = https://github.com/ms-jpq/coq.artifacts.git
+[submodule "vim/pack/lsp/start/coq.thirdparty"]
+	path = vim/pack/lsp/start/coq.thirdparty
+	url = https://github.com/ms-jpq/coq.thirdparty.git
+[submodule "vim/pack/lsp/start/lsp_signature.nvim"]
+	path = vim/pack/lsp/start/lsp_signature.nvim
+	url = https://github.com/ray-x/lsp_signature.nvim.git
+[submodule "vim/pack/lsp/start/goto-preview"]
+	path = vim/pack/lsp/start/goto-preview
+	url = https://github.com/rmagatti/goto-preview.git
+[submodule "vim/pack/plugins/start/dashboard-nvim"]
+	path = vim/pack/plugins/start/dashboard-nvim
+	url = https://github.com/glepnir/dashboard-nvim.git
+[submodule "vim/pack/plugins/start/plenary.nvim"]
+	path = vim/pack/plugins/start/plenary.nvim
+	url = https://github.com/nvim-lua/plenary.nvim.git
+[submodule "vim/pack/plugins/start/telescope.nvim"]
+	path = vim/pack/plugins/start/telescope.nvim
+	url = https://github.com/nvim-telescope/telescope.nvim.git
+[submodule "vim/pack/plugins/start/nvim-treesitter"]
+	path = vim/pack/plugins/start/nvim-treesitter
+	url = https://github.com/nvim-treesitter/nvim-treesitter.git
+[submodule "vim/pack/plugins/start/nvim-window"]
+	path = vim/pack/plugins/start/nvim-window
+	url = https://gitlab.com/yorickpeterse/nvim-window.git
+[submodule "vim/pack/plugins/start/nvim-ts-rainbow"]
+	path = vim/pack/plugins/start/nvim-ts-rainbow
+	url = https://github.com/p00f/nvim-ts-rainbow.git
+[submodule "vim/pack/plugins/start/lualine.nvim"]
+	path = vim/pack/plugins/start/lualine.nvim
+	url = https://github.com/nvim-lualine/lualine.nvim.git
+[submodule "vim/pack/plugins/start/nvim-web-devicons"]
+	path = vim/pack/plugins/start/nvim-web-devicons
+	url = https://github.com/kyazdani42/nvim-web-devicons.git
+[submodule "vim/pack/lsp/start/nvim-ts-autotag"]
+	path = vim/pack/lsp/start/nvim-ts-autotag
+	url = https://github.com/windwp/nvim-ts-autotag.git
+[submodule "vim/pack/lsp/start/nvim-treesitter-refactor"]
+	path = vim/pack/lsp/start/nvim-treesitter-refactor
+	url = https://github.com/nvim-treesitter/nvim-treesitter-refactor.git
+[submodule "vim/pack/plugins/start/gitlinker.nvim"]
+	path = vim/pack/plugins/start/gitlinker.nvim
+	url = https://github.com/ruifm/gitlinker.nvim.git
+[submodule "vim/pack/plugins/start/vgit.nvim"]
+	path = vim/pack/plugins/start/vgit.nvim
+	url = https://github.com/tanvirtin/vgit.nvim.git
+[submodule "vim/pack/plugins/start/vim-smoothie"]
+	path = vim/pack/plugins/start/vim-smoothie
+	url = https://github.com/psliwka/vim-smoothie.git
+[submodule "vim/pack/plugins/start/bufferline.nvim"]
+	path = vim/pack/plugins/start/bufferline.nvim
+	url = https://github.com/akinsho/bufferline.nvim.git
+[submodule "zsh/submodules/zsh-syntax-highlighting"]
+	path = zsh/submodules/zsh-syntax-highlighting
+	url = https://github.com/zsh-users/zsh-syntax-highlighting.git
+[submodule "zsh/submodules/zsh-autosuggestions"]
+	path = zsh/submodules/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions
+[submodule "zsh/submodules/zsh-completions"]
+	path = zsh/submodules/zsh-completions
+	url = https://github.com/zsh-users/zsh-completions.git
+[submodule "zsh/submodules/powerlevel10k"]
+	path = zsh/submodules/powerlevel10k
+	url = https://github.com/romkatv/powerlevel10k.git
