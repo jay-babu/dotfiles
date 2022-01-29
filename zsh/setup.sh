@@ -15,6 +15,8 @@ ln -sf "$(pwd)"/.tmux.conf ~/.tmux.conf
 ln -sf "$(pwd)"/.p10k.zsh ~/.p10k.zsh
 ln -sf "$(pwd)"/submodules ~/.zsh
 
+(npm install -g npm@latest && npm install -g neovim)&
+
 mkdir -p ~/.config/gitui
 ln -sf "$(pwd)"/key_bindings.ron ~/.config/gitui
 
