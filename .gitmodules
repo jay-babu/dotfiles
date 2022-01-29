@@ -88,3 +88,12 @@
 [submodule "vim/pack/plugins/start/vim-solidity"]
 	path = vim/pack/plugins/start/vim-solidity
 	url = https://github.com/TovarishFin/vim-solidity.git
+[submodule "vim/pack/plugins/start/vim-visual-multi"]
+	path = vim/pack/plugins/start/vim-visual-multi
+	url = https://github.com/mg979/vim-visual-multi.git
+[submodule "vim/pack/plugins/start/refactoring.nvim"]
+	path = vim/pack/plugins/start/refactoring.nvim
+	url = https://github.com/ThePrimeagen/refactoring.nvim.git
+[submodule "vim/pack/plugins/start/vim-startuptime"]
+	path = vim/pack/plugins/start/vim-startuptime
+	url = https://github.com/dstein64/vim-startuptime.git

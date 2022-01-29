@@ -22,7 +22,7 @@ export FZF_DEFAULT_OPTS='--hidden --preview "bat --style=numbers --color=always 
 [ -z "$PS1" ] && return
 
 function cd {
-    builtin cd "$@" && exa
+    builtin cd "$@" && exa -a
 }
 
 function vim {

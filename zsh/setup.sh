@@ -1,6 +1,7 @@
 #!/usr/bin/env zsh
 
-/home/linuxbew/.linuxbrew/bin/brew install zsh gcc node@16 exa gh openjdk@11 neovim fzf bat protobuf go gituir cheat
+/home/linuxbrew/.linuxbrew/bin/brew tap ethereum/ethereum
+/home/linuxbrew/.linuxbrew/bin/brew install zsh gcc node@16 exa gh openjdk@11 neovim fzf bat protobuf go gitui cheat solidity tmux fish fisher
 bash /home/linuxbrew/.linuxbrew/bin/brew/opt/fzf/install
 
 go install github.com/google/wire/cmd/wire@latest
@@ -10,6 +11,7 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 mkdir -p ~/.zsh
 
 ln -sf "$(pwd)"/.zshrc ~/.zshrc
+ln -sf "$(pwd)"/.tmux.conf ~/.tmux.conf
 ln -sf "$(pwd)"/.p10k.zsh ~/.p10k.zsh
 ln -sf "$(pwd)"/submodules ~/.zsh
 

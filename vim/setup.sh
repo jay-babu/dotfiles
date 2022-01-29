@@ -40,6 +40,8 @@ git submodule add -f https://github.com/nvim-lua/plenary.nvim.git pack/plugins/s
 
 git submodule add -f https://github.com/nvim-telescope/telescope.nvim.git pack/plugins/start/telescope.nvim
 
+git submodule add -f https://github.com/ThePrimeagen/refactoring.nvim.git pack/plugins/start/refactoring.nvim
+
 git submodule add -f https://github.com/nvim-treesitter/nvim-treesitter.git pack/plugins/start/nvim-treesitter
 
 git submodule add -f https://gitlab.com/yorickpeterse/nvim-window.git pack/plugins/start/nvim-window
@@ -52,8 +54,6 @@ git submodule add -f https://github.com/kyazdani42/nvim-web-devicons.git pack/pl
 
 git submodule add -f https://github.com/windwp/nvim-ts-autotag.git pack/lsp/start/nvim-ts-autotag
 
-git submodule add -f https://github.com/nvim-treesitter/nvim-treesitter-refactor.git pack/lsp/start/nvim-treesitter-refactor
-
 git submodule add -f https://github.com/ruifm/gitlinker.nvim.git pack/plugins/start/gitlinker.nvim
 
 git submodule add -f https://github.com/tanvirtin/vgit.nvim.git pack/plugins/start/vgit.nvim
@@ -63,6 +63,10 @@ git submodule add -f https://github.com/psliwka/vim-smoothie.git pack/plugins/st
 git submodule add -f https://github.com/akinsho/bufferline.nvim.git pack/plugins/start/bufferline.nvim
 
 git submodule add -f https://github.com/TovarishFin/vim-solidity.git pack/plugins/start/vim-solidity
+
+git submodule add -f https://github.com/mg979/vim-visual-multi.git pack/plugins/start/vim-visual-multi
+
+git submodule add -f https://github.com/dstein64/vim-startuptime.git pack/plugins/start/vim-startuptime
 
 git submodule update --recursive --remote
 

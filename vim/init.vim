@@ -30,6 +30,8 @@ noremap <Left> <Nop>
 noremap <Right> <Nop>
 
 nnoremap <SPACE> <Nop>
+nnoremap <silent>gb :BufferLinePick<CR>
+
 
 let mapleader = "\<Space>"
 let g:dashboard_default_executive = 'telescope'
@@ -106,7 +108,7 @@ require('goto-preview').setup {
 }
 
 -- Enable some language servers with the additional completion capabilities offered by coq_nvim
-local servers = { 'gopls', 'tsserver' }
+local servers = { 'gopls', 'tsserver', 'solc', 'pyright' }
 for _, lsp in ipairs(servers) do
   lspconfig[lsp].setup(coq.lsp_ensure_capabilities({
     -- on_attach = my_custom_on_attach,
@@ -189,7 +191,13 @@ require'nvim-web-devicons'.setup {
 }
 
 require('lualine').setup()
-require("bufferline").setup{}
+require("bufferline").setup{
+    diagnostic = "nvim_lsp",
+    diagnostics_indicator = function(count, level, diagnostics_dict, context)
+        local icon = level:match("error") and " " or " "
+        return " " .. icon .. count
+    end
+}
 EOF
 
 autocmd FileType go setlocal omnifunc=v:lua.vim.lsp.omnifunc
