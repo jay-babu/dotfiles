@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 /home/linuxbrew/.linuxbrew/bin/brew tap ethereum/ethereum
-/home/linuxbrew/.linuxbrew/bin/brew install zsh gcc node@16 exa gh openjdk@11 neovim fzf bat protobuf go gitui cheat solidity tmux fish fisher
+/home/linuxbrew/.linuxbrew/bin/brew install zsh gcc node@16 exa gh openjdk@11 neovim fzf bat protobuf go gitui cheat solidity tmux fish fisher ripgrep
 bash /home/linuxbrew/.linuxbrew/bin/brew/opt/fzf/install
 
 go install github.com/google/wire/cmd/wire@latest
