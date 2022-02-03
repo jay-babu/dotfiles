@@ -14,9 +14,10 @@ ln -sf "$(pwd)"/.zshrc ~/.zshrc
 ln -sf "$(pwd)"/.tmux.conf ~/.tmux.conf
 ln -sf "$(pwd)"/.p10k.zsh ~/.p10k.zsh
 ln -sf "$(pwd)"/submodules ~/.zsh
+ln -sf "$(pwd)"/nvchad/custom ~/.config/nvim/lua/custom
 
-(npm install -g npm@latest && npm install -g neovim)&
-(pip3 install --upgrade pynvim)&
+(npm install -g npm@latest && npm install -g neovim bash-language-server vscode-langservers-extracted graphql-language-service-cli solidity-language-server)&
+(pip3 install --upgrade pynvim pyright)&
 
 mkdir -p ~/.config/gitui
 ln -sf "$(pwd)"/key_bindings.ron ~/.config/gitui
