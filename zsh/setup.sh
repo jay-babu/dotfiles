@@ -1,12 +1,15 @@
 #!/usr/bin/env zsh
 
 /home/linuxbrew/.linuxbrew/bin/brew tap ethereum/ethereum
-/home/linuxbrew/.linuxbrew/bin/brew install zsh gcc node@16 exa gh openjdk@11 neovim fzf bat protobuf go gitui cheat solidity tmux fish fisher ripgrep
+/home/linuxbrew/.linuxbrew/bin/brew install zsh gcc node@16 exa gh openjdk@11 neovim fzf bat protobuf go gitui cheat solidity tmux fish fisher ripgrep stylua luarocks shellcheck lua-language-server
 bash /home/linuxbrew/.linuxbrew/bin/brew/opt/fzf/install
+
+luarocks install luacheck
 
 go install github.com/google/wire/cmd/wire@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install mvdan.cc/sh/v3/cmd/shfmt@latest
 
 mkdir -p ~/.zsh
 
@@ -15,6 +18,7 @@ ln -sf "$(pwd)"/.tmux.conf ~/.tmux.conf
 ln -sf "$(pwd)"/.p10k.zsh ~/.p10k.zsh
 ln -sf "$(pwd)"/submodules ~/.zsh
 ln -sf "$(pwd)"/nvchad/custom ~/.config/nvim/lua/custom
+ln -sf "$(pwd)"/stylua.toml ~/.stylua.toml
 
 (npm install -g npm@latest && npm install -g neovim bash-language-server vscode-langservers-extracted graphql-language-service-cli solidity-language-server)&
 (pip3 install --upgrade pynvim pyright)&

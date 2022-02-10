@@ -1,23 +1,27 @@
-local customPlugins = require "core.customPlugins"
-
-customPlugins.add(function(use)
-  use "nathom/filetype.nvim"
-
-  use {
+return {
+  {
     "TovarishFin/vim-solidity",
     ft = { 'solidity' },
-  }
+  },
 
-  use {
+  {
+    "jose-elias-alvarez/null-ls.nvim",
+    after = "nvim-lspconfig",
+    config = function()
+       require("custom.plugins.null-ls").setup()
+    end,
+  },
+
+  {
     "windwp/nvim-ts-autotag",
     ft = { 'html', 'javascript', 'javascriptreact', 'typescriptreact', 'svelte', 'vue' },
     after = "nvim-treesitter",
     config = function()
       require("nvim-ts-autotag").setup()
     end,
-  }
+  },
 
-   use {
+   {
     "Pocco81/TrueZen.nvim",
     cmd = {
        "TZAtaraxis",
@@ -27,5 +31,5 @@ customPlugins.add(function(use)
     config = function()
        require "custom.plugins.truezen"
     end,
-   }
-end)
+   },
+}
