@@ -20,7 +20,7 @@ ln -sf "$(pwd)"/submodules ~/.zsh
 ln -sf "$(pwd)"/nvchad/custom ~/.config/nvim/lua/custom
 ln -sf "$(pwd)"/stylua.toml ~/.stylua.toml
 
-(npm install -g npm@latest && npm install -g neovim bash-language-server vscode-langservers-extracted graphql-language-service-cli solidity-language-server)&
+(npm install -g npm@latest && npm install -g neovim bash-language-server vscode-langservers-extracted graphql-language-service-cli solidity-language-server typescript-language-server)&
 (pip3 install --upgrade pynvim pyright)&
 
 mkdir -p ~/.config/gitui
