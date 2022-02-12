@@ -7,6 +7,10 @@ M.options = {
 	relativenumber = true,
 	shiftwidth = 4,
 	tabstop = 4,
+
+	nvChad = {
+		copy_del = false,
+	},
 }
 
 M.plugins = {
