@@ -1,4 +1,4 @@
 #!/usr/bin/env fish
 
-fisher install jethrokuan/z IlanCosman/tide@v5 jhillyerd/plugin-git jethrokuan/fzf
+fisher install jethrokuan/z IlanCosman/tide@v5 jhillyerd/plugin-git PatrickF1/fzf.fish
 
