@@ -1,33 +1,37 @@
 local M = {}
 
 M.treesitter = {
-   ensure_installed = {
-      "c",
-      "css",
-      "dockerfile",
-      "go",
-      "graphql",
-      "html",
-      "javascript",
-      "json",
-      "lua",
-      "python",
-      "toml",
-      "vim",
-   },
+	ensure_installed = {
+		"c",
+		"css",
+		"dockerfile",
+		"go",
+		"graphql",
+		"html",
+		"javascript",
+		"json",
+		"lua",
+		"python",
+		"toml",
+		"vim",
+	},
+	rainbow = {
+		enable = true,
+		extended_mode = true,
+		max_file_lines = nil,
+	},
 }
 
 M.nvimtree = {
-   git = {
-      enable = true,
-   },
+	git = {
+		enable = true,
+	},
 }
 
 M.bufferline = {
-  options = {
-    diagnostics = "nvim_lsp",
-  },
+	options = {
+		diagnostics = "nvim_lsp",
+	},
 }
 
 return M
-

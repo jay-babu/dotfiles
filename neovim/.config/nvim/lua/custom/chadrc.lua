@@ -1,7 +1,7 @@
 local M = {}
 
-local plugin_conf = require('custom.plugins.configs')
-local userPlugins = require('custom.plugins')
+local plugin_conf = require("custom.plugins.configs")
+local userPlugins = require("custom.plugins")
 
 M.options = {
 	relativenumber = true,
@@ -22,7 +22,7 @@ M.plugins = {
 
 	options = {
 		lspconfig = {
-			setup_lspconf = 'custom.plugins.lspconfig',
+			setup_lspconf = "custom.plugins.lspconfig",
 		},
 	},
 
