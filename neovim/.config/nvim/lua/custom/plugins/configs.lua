@@ -13,6 +13,8 @@ M.treesitter = {
 		"lua",
 		"python",
 		"toml",
+		"tsx",
+		"typescript",
 		"vim",
 	},
 	rainbow = {
