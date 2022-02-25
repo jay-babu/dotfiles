@@ -18,3 +18,12 @@ if status is-interactive
     end
 end
 
+function ...
+  ../..
+end
+function ....
+  ../../..
+end
+function .....
+  ../../../..
+end
