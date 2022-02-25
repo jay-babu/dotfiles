@@ -3,7 +3,7 @@ local b = null_ls.builtins
 
 local sources = {
 	-- webdev
-	b.formatting.eslint,
+	b.formatting.prettierd,
 
 	-- Lua
 	b.formatting.stylua.with({}),
