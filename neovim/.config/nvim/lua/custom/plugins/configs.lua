@@ -25,6 +25,7 @@ M.treesitter = {
 }
 
 M.nvimtree = {
+        auto_close = true,
 	git = {
 		enable = true,
 	},
