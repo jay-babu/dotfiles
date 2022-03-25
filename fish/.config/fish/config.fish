@@ -10,9 +10,11 @@ fish_add_path (go env GOPATH)/bin
 # fish_add_path /home/linuxbrew/.linuxbrew/opt/nvim/bin
 # fish_add_path "(go env GOPATH)"/bin
 
-set -gx DONT_PROMPT_WSL_INSTALL true
+set -Ux DONT_PROMPT_WSL_INSTALL true
 
-set -gx EDITOR nvim
+set -Ux EDITOR nvim
+
+set -Ux XDEB_PKGROOT ~/.config/xdeb
 
 if status is-interactive
     # Commands to run in interactive sessions can go here
