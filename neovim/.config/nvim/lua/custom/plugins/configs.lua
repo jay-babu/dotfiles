@@ -36,4 +36,36 @@ M.bufferline = {
 	},
 }
 
+M.telescope = {
+	defaults = {
+		vimgrep_arguments = {
+			"rg",
+			"--color=never",
+			"--no-heading",
+			"--with-filename",
+			"--line-number",
+			"--column",
+			"--smart-case",
+			"--hidden",
+			"--follow",
+		},
+	},
+	pickers = {
+		find_files = {
+			hidden = true,
+			file_ignore_patterns = { "^.git/" },
+			follow = true,
+		},
+		buffers = {
+			show_all_buffers = true,
+			sort_lastused = true,
+			mappings = {
+				i = {
+					["<C-d>"] = "delete_buffer",
+				},
+			},
+		},
+	},
+}
+
 return M
