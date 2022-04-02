@@ -3,6 +3,7 @@ fish_add_path (which brew)/..
 fish_add_path (which brew)/../../opt/node@16/bin
 fish_add_path (which brew)/../../opt/openjdk@11/bin
 fish_add_path (which brew)/../../opt/nvim/bin
+fish_add_path /home/linuxbrew/.linuxbrew/bin 
 fish_add_path (go env GOPATH)/bin
 # fish_add_path /home/linuxbrew/.linuxbrew/bin 
 # fish_add_path /home/linuxbrew/.linuxbrew/opt/node@16/bin
