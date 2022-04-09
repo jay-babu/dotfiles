@@ -12,6 +12,11 @@ local sources = {
 	-- Shell
 	b.formatting.shfmt,
 	b.diagnostics.shellcheck.with({ diagnostics_format = '#{m} [#(c)]' }),
+
+	-- Docker
+	b.diagnostics.hadolint,
+
+	b.diagnostics.ansiblelint,
 }
 
 local M = {}
