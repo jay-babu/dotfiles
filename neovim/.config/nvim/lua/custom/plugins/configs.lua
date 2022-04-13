@@ -68,4 +68,13 @@ M.telescope = {
 	},
 }
 
+M.terminal = {
+	location = {
+		float = {
+			width = 0.9,
+			height = 0.9,
+		},
+	},
+}
+
 return M

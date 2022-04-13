@@ -1,4 +1,4 @@
-local null_ls = require('null-ls')
+local null_ls = require("null-ls")
 local b = null_ls.builtins
 
 local sources = {
@@ -11,12 +11,15 @@ local sources = {
 
 	-- Shell
 	b.formatting.shfmt,
-	b.diagnostics.shellcheck.with({ diagnostics_format = '#{m} [#(c)]' }),
+	b.diagnostics.shellcheck.with({ diagnostics_format = "#{m} [#(c)]" }),
 
 	-- Docker
 	b.diagnostics.hadolint,
 
 	b.diagnostics.ansiblelint,
+
+	-- Golang
+	b.formatting.gofumpt,
 }
 
 local M = {}
@@ -29,7 +32,7 @@ M.setup = function()
 		-- format on save
 		on_attach = function(client)
 			if client.resolved_capabilities.document_formatting then
-				vim.cmd('autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()')
+				vim.cmd("autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()")
 			end
 		end,
 	})

@@ -41,4 +41,15 @@ M.ui = {
 	transparency = true,
 }
 
+M.options = {
+	terminal = {
+		location = {
+			float = {
+				width = 0.9,
+				height = 0.9,
+			},
+		},
+	},
+}
+
 return M
