@@ -5,7 +5,16 @@ return function(plugins)
 			as = "catppuccin",
 			config = function()
 				-- code
-				require("catppuccin").setup({})
+				require("catppuccin").setup({
+					integrations = {
+						neotree = {
+							enabled = true,
+							show_root = false,
+							transparent_panel = true,
+						},
+						ts_rainbow = true,
+					},
+				})
 			end,
 		},
 		{
