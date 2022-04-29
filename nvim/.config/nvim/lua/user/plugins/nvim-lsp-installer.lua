@@ -1,12 +1,12 @@
 return {
-  ensure_installed = {
-    "cssls",
-    "html",
-    "jsonls",
-    "gopls",
-    "jdtls"
-    "pyright",
-    "sumneko_lua",
-    "tsserver",
-  }
+	ensure_installed = {
+		"cssls",
+		"html",
+		"jsonls",
+		"gopls",
+		"jdtls",
+		"pyright",
+		"sumneko_lua",
+		"tsserver",
+	},
 }
