@@ -6,4 +6,6 @@ return function()
 		pattern = "*",
 		callback = require("user.theme").telescope_theme,
 	})
+
+	require("user.mappings").setup()
 end
