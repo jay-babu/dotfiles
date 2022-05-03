@@ -20,12 +20,16 @@ return function()
 				b.diagnostics.ansiblelint,
 
 				-- Golang
-				b.formatting.gofumpt,
+				-- b.formatting.gofumpt,
 
 				-- JS
 				b.formatting.eslint_d,
 				b.diagnostics.eslint_d,
 				b.code_actions.eslint_d,
+
+				-- Protobuf
+				b.formatting.protolint,
+				b.diagnostics.protolint,
 			},
 			on_attach = function(client)
 				if client.resolved_capabilities.document_formatting then
