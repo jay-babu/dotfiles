@@ -21,6 +21,11 @@ return function()
 
 				-- Golang
 				b.formatting.gofumpt,
+
+				-- JS
+				b.formatting.eslint_d,
+				b.diagnostics.eslint_d,
+				b.code_actions.eslint_d,
 			},
 			on_attach = function(client)
 				if client.resolved_capabilities.document_formatting then
