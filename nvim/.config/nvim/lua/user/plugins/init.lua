@@ -21,6 +21,11 @@ return function(plugins)
 			"nvim-treesitter/nvim-treesitter-textobjects",
 			after = "nvim-treesitter",
 		},
+
+		{
+			"andymass/vim-matchup",
+			after = "nvim-treesitter",
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
