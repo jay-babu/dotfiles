@@ -10,7 +10,6 @@ return function(config)
 		-- Shell
 		b.formatting.shfmt,
 		b.diagnostics.shellcheck.with({ diagnostics_format = "#{m} [#(c)]" }),
-		b.diagnostics.semgrep,
 
 		-- Docker
 		b.diagnostics.hadolint,
@@ -18,6 +17,7 @@ return function(config)
 		b.diagnostics.ansiblelint,
 
 		-- Golang
+		b.diagnostics.staticcheck,
 		-- b.formatting.gofumpt,
 
 		-- JS
