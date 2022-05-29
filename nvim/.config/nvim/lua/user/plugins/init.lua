@@ -26,6 +26,9 @@ return function(plugins)
 			"andymass/vim-matchup",
 			after = "nvim-treesitter",
 		},
+		{
+			"dstein64/vim-startuptime",
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
