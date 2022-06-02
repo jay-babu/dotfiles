@@ -30,10 +30,12 @@ return function(default)
 			},
 			layout_strategy = "horizontal",
 		},
+		pickers = {
+			find_files = {
+				hidden = true,
+			},
+		},
 	}
-
-	-- vim.opt.foldmethod = expr
-	-- vim.opt.foldexpr = nvim_treesitter#foldexpr()
 
 	return vim.tbl_deep_extend("force", default, overrides)
 end

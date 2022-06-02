@@ -9,6 +9,7 @@ return function(default)
 			"graphql",
 			"html",
 			"http",
+			"java",
 			"javascript",
 			"json",
 			"lua",
