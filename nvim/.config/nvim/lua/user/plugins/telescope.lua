@@ -29,6 +29,15 @@ return function(default)
 				},
 			},
 			layout_strategy = "horizontal",
+			vimgrep_arguments = {
+				"rg",
+				"--color=never",
+				"--no-heading",
+				"--with-filename",
+				"--line-number",
+				"--column",
+				"--hidden",
+			},
 		},
 		pickers = {
 			find_files = {

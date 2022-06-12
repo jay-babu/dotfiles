@@ -1,8 +1,8 @@
-
-fish_add_path (which brew)/.. 
-fish_add_path (which brew)/../../opt/node@16/bin
-fish_add_path (which brew)/../../opt/openjdk@11/bin
-fish_add_path (which brew)/../../opt/nvim/bin
+set brew_location (which brew)
+fish_add_path $brew_location/.. 
+fish_add_path $brew_location/../../opt/node@16/bin
+fish_add_path $brew_location/../../opt/openjdk@11/bin
+fish_add_path $brew_location/../../opt/nvim/bin
 fish_add_path /home/linuxbrew/.linuxbrew/bin 
 fish_add_path (go env GOPATH)/bin
 
@@ -19,7 +19,7 @@ alias v="nvim"
 if status is-interactive
     # Commands to run in interactive sessions can go here
 
-    set -gx FZF_DEFAULT_OPTS '--hidden --preview "bat --style=numbers --color=always --line-range :500 {}"'
+    # set -gx FZF_DEFAULT_OPTS '--hidden --preview "bat --style=numbers --color=always --line-range :500 {}"'
 
     function cd 
         builtin cd $argv && exa -a -F --icons
