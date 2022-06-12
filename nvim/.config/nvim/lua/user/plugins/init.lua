@@ -12,7 +12,9 @@ return function(plugins)
 							show_root = false,
 							transparent_panel = true,
 						},
+						hop = true,
 						ts_rainbow = true,
+						which_key = true,
 					},
 				})
 			end,
