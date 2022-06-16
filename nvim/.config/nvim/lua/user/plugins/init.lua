@@ -33,6 +33,22 @@ return function(plugins)
 		},
 		{
 			"ThePrimeagen/harpoon",
+			requires = "nvim-lua/plenary.nvim",
+		},
+		{
+			"vimpostor/vim-tpipeline",
+		},
+		{
+			"ThePrimeagen/git-worktree.nvim",
+			requires = {
+				"nvim-lua/plenary.nvim",
+				"nvim-telescope/telescope.nvim",
+			},
+			config = function()
+				require("git-worktree").setup({
+					autopush = true,
+				})
+			end,
 		},
 	}
 
