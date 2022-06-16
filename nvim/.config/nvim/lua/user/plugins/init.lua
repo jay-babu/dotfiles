@@ -31,6 +31,9 @@ return function(plugins)
 		{
 			"dstein64/vim-startuptime",
 		},
+		{
+			"ThePrimeagen/harpoon",
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)

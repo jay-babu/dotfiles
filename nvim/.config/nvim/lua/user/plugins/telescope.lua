@@ -33,6 +33,7 @@ return function(default)
 				"rg",
 				"--color=never",
 				"--no-heading",
+				"-i",
 				"--with-filename",
 				"--line-number",
 				"--column",
@@ -45,6 +46,9 @@ return function(default)
 			},
 		},
 	}
+
+	local telescope = require("telescope")
+	telescope.load_extension("harpoon")
 
 	return vim.tbl_deep_extend("force", default, overrides)
 end
