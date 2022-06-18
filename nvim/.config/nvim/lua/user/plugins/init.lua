@@ -50,6 +50,19 @@ return function(plugins)
 				})
 			end,
 		},
+		{
+			"phaazon/hop.nvim",
+			-- cmd = {
+			-- 	"HopWord",
+			-- 	"HopPattern",
+			-- 	"HopChar1",
+			-- 	"HopChar2",
+			-- 	"HopLine",
+			-- },
+			config = function()
+				require("hop").setup()
+			end,
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
