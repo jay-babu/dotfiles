@@ -34,13 +34,6 @@ return function(plugins)
 		{
 			"ThePrimeagen/harpoon",
 			requires = "nvim-lua/plenary.nvim",
-			after = {
-				"nvim-telescope/telescope.nvim",
-			},
-			config = function()
-				local telescope = require("telescope")
-				telescope.load_extension("harpoon")
-			end,
 		},
 		{
 			"vimpostor/vim-tpipeline",
@@ -75,13 +68,6 @@ return function(plugins)
 			requires = {
 				"nvim-telescope/telescope.nvim",
 			},
-			after = {
-				"nvim-telescope/telescope.nvim",
-			},
-			config = function()
-				local telescope = require("telescope")
-				telescope.load_extension("media_files")
-			end,
 		},
 	}
 

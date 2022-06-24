@@ -50,6 +50,9 @@ return function(default)
 			},
 		},
 	}
+	local telescope = require("telescope")
+	telescope.load_extension("media_files")
+	telescope.load_extension("harpoon")
 
 	return vim.tbl_deep_extend("force", default, overrides)
 end
