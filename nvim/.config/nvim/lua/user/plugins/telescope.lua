@@ -39,6 +39,10 @@ return function(default)
 				"--column",
 				"--hidden",
 			},
+			file_ignore_patterns = {
+				".git",
+				"node_modules",
+			},
 		},
 		pickers = {
 			find_files = {
@@ -46,9 +50,6 @@ return function(default)
 			},
 		},
 	}
-
-	local telescope = require("telescope")
-	telescope.load_extension("harpoon")
 
 	return vim.tbl_deep_extend("force", default, overrides)
 end
