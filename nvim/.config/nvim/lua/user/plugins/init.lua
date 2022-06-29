@@ -69,6 +69,9 @@ return function(plugins)
 				"nvim-telescope/telescope.nvim",
 			},
 		},
+		{
+			"jabirali/vim-tmux-yank",
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
