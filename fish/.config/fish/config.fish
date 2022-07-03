@@ -1,10 +1,10 @@
-set brew_location (which brew)
-fish_add_path $brew_location/.. 
-fish_add_path $brew_location/../../opt/node@16/bin
-fish_add_path $brew_location/../../opt/openjdk@11/bin
-fish_add_path $brew_location/../../opt/nvim/bin
-fish_add_path /home/linuxbrew/.linuxbrew/bin 
-fish_add_path (go env GOPATH)/bin
+# set brew_location (which brew)
+# fish_add_path $brew_location/.. 
+# fish_add_path $brew_location/../../opt/node@16/bin
+# fish_add_path $brew_location/../../opt/openjdk@11/bin
+# fish_add_path $brew_location/../../opt/nvim/bin
+# fish_add_path /home/linuxbrew/.linuxbrew/bin 
+# fish_add_path (go env GOPATH)/bin
 
 set -Ux DONT_PROMPT_WSL_INSTALL true
 
@@ -12,7 +12,7 @@ set -Ux EDITOR nvim
 
 set -Ux XDEB_PKGROOT ~/.config/xdeb
 
-set sponge_delay 10
+set sponge_delay 100
 
 alias v="nvim"
 
