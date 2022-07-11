@@ -6,6 +6,8 @@
 # fish_add_path /home/linuxbrew/.linuxbrew/bin 
 # fish_add_path (go env GOPATH)/bin
 
+bass source ~/.profile
+
 set -Ux DONT_PROMPT_WSL_INSTALL true
 
 set -Ux EDITOR nvim
