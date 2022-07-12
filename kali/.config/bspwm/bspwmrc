@@ -1,9 +1,7 @@
 #!/bin/sh
 
-/usr/bin/pgrep -x sxhkd > /dev/null || sxhkd &
-
 # Workspaces
-bspc monitor -d 1 2 3 4 5 6 7 8 9 web
+bspc monitor -d 1 2 3 4 5 6
 
 # Windows Config
 bspc config border_width 0
@@ -22,9 +20,14 @@ bspc config pointer_action3 resize_side
 #   Alt + Right Click button resize by corner
 bspc config pointer_action3 resize_corner
 
-bspc rule -a Chromium desktop='web'
-bspc rule -a "Vivaldi-stable" desktop='web'
+bspc rule -a Chromium desktop='2'
+bspc rule -a "Vivaldi-stable" desktop='2'
 bspc rule -a "*":"Popup" state=floating
 bspc rule -a "feh" state=floating
 bspc rule -a "mpv" state=floating
 
+# autostart up applications
+~/.config/polybar/launch.sh &
+picom &
+xrdb merge ~/.Xresources &
+/usr/bin/pgrep -x sxhkd > /dev/null || sxhkd &

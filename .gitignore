@@ -241,3 +241,5 @@ vim/pack/
 
 # Fish
 fish/.config/fish/fish_variables
+
+shell/.config/tmux/plugins/
