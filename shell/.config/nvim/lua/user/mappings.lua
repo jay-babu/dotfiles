@@ -26,6 +26,14 @@ return {
 		["<S-s>"] = {
 			"<cmd>lua require('hop').hint_lines({ extend_visual = true })<cr>",
 		},
+		["<leader>im"] = {
+			function()
+				require("telescope").extensions.goimpl.goimpl({})
+			end,
+			desc = "Go Interface Impl",
+			silent = true,
+			noremap = true,
+		},
 	},
 	[""] = {
 		[":"] = { "," },

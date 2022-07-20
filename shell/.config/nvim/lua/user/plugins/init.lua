@@ -72,6 +72,18 @@ return function(plugins)
 		{
 			"jabirali/vim-tmux-yank",
 		},
+		{
+			"edolphin-ydf/goimpl.nvim",
+			requires = {
+				{ "nvim-lua/plenary.nvim" },
+				{ "nvim-lua/popup.nvim" },
+				{ "nvim-telescope/telescope.nvim" },
+				{ "nvim-treesitter/nvim-treesitter" },
+			},
+			config = function()
+				require("telescope").load_extension("goimpl")
+			end,
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
