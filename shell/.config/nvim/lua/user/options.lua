@@ -5,4 +5,7 @@ return {
 		-- wildignorecase = true,
 		-- smartcase = false,
 	},
+	o = {
+		signcolumn = "yes",
+	},
 }

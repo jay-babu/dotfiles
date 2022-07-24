@@ -6,6 +6,16 @@ return function(plugins)
 			config = function()
 				-- code
 				require("catppuccin").setup({
+					dim_inactive = {
+						enabled = true,
+						shade = "dark",
+						percentage = 0.15,
+					},
+					compile = {
+						enabled = true,
+						path = vim.fn.stdpath("cache") .. "/catppuccin",
+					},
+					term_colors = true,
 					integrations = {
 						neotree = {
 							enabled = true,
@@ -15,6 +25,11 @@ return function(plugins)
 						hop = true,
 						ts_rainbow = true,
 						which_key = true,
+						dap = {
+							enabled = true,
+							enable_ui = true,
+						},
+						aerial = true,
 					},
 				})
 			end,
@@ -83,6 +98,21 @@ return function(plugins)
 			config = function()
 				require("telescope").load_extension("goimpl")
 			end,
+		},
+		{
+			"mfussenegger/nvim-dap",
+			module = "dap",
+			config = function()
+				require("user.plugins.dap")
+			end,
+		},
+		{
+			"rcarriga/nvim-dap-ui",
+			after = "nvim-dap",
+			config = function()
+				require("user.plugins.nvim-dap-ui")
+			end,
+			requires = { "mfussenegger/nvim-dap" },
 		},
 	}
 
