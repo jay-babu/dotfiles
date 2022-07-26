@@ -7,4 +7,5 @@ return {
 	"pyright",
 	"sumneko_lua",
 	"tsserver",
+	"solc",
 }
