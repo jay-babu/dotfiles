@@ -114,6 +114,14 @@ return function(plugins)
 			end,
 			requires = { "mfussenegger/nvim-dap" },
 		},
+		{
+			"ray-x/lsp_signature.nvim",
+			after = "nvim-cmp",
+			config = function()
+				require("user.plugins.lsp_signature")
+			end,
+			requires = "hrsh7th/nvim-cmp",
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
