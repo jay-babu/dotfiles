@@ -1,11 +1,13 @@
 return {
 	"cssls",
-	"html",
-	"jsonls",
+	"dockerls",
 	"gopls",
+	"graphql",
+	"html",
 	"jdtls",
+	"jsonls",
 	"pyright",
+	"solc",
 	"sumneko_lua",
 	"tsserver",
-	"solc",
 }

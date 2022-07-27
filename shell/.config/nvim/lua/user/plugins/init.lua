@@ -122,6 +122,35 @@ return function(plugins)
 			end,
 			requires = "hrsh7th/nvim-cmp",
 		},
+		{
+			"williamboman/nvim-lsp-installer",
+			disable = true,
+		},
+		{
+			"williamboman/mason.nvim",
+			config = function()
+				require("user.plugins.mason")
+			end,
+		},
+		-- LSP manager
+		{
+			"williamboman/mason-lspconfig.nvim",
+			after = { "mason.nvim", "nvim-lspconfig" },
+			config = function()
+				require("user.plugins.mason-lspconfig")
+				require("configs.lsp")
+			end,
+		},
+		{
+			"WhoIsSethDaniel/mason-tool-installer.nvim",
+			after = {
+				"mason.nvim",
+			},
+			run = ":MasonToolsUpdate",
+			config = function()
+				require("user.plugins.mason-tool-installer")
+			end,
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
