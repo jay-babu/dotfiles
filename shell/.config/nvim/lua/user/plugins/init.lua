@@ -89,6 +89,7 @@ return function(plugins)
 		},
 		{
 			"edolphin-ydf/goimpl.nvim",
+			ft = "go",
 			requires = {
 				{ "nvim-lua/plenary.nvim" },
 				{ "nvim-lua/popup.nvim" },
