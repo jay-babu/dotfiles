@@ -7,7 +7,7 @@ return function(plugins)
 				-- code
 				require("catppuccin").setup({
 					dim_inactive = {
-						enabled = true,
+						enabled = false,
 						shade = "dark",
 						percentage = 0.15,
 					},
@@ -16,6 +16,7 @@ return function(plugins)
 						path = vim.fn.stdpath("cache") .. "/catppuccin",
 					},
 					term_colors = true,
+					transparent_background = true,
 					integrations = {
 						neotree = {
 							enabled = true,
@@ -122,10 +123,6 @@ return function(plugins)
 				require("user.plugins.lsp_signature")
 			end,
 			requires = "hrsh7th/nvim-cmp",
-		},
-		{
-			"williamboman/nvim-lsp-installer",
-			disable = true,
 		},
 		{
 			"williamboman/mason.nvim",
