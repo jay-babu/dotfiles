@@ -26,7 +26,7 @@ format-muted-prefix-font = 2
 format-muted-prefix-foreground = ${color.RED}
 
 label-volume = %percentage%%
-label-muted = " Mute"
+label-muted = " Muted"
 label-muted-foreground = #757575
 
 ramp-volume-0 = 奄
@@ -116,7 +116,7 @@ full-at = 99
 battery = ${system.sys_battery}
 adapter = ${system.sys_adapter}
 
-poll-interval = 2
+poll-interval = 10
 time-format = %H:%M
 
 format-charging = <animation-charging> <label-charging>
@@ -247,7 +247,7 @@ type = internal/date
 
 interval = 1.0
 
-time = %I:%M %p
+time = %B %d | %H:%M:%S
 time-alt = %A, %d %B %Y
 
 format = <label>
@@ -256,7 +256,7 @@ format-prefix-font = 3
 format-prefix-foreground = ${color.RED}
 
 label = %time%
-label-font = 4
+label-font = 3
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 
