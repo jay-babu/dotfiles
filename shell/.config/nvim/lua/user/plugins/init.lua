@@ -125,29 +125,11 @@ return function(plugins)
 			requires = "hrsh7th/nvim-cmp",
 		},
 		{
-			"williamboman/mason.nvim",
-			config = function()
-				require("user.plugins.mason")
-			end,
+			"williamboman/nvim-lsp-installer",
+			disable = true,
 		},
-		-- LSP manager
-		{
-			"williamboman/mason-lspconfig.nvim",
-			after = { "mason.nvim", "nvim-lspconfig" },
-			config = function()
-				require("user.plugins.mason-lspconfig")
-				require("configs.lsp")
-			end,
-		},
-		{
-			"WhoIsSethDaniel/mason-tool-installer.nvim",
-			after = {
-				"mason.nvim",
-			},
+		["WhoIsSethDaniel/mason-tool-installer.nvim"] = {
 			run = ":MasonToolsUpdate",
-			config = function()
-				require("user.plugins.mason-tool-installer")
-			end,
 		},
 		{
 			"mfussenegger/nvim-jdtls",
