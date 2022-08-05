@@ -39,7 +39,6 @@ return function(plugins)
 			"nvim-treesitter/nvim-treesitter-textobjects",
 			after = "nvim-treesitter",
 		},
-
 		{
 			"andymass/vim-matchup",
 			after = "nvim-treesitter",
@@ -49,6 +48,14 @@ return function(plugins)
 		},
 		{
 			"ThePrimeagen/harpoon",
+			event = {
+				"BufRead",
+				"BufNewFile",
+			},
+			config = function()
+				local telescope = require("telescope")
+				telescope.load_extension("harpoon")
+			end,
 			requires = "nvim-lua/plenary.nvim",
 		},
 		{
@@ -75,14 +82,22 @@ return function(plugins)
 			-- 	"HopChar2",
 			-- 	"HopLine",
 			-- },
+			event = {
+				"BufRead",
+				"BufNewFile",
+			},
 			config = function()
 				require("hop").setup()
 			end,
 		},
 		{
 			"nvim-telescope/telescope-media-files.nvim",
-			requires = {
-				"nvim-telescope/telescope.nvim",
+			config = function()
+				local telescope = require("telescope")
+				telescope.load_extension("media_files")
+			end,
+			after = {
+				"telescope.nvim",
 			},
 		},
 		{
@@ -104,6 +119,11 @@ return function(plugins)
 		{
 			"mfussenegger/nvim-dap",
 			module = "dap",
+			ft = {
+				"go",
+				"python",
+				"java",
+			},
 			config = function()
 				require("user.plugins.dap")
 			end,
@@ -124,15 +144,14 @@ return function(plugins)
 			end,
 			requires = "hrsh7th/nvim-cmp",
 		},
-		{
-			"williamboman/nvim-lsp-installer",
-			disable = true,
-		},
 		["WhoIsSethDaniel/mason-tool-installer.nvim"] = {
 			run = ":MasonToolsUpdate",
 		},
 		{
 			"mfussenegger/nvim-jdtls",
+			-- ft = {
+			-- 	"java"
+			-- },
 			after = {
 				"nvim-lspconfig",
 			},

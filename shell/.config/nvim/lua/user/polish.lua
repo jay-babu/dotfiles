@@ -95,6 +95,27 @@ return function()
 			jdtls_setup()
 		end,
 	})
+
+	if vim.fn.has("wsl") == 1 then
+		vim.api.nvim_exec(
+			[[
+			let g:clipboard = {
+          \   'name': 'win32yank-wsl',
+          \   'copy': {
+          \      '+': 'win32yank.exe -i --crlf',
+          \      '*': 'win32yank.exe -i --crlf',
+          \    },
+          \   'paste': {
+          \      '+': 'win32yank.exe -o --lf',
+          \      '*': 'win32yank.exe -o --lf',
+          \   },
+          \   'cache_enabled': 0,
+          \ }
+		]],
+			true
+		)
+	end
+
 	-- Create an autocmd User PackerCompileDone to update it every time packer is compiled
 	-- vim.api.nvim_create_autocmd("User", {
 	-- 	pattern = "PackerCompileDone",

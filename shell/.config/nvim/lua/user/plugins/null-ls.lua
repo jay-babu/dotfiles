@@ -5,7 +5,7 @@ return function(config)
 	config.sources = {
 		-- Lua
 		b.formatting.stylua.with({}),
-		b.diagnostics.luacheck,
+		-- b.diagnostics.luacheck,
 
 		-- Shell
 		b.formatting.shfmt,
