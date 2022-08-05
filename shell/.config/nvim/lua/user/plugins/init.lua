@@ -149,10 +149,10 @@ return function(plugins)
 		},
 		{
 			"mfussenegger/nvim-jdtls",
-			-- ft = {
-			-- 	"java"
-			-- },
-			after = {
+			ft = {
+				"java",
+			},
+			requires = {
 				"nvim-lspconfig",
 			},
 		},
