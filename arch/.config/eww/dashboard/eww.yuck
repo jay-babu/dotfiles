@@ -221,7 +221,7 @@
 
 ;; background
 (defwindow background :stacking "fg" :focusable "false" :screen 1 
-	    :geometry (geometry :x 0 :y 0 :width "1920px" :height "1080px")
+	    :geometry (geometry :x 0 :y 0 :width "2560px" :height "1440px")
 					(bg))
 
 ;; profile
