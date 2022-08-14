@@ -75,13 +75,6 @@ return function(plugins)
 		},
 		{
 			"phaazon/hop.nvim",
-			-- cmd = {
-			-- 	"HopWord",
-			-- 	"HopPattern",
-			-- 	"HopChar1",
-			-- 	"HopChar2",
-			-- 	"HopLine",
-			-- },
 			event = {
 				"BufRead",
 				"BufNewFile",
@@ -155,6 +148,33 @@ return function(plugins)
 			requires = {
 				"nvim-lspconfig",
 			},
+		},
+		{
+			"nvim-neotest/neotest",
+			opt = true,
+			requires = {
+				"nvim-lua/plenary.nvim",
+				"nvim-treesitter/nvim-treesitter",
+				"antoinemadec/FixCursorHold.nvim",
+				"haydenmeade/neotest-jest",
+				"nvim-neotest/neotest-go",
+				"nvim-neotest/neotest-python",
+			},
+			module = "test",
+			config = function()
+				-- code
+				require("user.plugins.neotest")
+			end,
+		},
+		{
+			"vuki656/package-info.nvim",
+			opt = true,
+			module = "package-info",
+			requires = "MunifTanjim/nui.nvim",
+			config = function()
+				-- code
+				require("package-info").setup()
+			end,
 		},
 	}
 

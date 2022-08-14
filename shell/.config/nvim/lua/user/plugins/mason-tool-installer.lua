@@ -3,7 +3,7 @@ return {
 		"debugpy",
 		"delve",
 		"dockerfile-language-server",
-		"eslint-lsp",
+		--[[ "eslint-lsp", ]]
 		"eslint_d",
 		"gofumpt",
 		"golines",

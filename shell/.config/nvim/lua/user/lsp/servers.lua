@@ -2,7 +2,7 @@ return {
 	"ansiblels",
 	"cssls",
 	"dockerls",
-	"eslint",
+	--[[ "eslint", ]]
 	"gopls",
 	"graphql",
 	"html",

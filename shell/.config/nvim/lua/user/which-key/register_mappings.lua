@@ -88,6 +88,21 @@ return {
 					"Inspect",
 				},
 			},
+			n = {
+				name = "package.json",
+				i = {
+					function()
+						require("package-info").install()
+					end,
+					"Install a new dependency",
+				},
+				d = {
+					function()
+						require("package-info").delete()
+					end,
+					"Delete dependency on line",
+				},
+			},
 		},
 	},
 	v = {
