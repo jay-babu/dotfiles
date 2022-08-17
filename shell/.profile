@@ -36,6 +36,11 @@ if [ -d "$HOME/go/bin" ]; then
 	PATH="$HOME/go/bin:$PATH"
 fi
 
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/.local/share/gem/ruby/3.0.0/bin" ]; then
+	PATH="$HOME/.local/share/gem/ruby/3.0.0/bin:$PATH"
+fi
+
 alias v="nvim"
 export SHELL=$(which fish)
 export EDITOR="nvim"
