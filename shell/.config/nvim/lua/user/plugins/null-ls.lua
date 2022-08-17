@@ -28,6 +28,9 @@ return function(config)
 		-- Protobuf
 		b.formatting.protolint,
 		b.diagnostics.protolint,
+
+		-- Rust
+		b.formatting.rustfmt,
 	}
 	config.on_attach = function(client)
 		if client.resolved_capabilities.document_formatting then

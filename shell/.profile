@@ -39,3 +39,4 @@ fi
 alias v="nvim"
 
 export DESKTOP_SESSION="bspwm"
+. "$HOME/.cargo/env"
