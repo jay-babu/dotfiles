@@ -37,6 +37,8 @@ if [ -d "$HOME/go/bin" ]; then
 fi
 
 alias v="nvim"
+export SHELL=$(which fish)
+export EDITOR="nvim"
 
 export DESKTOP_SESSION="bspwm"
 . "$HOME/.cargo/env"

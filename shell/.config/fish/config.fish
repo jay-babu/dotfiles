@@ -8,11 +8,9 @@
 
 bass source ~/.profile
 
-set -Ux DONT_PROMPT_WSL_INSTALL true
+set -x DONT_PROMPT_WSL_INSTALL true
 
-set -Ux EDITOR nvim
-
-set -Ux XDEB_PKGROOT ~/.config/xdeb
+set -x XDEB_PKGROOT ~/.config/xdeb
 
 set sponge_delay 100
 
