@@ -179,6 +179,8 @@ xsetroot -cursor_name left_ptr
 setxkbmap dvorak
 xset r rate 200 25
 
+xinput set-prop 16 312 1
+
 # Restore wallpaper
 feh --no-fehbg --bg-fill "$CURRENT_WALLPAPER"
 
