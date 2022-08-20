@@ -11,29 +11,29 @@ terminal=" Alacritty"
 files=" Thunar"
 editor=" Geany"
 clifm=" Ranger"
-vim=" Vim"
+vim=" Neovim"
 
 # Variable passed to rofi
 options="$terminal\n$files\n$editor\n$clifm\n$vim"
-term='alacritty --class alacritty-float,alacritty-float --config-file /root/.config/bspwm/alacritty/alacritty.yml'
+term='alacritty --class alacritty-float,alacritty-float'
 
 # Functions
 
 chosen="$(echo -e "$options" | $rofi_cmd -p "Run apps as root" -dmenu -selected-row 0)"
 case $chosen in
-    $terminal)
-        bsproot "$term"
-        ;;
-    $files)
-        bsproot 'dbus-run-session thunar'
-        ;;
-    $editor)
-        bsproot geany
-        ;;
-    $clifm)
-        bsproot "$term -e ranger"
-        ;;
-    $vim)
-        bsproot "$term -e vim"
-        ;;
+$terminal)
+	bsproot "$term"
+	;;
+$files)
+	bsproot 'dbus-run-session thunar'
+	;;
+$editor)
+	bsproot geany
+	;;
+$clifm)
+	bsproot "$term -e ranger"
+	;;
+$vim)
+	bsproot "$term -e nvim"
+	;;
 esac
