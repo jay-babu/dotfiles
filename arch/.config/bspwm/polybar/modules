@@ -45,6 +45,9 @@ ramp-volume-foreground = ${color.BLUE}
 ramp-headphones-0 = 
 ramp-headphones-1 = 
 
+; Right and Middle click
+click-right = pavucontrol
+
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 
 [module/bna]
