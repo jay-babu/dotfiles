@@ -118,7 +118,7 @@ for i in ${office[@]}; do
 done
 
 ## 6 > communication (always open communication apps on workspace-6)
-declare -a comm=(Thunderbird TelegramDesktop Hexchat)
+declare -a comm=(Thunderbird TelegramDesktop Hexchat Signal)
 for i in ${comm[@]}; do
 	bspc rule -a $i desktop='^6' follow=on focus=on
 done
