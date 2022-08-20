@@ -367,7 +367,7 @@ content = ◆
 
 content-background = ${color.BACKGROUND}
 content-foreground = ${color.BLACK}
-content-padding = 2
+content-padding = 1
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 

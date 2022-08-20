@@ -47,7 +47,7 @@ font-1 = "Iosevka Nerd Font:size=22;3"
 font-2 = "google\-mdi:size=22;3"
 font-3 = "Iosevka:style=bold:"size=22;3"
 
-modules-left = mod sep updates sep bspwm
+modules-left = updates bspwm
 modules-center = mpd
 modules-right = volume sep hackspeed sep brightness sep network sep battery sep date
 
