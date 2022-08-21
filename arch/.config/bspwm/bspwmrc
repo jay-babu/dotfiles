@@ -58,7 +58,7 @@ workspaces() {
 	name=1
 	for monitor in $(bspc query -M); do
 		#bspc monitor ${monitor} -n "$name" -d 'I' 'II' 'III' 'IV' 'V' 'VI' 'VII' 'VIII'
-		bspc monitor ${monitor} -n "$name" -d '' '' '' '' '' '' '' ''
+		bspc monitor ${monitor} -n "$name" -d '' '' '' '' '' '' '' ''
 		let name++
 	done
 }
@@ -110,12 +110,15 @@ for i in ${code[@]}; do
 done
 
 ## 5 > office and docs (always open office/doc apps on workspace-5)
-declare -a office=(Gucharmap Atril Evince
-	libreoffice-writer libreoffice-calc libreoffice-impress
-	libreoffice-startcenter libreoffice Soffice *:libreofficedev *:soffice)
-for i in ${office[@]}; do
-	bspc rule -a $i desktop='^5' follow=on focus=on
+# declare -a office=(Gucharmap Atril Evince
+# 	libreoffice-writer libreoffice-calc libreoffice-impress
+# 	libreoffice-startcenter libreoffice Soffice *:libreofficedev *:soffice)
+
+declare -a gaming=(Steam)
+for i in ${gaming[@]}; do
+	bspc rule -a $i desktop='^5' follow=on focus=off state=floating
 done
+bspc rule -a 'Steam - News' state=floating focus=off
 
 ## 6 > communication (always open communication apps on workspace-6)
 declare -a comm=(Thunderbird TelegramDesktop Hexchat Signal)
