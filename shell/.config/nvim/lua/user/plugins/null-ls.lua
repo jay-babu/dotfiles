@@ -31,6 +31,8 @@ return function(config)
 
 		-- Rust
 		b.formatting.rustfmt,
+
+		b.code_actions.gitsigns,
 	}
 	config.on_attach = function(client)
 		if client.resolved_capabilities.document_formatting then
