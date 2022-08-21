@@ -184,6 +184,29 @@ return function(plugins)
 				"BufNewFile",
 			},
 		},
+		{
+			"folke/twilight.nvim",
+			opt = true,
+			event = {
+				"BufRead",
+				"BufNewFile",
+			},
+			config = function()
+				require("twilight").setup({
+					-- your configuration comes here
+					-- or leave it empty to use the default settings
+					-- refer to the configuration section below
+				})
+			end,
+		},
+		{
+			"Pocco81/true-zen.nvim",
+			after = "twilight.nvim",
+			config = function()
+				-- code
+				require("user.plugins.true-zen")
+			end,
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)

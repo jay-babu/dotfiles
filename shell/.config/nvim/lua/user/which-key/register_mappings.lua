@@ -103,6 +103,26 @@ return {
 					"Delete dependency on line",
 				},
 			},
+			z = {
+				f = {
+					function()
+						require("true-zen").focus()
+					end,
+					"True Zen Focus",
+				},
+				m = {
+					function()
+						require("true-zen").minimalist()
+					end,
+					"True Zen Minimalist",
+				},
+				a = {
+					function()
+						require("true-zen").ataraxis()
+					end,
+					"True Zen Ataraxis",
+				},
+			},
 		},
 	},
 	v = {
