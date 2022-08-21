@@ -16,57 +16,57 @@ get_status() {
 
 ## Get song
 get_song() {
-	song=`mpc -f %title% current`
+	song=$(mpc -f %title% current)
 	if [[ -z "$song" ]]; then
 		echo "Offline"
 	else
 		echo "$song"
-	fi	
+	fi
 }
 
 ## Get artist
 get_artist() {
-	artist=`mpc -f %artist% current`
+	artist=$(mpc -f %artist% current)
 	if [[ -z "$artist" ]]; then
 		echo "Offline"
 	else
 		echo "$artist"
-	fi	
+	fi
 }
 
 ## Get time
 get_time() {
-	time=`mpc status | grep "%)" | awk '{print $4}' | tr -d '(%)'`
+	time=$(mpc status | grep "%)" | awk '{print $4}' | tr -d '(%)')
 	if [[ -z "$time" ]]; then
 		echo "0"
 	else
 		echo "$time"
-	fi	
+	fi
 }
 get_ctime() {
-	ctime=`mpc status | grep "#" | awk '{print $3}' | sed 's|/.*||g'`
+	ctime=$(mpc status | grep "#" | awk '{print $3}' | sed 's|/.*||g')
 	if [[ -z "$ctime" ]]; then
 		echo "0:00"
 	else
 		echo "$ctime"
-	fi	
+	fi
 }
 get_ttime() {
-	ttime=`mpc -f %time% current`
+	ttime=$(mpc -f %time% current)
 	if [[ -z "$ttime" ]]; then
 		echo "0:00"
 	else
 		echo "$ttime"
-	fi	
+	fi
 }
 
 ## Get cover
 get_cover() {
-	ffmpeg -i "${MUSIC_DIR}/$(mpc current -f %file%)" "${COVER}" -y &> /dev/null
+	ffmpeg -i "${MUSIC_DIR}/$(mpc current -f %file%)" "${COVER}" -y &>/dev/null
 	STATUS=$?
 
 	# Check if the file has a embbeded album art
-	if [ "$STATUS" -eq 0 ];then
+	if [ "$STATUS" -eq 0 ]; then
 		echo "$COVER"
 	else
 		echo "images/music.png"
@@ -91,7 +91,13 @@ elif [[ "$1" == "--cover" ]]; then
 elif [[ "$1" == "--toggle" ]]; then
 	mpc -q toggle
 elif [[ "$1" == "--next" ]]; then
-	{ mpc -q next; get_cover; }
+	{
+		mpc -q next
+		get_cover
+	}
 elif [[ "$1" == "--prev" ]]; then
-	{ mpc -q prev; get_cover; }
+	{
+		mpc -q prev
+		get_cover
+	}
 fi

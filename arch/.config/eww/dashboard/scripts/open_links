@@ -3,13 +3,13 @@
 ## Open links in firefox
 FILE="$HOME/.cache/eww_launch.dashboard"
 CFG="$HOME/.config/eww/dashboard"
-EWW=`which eww`
-cmd="firefox --new-tab"
+EWW=$(which eww)
+cmd="vivaldi-stable"
 
 close_dash() {
 	${EWW} --config "$CFG" close \
-					background profile system clock uptime music github \
-					reddit twitter youtube weather apps mail logout sleep reboot poweroff folders
+		background profile system clock uptime music github \
+		reddit twitter youtube weather apps mail logout sleep reboot poweroff folders
 	rm -rf "$FILE"
 }
 
