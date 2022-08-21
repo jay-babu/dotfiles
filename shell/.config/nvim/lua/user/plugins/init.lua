@@ -40,6 +40,16 @@ return function(plugins)
 			after = "nvim-treesitter",
 		},
 		{
+			"nvim-treesitter/nvim-treesitter-context",
+			after = "nvim-treesitter",
+			config = {
+				require("treesitter-context").setup({
+					enable = true,
+					trim_scope = "outer",
+				}),
+			},
+		},
+		{
 			"andymass/vim-matchup",
 			after = "nvim-treesitter",
 		},
