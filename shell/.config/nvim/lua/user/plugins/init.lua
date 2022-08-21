@@ -176,6 +176,14 @@ return function(plugins)
 				require("package-info").setup()
 			end,
 		},
+		{
+			"f-person/git-blame.nvim",
+			opt = true,
+			event = {
+				"BufRead",
+				"BufNewFile",
+			},
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
