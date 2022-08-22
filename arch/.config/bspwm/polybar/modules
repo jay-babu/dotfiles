@@ -250,7 +250,7 @@ type = internal/date
 
 interval = 1.0
 
-time = %B %d | %H:%M:%S
+time = %b %d | %H:%M:%S
 time-alt = %A, %d %B %Y
 
 format = <label>
