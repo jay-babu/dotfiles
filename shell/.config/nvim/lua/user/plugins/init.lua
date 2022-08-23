@@ -220,6 +220,23 @@ return function(plugins)
 				require("user.plugins.true-zen")
 			end,
 		},
+		["ziontee113/syntax-tree-surfer"] = {
+			cmd = {
+				"STSSelectChildNode",
+				"STSSelectCurrentNode",
+				"STSSelectMasterNode",
+				"STSSelectNextSiblingNode",
+				"STSSelectParentNode",
+				"STSSelectPrevSiblingNode",
+				"STSSwapDownNormal",
+				"STSSwapNextVisual",
+				"STSSwapPrevVisual",
+				"STSSwapUpNormal",
+			},
+			config = function()
+				require("user.plugins.syntax-tree-surfer")
+			end,
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)

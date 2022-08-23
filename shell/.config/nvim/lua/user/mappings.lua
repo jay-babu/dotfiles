@@ -18,6 +18,11 @@ return {
 		["<S-s>"] = {
 			"<cmd>lua require('hop').hint_lines()<cr>",
 		},
+		-- Treesitter Surfer
+		["<c-down>"] = { "<cmd>STSSwapDownNormal<cr>", desc = "Swap next tree-sitter object" },
+		["<c-right>"] = { "<cmd>STSSwapDownNormal<cr>", desc = "Swap next tree-sitter object" },
+		["<c-up>"] = { "<cmd>STSSwapUpNormal<cr>", desc = "Swap previous tree-sitter object" },
+		["<c-left>"] = { "<cmd>STSSwapUpNormal<cr>", desc = "Swap previous tree-sitter object" },
 	},
 	v = {
 		["s"] = {
@@ -38,5 +43,15 @@ return {
 	[""] = {
 		[":"] = { ";" },
 		[";"] = { ":" },
+	},
+	x = {
+		["J"] = { "<cmd>STSSelectNextSiblingNode<cr>", desc = "Surf next tree-sitter object" },
+		["K"] = { "<cmd>STSSelectPrevSiblingNode<cr>", desc = "Surf previous tree-sitter object" },
+		["H"] = { "<cmd>STSSelectParentNode<cr>", desc = "Surf parent tree-sitter object" },
+		["L"] = { "<cmd>STSSelectChildNode<cr>", desc = "Surf child tree-sitter object" },
+		["<c-j>"] = { "<cmd>STSSwapNextVisual<cr>", desc = "Surf next tree-sitter object" },
+		["<c-l>"] = { "<cmd>STSSwapNextVisual<cr>", desc = "Surf next tree-sitter object" },
+		["<c-k>"] = { "<cmd>STSSwapPrevVisual<cr>", desc = "Surf previous tree-sitter object" },
+		["<c-h>"] = { "<cmd>STSSwapPrevVisual<cr>", desc = "Surf previous tree-sitter object" },
 	},
 }

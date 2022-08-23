@@ -123,6 +123,11 @@ return {
 					"True Zen Ataraxis",
 				},
 			},
+			s = {
+				name = "Surf",
+				s = { "<cmd>STSSelectMasterNode<cr>", "Surf" },
+				S = { "<cmd>STSSelectCurrentNode<cr>", "Surf Node" },
+			},
 		},
 	},
 	v = {
