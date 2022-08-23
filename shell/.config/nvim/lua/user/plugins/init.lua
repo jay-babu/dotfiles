@@ -158,6 +158,9 @@ return function(plugins)
 			requires = {
 				"nvim-lspconfig",
 			},
+			config = function()
+				require("user.plugins.nvim-jdtls")
+			end,
 		},
 		{
 			"nvim-neotest/neotest",
