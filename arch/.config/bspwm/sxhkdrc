@@ -57,23 +57,27 @@ ctrl + alt + l
 
 # Take a screenshot
 Print
-	takeshot --now
+	shot --now
 	
-# Take screenshot in 5 second
-alt + Print	
-	takeshot --in5
+# Take t in 5 second
+# alt + Print	
+#	shot --in5
 
 # Take screenshot in 10 second
 shift + Print	
-	takeshot --in10
+	shot --in10
 
 # Take screenshot of active window
 ctrl + Print
-	takeshot --win
+	shot --win
 
 # Take screenshot of area
 ctrl + alt + Print
-	takeshot --area
+	shot --area
+
+# QR Code to Clipboard Text
+alt + Print
+	shot --scan
 
 # Brighness control
 XF86MonBrightness{Up,Down}
