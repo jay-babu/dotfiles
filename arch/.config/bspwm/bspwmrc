@@ -116,7 +116,7 @@ done
 
 declare -a gaming=(Steam)
 for i in ${gaming[@]}; do
-	bspc rule -a $i desktop='^5' follow=on focus=off state=floating
+	bspc rule -a $i desktop='^5' follow=on focus=on state=floating
 done
 bspc rule -a 'Steam - News' state=floating focus=off
 
