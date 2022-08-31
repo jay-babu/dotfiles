@@ -12,6 +12,7 @@ return function(default)
 			"java",
 			"javascript",
 			"json",
+			"kotlin",
 			"lua",
 			"make",
 			"markdown",
