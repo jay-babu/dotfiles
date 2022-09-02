@@ -31,6 +31,16 @@ return function(plugins)
 							enable_ui = true,
 						},
 						aerial = true,
+						treesitter_context = true,
+						notify = true,
+						gitsigns = true,
+						cmp = true,
+						telescope = true,
+						treesitter = true,
+						nvimtree = true,
+						native_lsp = {
+							enabled = true,
+						},
 					},
 				})
 			end,
