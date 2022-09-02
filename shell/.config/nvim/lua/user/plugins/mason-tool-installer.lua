@@ -3,7 +3,6 @@ return {
 		"debugpy",
 		"delve",
 		"dockerfile-language-server",
-		--[[ "eslint-lsp", ]]
 		"eslint_d",
 		"gofumpt",
 		"golines",
@@ -19,6 +18,7 @@ return {
 		"shfmt",
 		"solidity",
 		"staticcheck",
+		"stylua",
 	},
 	auto_update = true,
 	run_on_start = false,
