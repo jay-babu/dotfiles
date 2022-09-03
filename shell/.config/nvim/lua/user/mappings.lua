@@ -1,5 +1,9 @@
 return {
 	n = {
+		["<C-Down>"] = false,
+		["<C-Left>"] = false,
+		["<C-Right>"] = false,
+		["<C-Up>"] = false,
 		["<leader>a"] = {
 			function()
 				require("harpoon.mark").add_file()
