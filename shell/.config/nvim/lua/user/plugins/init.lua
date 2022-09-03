@@ -52,6 +52,11 @@ return function(plugins)
 		{
 			"kylechui/nvim-surround",
 			tag = "*", -- Use for stability; omit to use `main` branch for the latest features
+			opt = true,
+			event = {
+				"BufRead",
+				"BufNewFile",
+			},
 			config = function()
 				require("nvim-surround").setup({})
 			end,
@@ -252,6 +257,16 @@ return function(plugins)
 			},
 			config = function()
 				require("user.plugins.syntax-tree-surfer")
+			end,
+		},
+		["petertriho/nvim-scrollbar"] = {
+			opt = true,
+			event = {
+				"BufRead",
+				"BufNewFile",
+			},
+			config = function()
+				require("scrollbar").setup()
 			end,
 		},
 	}
