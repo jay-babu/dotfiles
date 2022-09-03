@@ -4,6 +4,7 @@ return {
 		["<C-Left>"] = false,
 		["<C-Right>"] = false,
 		["<C-Up>"] = false,
+		["<C-s>"] = false,
 		["<leader>a"] = {
 			function()
 				require("harpoon.mark").add_file()
@@ -15,8 +16,22 @@ return {
 				require("hop").hint_words()
 			end,
 		},
-		["<C-e>"] = {
-			"<cmd>Telescope harpoon marks<cr>",
+		["<c-e>"] = {
+			function()
+				require("harpoon.ui").toggle_quick_menu()
+			end,
+			desc = "View Harpoon Marks",
+		},
+		["<c-t>"] = {
+			function()
+				require("harpoon.ui").nav_prev()
+			end,
+			desc = "View Harpoon Marks",
+		},
+		["<c-s>"] = {
+			function()
+				require("harpoon.ui").nav_next()
+			end,
 			desc = "View Harpoon Marks",
 		},
 		["<S-s>"] = {
