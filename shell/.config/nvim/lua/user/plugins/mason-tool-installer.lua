@@ -7,6 +7,7 @@ return {
 		"gofumpt",
 		"golines",
 		"gotests",
+		"chrome-debug-adapter",
 		"impl",
 		"json-to-struct",
 		"kotlin-language-server",

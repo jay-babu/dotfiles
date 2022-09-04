@@ -52,6 +52,64 @@ dap.configurations.go = {
 	},
 }
 
+dap.adapters.chrome = {
+	type = "executable",
+	command = "node",
+	args = { vim.fn.stdpath("data") .. "/mason/packages/chrome-debug-adapter/out/src/chromeDebug.js" }, -- TODO adjust
+}
+
+dap.configurations.javascript = { -- change this to javascript if needed
+	{
+		type = "chrome",
+		request = "attach",
+		program = "${file}",
+		cwd = vim.fn.getcwd(),
+		sourceMaps = true,
+		protocol = "inspector",
+		port = 9222,
+		webRoot = "${workspaceFolder}",
+	},
+}
+
+dap.configurations.javascriptreact = { -- change this to javascript if needed
+	{
+		type = "chrome",
+		request = "attach",
+		program = "${file}",
+		cwd = vim.fn.getcwd(),
+		sourceMaps = true,
+		protocol = "inspector",
+		port = 9222,
+		webRoot = "${workspaceFolder}",
+	},
+}
+
+dap.configurations.typescript = { -- change to typescript if needed
+	{
+		type = "chrome",
+		request = "attach",
+		program = "${file}",
+		cwd = vim.fn.getcwd(),
+		sourceMaps = true,
+		protocol = "inspector",
+		port = 9222,
+		webRoot = "${workspaceFolder}",
+	},
+}
+
+dap.configurations.typescriptreact = { -- change to typescript if needed
+	{
+		type = "chrome",
+		request = "attach",
+		program = "${file}",
+		cwd = vim.fn.getcwd(),
+		sourceMaps = true,
+		protocol = "inspector",
+		port = 9222,
+		webRoot = "${workspaceFolder}",
+	},
+}
+
 vim.fn.sign_define("DapStopped", { text = "", texthl = "DiagnosticWarn" })
 vim.fn.sign_define("DapBreakpoint", { text = "", texthl = "DiagnosticInfo" })
 vim.fn.sign_define("DapBreakpointRejected", { text = "", texthl = "DiagnosticError" })
