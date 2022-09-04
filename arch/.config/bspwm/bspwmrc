@@ -188,7 +188,7 @@ xinput set-prop 16 312 1
 
 # Restore wallpaper
 # back4.sh 0.010 ~/Downloads/naruto.gif &
-/home/archy/code/linux-wallpaperengine/build/linux-wallpaperengine --fps 60 --screen-root "eDP" 2032630680
+/home/archy/code/linux-wallpaperengine/build/linux-wallpaperengine --fps 60 --screen-root "eDP" 2032630680 &
 # feh --no-fehbg --bg-fill "$CURRENT_WALLPAPER"
 
 # Start mpd
