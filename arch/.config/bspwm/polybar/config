@@ -49,7 +49,7 @@ font-3 = "Iosevka:style=bold:"size=22;3"
 
 modules-left = updates bspwm
 modules-center = mpd
-modules-right = volume sep hackspeed sep brightness sep network sep battery sep date
+modules-right = volume sep hackspeed sep brightness sep network sep battery sep date sep powermenu
 
 separator =
 spacing = 0

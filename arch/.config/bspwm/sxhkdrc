@@ -177,7 +177,4 @@ alt + shift + {Left,Down,Up,Right}
 super + shift + i
 	winmask		
 
-# Open / Close Dashboard
-super + d
-  ~/.config/eww/dashboard/launch_dashboard
 ##---------- EOF ----------##

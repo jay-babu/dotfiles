@@ -191,6 +191,8 @@ xinput set-prop 16 312 1
 /home/archy/code/linux-wallpaperengine/build/linux-wallpaperengine --fps 60 --screen-root "eDP" 2032630680 &
 # feh --no-fehbg --bg-fill "$CURRENT_WALLPAPER"
 
+eww daemon &
+
 # Start mpd
 exec mpd &
 

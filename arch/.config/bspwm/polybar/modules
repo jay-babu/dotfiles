@@ -384,6 +384,16 @@ exec = ~/.config/polybar/polybar-scripts/polybar-scripts/updates-pacman/updates-
 interval = 600
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+
+[module/powermenu]
+type = custom/text
+content = " "
+content-foreground = ${color.RED}
+click-left = eww open-many --toggle background-closer powermenu 
+content-padding = 0
+content-font = 5
+
+;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 ;;	    __________  ______
 ;;	   / ____/ __ \/ ____/
 ;;	  / __/ / / / / /_    
