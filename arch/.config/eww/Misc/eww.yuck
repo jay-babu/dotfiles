@@ -1,5 +1,6 @@
 ;;variables
 (defpoll greeting :interval "10h" "Misc/scripts/quote")
+(defvar uptime :interval "10h" "uptime -p | sed -e 's/up //g'")
 (defvar volume-hidden false)
 (defvar volume-level 50)
 (defvar volume-muted false)
@@ -10,11 +11,12 @@
 (defwidget powermenu[]
   (box :class "main-box" :orientation "v" :space-evenly "false"
     (label :class "greeting" :text greeting :space-evenly "false")
+    (label :class "greeting" :text uptime :space-evenly "false")
     (box :class "main-buttons-box" :orientation "h" :space-evenly "false"
-      (button :tooltip "Shutdown your PC." :class "shutdown" :onclick "shutdown now" "襤")
-      (button :tooltip "Reboot your PC." :class "reboot" :onclick "reboot" "ﰇ")
+      (button :tooltip "Shutdown your PC." :class "shutdown" :onclick "systemctl poweroff" "襤")
+      (button :tooltip "Reboot your PC." :class "reboot" :onclick "systemctl reboot" "ﰇ")
       (button :tooltip "Restart BSPWM." :class "exit" :onclick "bspc wm -r" "")
-      (button :tooltip "Lock" :class "lock" :onclick "$HOME/.scripts/lock" ""))))
+      (button :tooltip "Lock" :class "lock" :onclick "betterlockscreen --lock" ""))))
 
 (defwidget volume-indicator[]
   (box :class "volume-window"
