@@ -32,8 +32,11 @@ ctrl + alt + t
 	sh ~/.config/bspwm/rofi/bin/themes
 
 # Rofi Menus/Applets
-super + {w,m,x,r,s}
-	sh ~/.config/bspwm/rofi/bin/{windows,mpd,powermenu,asroot,screenshot}
+super + {w,m,r,s}
+	sh ~/.config/bspwm/rofi/bin/{windows,mpd,asroot,screenshot}
+
+super + x
+  eww open-many --toggle background-closer powermenu
 
 ##---------- Applications ----------##
 
