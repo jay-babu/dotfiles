@@ -158,6 +158,10 @@ bspc rule -a stalonetray state=floating manage=off
 killall -9 xsettingsd sxhkd dunst ksuperkey xfce4-power-manager
 # kill -9 $(ps aux | grep "back4.sh" | awk '{print $2}')
 kill -9 $(ps aux | grep "linux-wallpaperengine" | awk '{print $2}')
+## Launch dunst daemon
+if [[ $(pidof eww) ]]; then
+	pkill eww
+fi
 
 # Lauch xsettingsd daemon
 xsettingsd --config="$BSPDIR"/xsettingsd &
