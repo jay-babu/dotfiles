@@ -23,32 +23,32 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 source "$BSPDIR"/themes/current.bash
 
 ## Get the wallpaper from theme file
-CURRENT_WALLPAPER="$wallpaper"
+# CURRENT_WALLPAPER="$wallpaper"
 
 ## Get the colors from theme file
-FOREGROUND="$foreground"
+# FOREGROUND="$foreground"
 BACKGROUND="$background"
-CURSOR="$cursor"
-BLACK="$color0"
-RED="$color1"
+# CURSOR="$cursor"
+# BLACK="$color0"
+# RED="$color1"
 GREEN="$color2"
-YELLOW="$color3"
+# YELLOW="$color3"
 BLUE="$color4"
 MAGENTA="$color5"
-CYAN="$color6"
-WHITE="$color7"
-ALTBLACK="$color8"
-ALTRED="$color9"
-ALTGREEN="$color10"
-ALTYELLOW="$color11"
-ALTBLUE="$color12"
-ALTMAGENTA="$color13"
-ALTCYAN="$color14"
-ALTWHITE="$color15"
+# CYAN="$color6"
+# WHITE="$color7"
+# ALTBLACK="$color8"
+# ALTRED="$color9"
+# ALTGREEN="$color10"
+# ALTYELLOW="$color11"
+# ALTBLUE="$color12"
+# ALTMAGENTA="$color13"
+# ALTCYAN="$color14"
+# ALTWHITE="$color15"
 
 ## Bspwm appearance
 CURRENT_BORDER='1'
-CURRENT_GAP='10'
+CURRENT_GAP='5'
 CURRENT_SRATIO='0.50'
 
 ## Configurations --------------------------------------------#
@@ -58,8 +58,8 @@ workspaces() {
 	name=1
 	for monitor in $(bspc query -M); do
 		#bspc monitor ${monitor} -n "$name" -d 'I' 'II' 'III' 'IV' 'V' 'VI' 'VII' 'VIII'
-		bspc monitor ${monitor} -n "$name" -d '' '' '' '' '' '' '' ''
-		let name++
+		bspc monitor "${monitor}" -n "$name" -d '' '' '' '' '' '' '' ''
+		((name++)) || true
 	done
 }
 workspaces
@@ -86,7 +86,7 @@ bspc wm --adopt-orphans
 ## Window rules ----------------------------------------------#
 
 # remove all rules first
-bspc rule -r *:*
+bspc rule -r ./*:*
 
 ## 1 > terminal (always open terminal on workspace-1)
 bspc rule -a Alacritty desktop='^1' follow=on focus=on
@@ -99,14 +99,14 @@ bspc rule -a chromium desktop='^2' follow=on focus=on
 
 ## 3 > files (always open file manager on workspace-3)
 declare -a files=(Pcmanfm Thunar qBittorrent)
-for i in ${files[@]}; do
-	bspc rule -a $i desktop='^3' follow=on focus=on
+for i in "${files[@]}"; do
+	bspc rule -a "$i" desktop='^3' follow=on focus=on
 done
 
 ## 4 > code (always open editors on workspace-4)
 declare -a code=(Geany code-oss)
-for i in ${code[@]}; do
-	bspc rule -a $i desktop='^4' follow=on focus=on
+for i in "${code[@]}"; do
+	bspc rule -a "$i" desktop='^4' follow=on focus=on
 done
 
 ## 5 > office and docs (always open office/doc apps on workspace-5)
@@ -115,21 +115,21 @@ done
 # 	libreoffice-startcenter libreoffice Soffice *:libreofficedev *:soffice)
 
 declare -a gaming=(Steam)
-for i in ${gaming[@]}; do
-	bspc rule -a $i desktop='^5' follow=on focus=on state=floating
+for i in "${gaming[@]}"; do
+	bspc rule -a "$i" desktop='^5' follow=on focus=on state=floating
 done
-bspc rule -a 'Steam - News' state=floating focus=off
+bspc rule -a 'Steam - News' desktop='^5' state=floating focus=off
 
 ## 6 > communication (always open communication apps on workspace-6)
 declare -a comm=(Thunderbird TelegramDesktop Hexchat Signal)
-for i in ${comm[@]}; do
-	bspc rule -a $i desktop='^6' follow=on focus=on
+for i in "${comm[@]}"; do
+	bspc rule -a "$i" desktop='^6' follow=on focus=on
 done
 
 ## 7 > media (always open media apps on workspace-7)
 declare -a media=(Audacity Music MPlayer Lxmusic Inkscape Gimp-2.10 obs)
-for i in ${media[@]}; do
-	bspc rule -a $i desktop='^7' state=floating follow=on focus=on
+for i in "${media[@]}"; do
+	bspc rule -a "$i" desktop='^7' state=floating follow=on focus=on
 done
 
 ## 8 > system (always open system apps on workspace-8)
@@ -138,15 +138,15 @@ bspc rule -a GParted desktop='^8' follow=on focus=on
 declare -a settings=(Lxappearance Lxtask Lxrandr Arandr
 	System-config-printer.py Pavucontrol Exo-helper-1
 	Xfce4-power-manager-settings)
-for i in ${settings[@]}; do
-	bspc rule -a $i desktop='^8' state=floating follow=on focus=on
+for i in "${settings[@]}"; do
+	bspc rule -a "$i" desktop='^8' state=floating follow=on focus=on
 done
 
 ## Always Floating Apps
 declare -a floating=(alacritty-float Pcmanfm Thunar Onboard Yad 'Firefox:Places'
 	Viewnior feh Nm-connection-editor)
-for i in ${floating[@]}; do
-	bspc rule -a $i state=floating follow=on focus=on
+for i in "${floating[@]}"; do
+	bspc rule -a "$i" state=floating follow=on focus=on
 done
 
 bspc rule -a Conky state=floating manage=off

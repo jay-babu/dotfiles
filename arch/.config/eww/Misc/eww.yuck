@@ -1,6 +1,6 @@
 ;;variables
 (defpoll greeting :interval "10h" "Misc/scripts/quote")
-(defvar uptime :interval "10h" "uptime -p | sed -e 's/up //g'")
+(defpoll uptime :interval "10h" "uptime -p | sed -e 's/up //g'")
 (defvar volume-hidden false)
 (defvar volume-level 50)
 (defvar volume-muted false)
