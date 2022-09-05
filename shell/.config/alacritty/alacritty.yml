@@ -332,7 +332,7 @@ shell:
  args:
    - --login
    - -c
-   - "tmux attach || tmux"
+   - "tmux attach -t main || tmux new-session -s main"
 
 # Startup directory
 #
