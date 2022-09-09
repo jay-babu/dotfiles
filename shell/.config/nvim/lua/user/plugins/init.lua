@@ -269,6 +269,17 @@ return function(plugins)
 				require("scrollbar").setup()
 			end,
 		},
+		["jayp0521/mason-null-ls.nvim"] = {
+			after = {
+				"null-ls.nvim",
+				"mason.nvim",
+			},
+			config = function()
+				require("mason-null-ls").setup({
+					automatic_installation = true,
+				})
+			end,
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
