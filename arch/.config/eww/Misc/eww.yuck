@@ -15,8 +15,10 @@
     (box :class "main-buttons-box" :orientation "h" :space-evenly "false"
       (button :tooltip "Shutdown your PC." :class "shutdown" :onclick "systemctl poweroff" "襤")
       (button :tooltip "Reboot your PC." :class "reboot" :onclick "systemctl reboot" "ﰇ")
+      (button :tooltip "Suspend" :class "suspend" :onclick "betterlockscreen --suspend&" "鈴")
       (button :tooltip "Restart BSPWM." :class "exit" :onclick "bspc wm -r" "")
-      (button :tooltip "Lock" :class "lock" :onclick "betterlockscreen --lock" ""))))
+      (button :tooltip "Lock" :class "lock" :onclick "betterlockscreen --lock" "")
+      )))
 
 (defwidget volume-indicator[]
   (box :class "volume-window"

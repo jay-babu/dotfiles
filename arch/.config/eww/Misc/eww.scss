@@ -42,7 +42,9 @@
 
 .reboot:hover,
 .shutdown:hover,
-.exit:hover {
+.exit:hover,
+.lock:hover,
+.suspend:hover {
   background-color: $bg-alt;
 }
 
@@ -58,6 +60,15 @@
 .lock {
   background-color: $bg;
   color: $yellow;
+  border-radius: 30px;
+  padding: 20px 50px;
+  margin: 20px 20px 20px 0px;
+  font-size: 80px;
+}
+
+.suspend {
+  background-color: $bg;
+  color: $purple;
   border-radius: 30px;
   padding: 20px 50px;
   margin: 20px 20px 20px 0px;
