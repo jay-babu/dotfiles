@@ -22,6 +22,9 @@ if status is-interactive
     function cd 
         builtin cd $argv && exa -a -F --icons
     end
+
+    # Enable VI Mode
+    fish_vi_key_bindings
 end
 
 # Start X at login
