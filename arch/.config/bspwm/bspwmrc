@@ -186,8 +186,10 @@ xsetroot -cursor_name left_ptr
 
 # Fix keyboard in launcher
 setxkbmap dvorak
+setxkbmap -option caps:escape
 xset r rate 200 25
 
+# Natural scrolling on
 xinput set-prop 16 312 1
 
 # Restore wallpaper
