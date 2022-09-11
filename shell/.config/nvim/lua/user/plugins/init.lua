@@ -97,12 +97,15 @@ return function(plugins)
 			"ThePrimeagen/git-worktree.nvim",
 			requires = {
 				"nvim-lua/plenary.nvim",
-				"nvim-telescope/telescope.nvim",
+			},
+			after = {
+				"telescope.nvim",
 			},
 			config = function()
 				require("git-worktree").setup({
 					autopush = true,
 				})
+				require("telescope").load_extension("git_worktree")
 			end,
 		},
 		{
