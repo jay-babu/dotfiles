@@ -26,13 +26,13 @@ return {
 			function()
 				require("harpoon.ui").nav_prev()
 			end,
-			desc = "View Harpoon Marks",
+			desc = "Harpoon Marks Previous",
 		},
 		["<c-s>"] = {
 			function()
 				require("harpoon.ui").nav_next()
 			end,
-			desc = "View Harpoon Marks",
+			desc = "Harpoon Marks Next",
 		},
 		["<S-s>"] = {
 			"<cmd>lua require('hop').hint_lines()<cr>",
