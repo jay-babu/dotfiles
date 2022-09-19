@@ -283,6 +283,13 @@ return function(plugins)
 				})
 			end,
 		},
+		["romainl/vim-cool"] = {
+			opt = true,
+			event = {
+				"BufRead",
+				"BufNewFile",
+			},
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
