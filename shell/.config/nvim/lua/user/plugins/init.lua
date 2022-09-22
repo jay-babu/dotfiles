@@ -290,6 +290,14 @@ return function(plugins)
 				"BufNewFile",
 			},
 		},
+		["ellisonleao/glow.nvim"] = {
+			ft = "markdown",
+			config = function()
+				require("glow").setup({
+					width = 120,
+				})
+			end,
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
