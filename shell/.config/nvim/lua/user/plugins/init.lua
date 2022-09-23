@@ -298,6 +298,27 @@ return function(plugins)
 				})
 			end,
 		},
+		["sindrets/diffview.nvim"] = {
+			opt = true,
+			event = {
+				"BufRead",
+				"BufNewFile",
+			},
+			requires = "nvim-lua/plenary.nvim",
+			config = function()
+				local actions = require("diffview.actions")
+
+				require("diffview").setup({
+					enhanced_diff_hl = true,
+					keymaps = {
+						view = {
+							["<leader>b"] = false,
+							["<leader>o"] = actions.toggle_files,
+						},
+					},
+				})
+			end,
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
