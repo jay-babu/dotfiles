@@ -319,6 +319,18 @@ return function(plugins)
 				})
 			end,
 		},
+		["jayp0521/mason-nvim-dap"] = {
+			opt = true,
+			after = {
+				"mason.nvim",
+				"nvim-dap",
+			},
+			config = function()
+				require("mason-nvim-dap").setup({
+					automatic_installation = true,
+				})
+			end,
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
