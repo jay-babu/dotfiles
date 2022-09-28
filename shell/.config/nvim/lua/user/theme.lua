@@ -50,6 +50,8 @@ function M.telescope_theme()
 	set_fg_bg("LvimInfoIdentifier", colors.red, colors.bg_alt)
 	set_bg("TelescopeSelection", colors.bg_alt)
 	set_bg("TelescopeNormal", colors.bg)
+	vim.cmd("highlight Normal guibg=none")
+	vim.cmd("highlight NonText guibg=none")
 end
 
 return M

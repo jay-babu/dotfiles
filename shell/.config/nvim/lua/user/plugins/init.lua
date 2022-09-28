@@ -331,6 +331,14 @@ return function(plugins)
 				})
 			end,
 		},
+		["andweeb/presence.nvim"] = {
+			opt = true,
+			config = function()
+				require("presence"):setup({
+					log_level = "debug",
+				})
+			end,
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
