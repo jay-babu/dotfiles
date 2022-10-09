@@ -320,7 +320,6 @@ return function(plugins)
 			end,
 		},
 		["jayp0521/mason-nvim-dap"] = {
-			opt = true,
 			after = {
 				"mason.nvim",
 				"nvim-dap",

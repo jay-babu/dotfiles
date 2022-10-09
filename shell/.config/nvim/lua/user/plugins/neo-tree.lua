@@ -6,6 +6,8 @@ return {
 			hide_gitignored = false,
 		},
 	},
+	sort_case_insensitive = true,
+	group_empty_dirs = true,
 	renderers = {
 		directory = {
 			{ "indent" },
@@ -29,5 +31,9 @@ return {
 			{ "diagnostics" },
 			{ "git_status" },
 		},
+	},
+	window = {
+		position = "float",
+		width = "100%",
 	},
 }
