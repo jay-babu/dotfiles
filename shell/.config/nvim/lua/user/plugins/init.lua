@@ -172,9 +172,6 @@ return function(plugins)
 			end,
 			requires = "hrsh7th/nvim-cmp",
 		},
-		["WhoIsSethDaniel/mason-tool-installer.nvim"] = {
-			run = ":MasonToolsUpdate",
-		},
 		{
 			"mfussenegger/nvim-jdtls",
 			ft = {
@@ -328,6 +325,13 @@ return function(plugins)
 				require("mason-nvim-dap").setup({
 					automatic_installation = true,
 				})
+			end,
+		},
+		["WhoIsSethDaniel/mason-tool-installer.nvim"] = {
+			after = "mason.nvim",
+			run = ":MasonToolsUpdate",
+			config = function()
+				require("mason-tool-installer").setup(require("user.plugins.mason-tool-installer"))
 			end,
 		},
 		["andweeb/presence.nvim"] = {

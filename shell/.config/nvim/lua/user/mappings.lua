@@ -1,5 +1,6 @@
 return {
 	n = {
+		["<C-\\>"] = { "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
 		["<C-Down>"] = false,
 		["<C-Left>"] = false,
 		["<C-Right>"] = false,
