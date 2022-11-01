@@ -1,6 +1,6 @@
 return {
 	auto_reload = true,
 	auto_quit = true,
-	channel = "stable",
+	channel = "nightly",
 	skip_prompts = true,
 }
