@@ -77,11 +77,11 @@ return function(default)
 	-- vim.o.foldtext =
 	-- 	[[substitute(getline(v:foldstart),'\\t',repeat('\ ',&tabstop),'g').'...'.trim(getline(v:foldend)) . ' (' . (v:foldend - v:foldstart + 1) . ' lines)']]
 	-- https://www.reddit.com/r/neovim/comments/psl8rq/sexy_folds/
-	vim.o.foldnestmax = 3
-	vim.o.foldlevel = 0
-	vim.o.foldexpr = "nvim_treesitter#foldexpr()"
-	vim.o.foldmethod = "expr"
-	vim.o.foldtext =
-		[[substitute(getline(v:foldstart),'\\t',repeat('\ ',&tabstop),'g').'...'.trim(getline(v:foldend)) . ' (' . (v:foldend - v:foldstart + 1) . ' lines)']]
+	-- vim.o.foldnestmax = 3
+	-- vim.o.foldlevel = 0
+	-- vim.o.foldexpr = "nvim_treesitter#foldexpr()"
+	-- vim.o.foldmethod = "expr"
+	-- vim.o.foldtext =
+	-- 	[[substitute(getline(v:foldstart),'\\t',repeat('\ ',&tabstop),'g').'...'.trim(getline(v:foldend)) . ' (' . (v:foldend - v:foldstart + 1) . ' lines)']]
 	return vim.tbl_deep_extend("force", default, overrides)
 end
