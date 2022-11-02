@@ -269,31 +269,12 @@ return function(plugins)
 				require("scrollbar").setup()
 			end,
 		},
-		["jayp0521/mason-null-ls.nvim"] = {
-			after = {
-				"null-ls.nvim",
-				"mason.nvim",
-			},
-			config = function()
-				require("mason-null-ls").setup({
-					automatic_installation = true,
-				})
-			end,
-		},
 		["romainl/vim-cool"] = {
 			opt = true,
 			event = {
 				"BufRead",
 				"BufNewFile",
 			},
-		},
-		["ellisonleao/glow.nvim"] = {
-			ft = "markdown",
-			config = function()
-				require("glow").setup({
-					width = 120,
-				})
-			end,
 		},
 		["sindrets/diffview.nvim"] = {
 			opt = true,
@@ -332,14 +313,6 @@ return function(plugins)
 			run = ":MasonToolsUpdate",
 			config = function()
 				require("mason-tool-installer").setup(require("user.plugins.mason-tool-installer"))
-			end,
-		},
-		["andweeb/presence.nvim"] = {
-			opt = true,
-			config = function()
-				require("presence"):setup({
-					log_level = "debug",
-				})
 			end,
 		},
 	}
