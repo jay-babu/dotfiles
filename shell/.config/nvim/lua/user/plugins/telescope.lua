@@ -42,6 +42,7 @@ return function(default)
 			file_ignore_patterns = {
 				".git",
 				"node_modules",
+				".bemol",
 			},
 			preview = {
 				mime_hook = function(filepath, bufnr, opts)
@@ -58,6 +59,7 @@ return function(default)
 								vim.api.nvim_chan_send(term, d .. "\r\n")
 							end
 						end
+
 						vim.fn.jobstart({
 							"catimg",
 							filepath, -- Terminal image viewer command

@@ -92,6 +92,7 @@ return function(plugins)
 		},
 		{
 			"vimpostor/vim-tpipeline",
+			disable = true,
 		},
 		{
 			"ThePrimeagen/git-worktree.nvim",
