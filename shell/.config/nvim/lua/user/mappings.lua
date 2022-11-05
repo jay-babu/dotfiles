@@ -74,4 +74,7 @@ return {
 		["<c-k>"] = { "<cmd>STSSwapPrevVisual<cr>", desc = "Surf previous tree-sitter object" },
 		["<c-h>"] = { "<cmd>STSSwapPrevVisual<cr>", desc = "Surf previous tree-sitter object" },
 	},
+	t = {
+		["<C-\\>"] = { "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
+	},
 }
