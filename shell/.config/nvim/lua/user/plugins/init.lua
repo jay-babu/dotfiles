@@ -318,6 +318,14 @@ return function(plugins)
 				require("mason-tool-installer").setup(require("user.plugins.mason-tool-installer"))
 			end,
 		},
+		["jose-elias-alvarez/typescript.nvim"] = {
+			after = "mason-lspconfig.nvim",
+			config = function()
+				require("typescript").setup({
+					server = astronvim.lsp.server_settings("tsserver"),
+				})
+			end,
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
