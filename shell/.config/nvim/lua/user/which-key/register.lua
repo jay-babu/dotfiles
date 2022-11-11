@@ -88,6 +88,12 @@ return {
 					"Inspect",
 				},
 			},
+			y = {
+				function()
+					vim.cmd([[:%y]])
+				end,
+				"Yank file to clipboard",
+			},
 			n = {
 				name = "package.json",
 				i = {
