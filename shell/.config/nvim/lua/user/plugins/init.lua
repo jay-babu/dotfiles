@@ -329,6 +329,9 @@ return function(plugins)
 				})
 			end,
 		},
+		["MunifTanjim/nui.nvim"] = {
+			opt = false,
+		},
 	}
 
 	return vim.tbl_deep_extend("force", plugins, user_plugins)
