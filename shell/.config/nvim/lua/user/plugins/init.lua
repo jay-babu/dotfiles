@@ -283,7 +283,10 @@ return function(plugins)
 				"BufRead",
 				"BufNewFile",
 			},
-			requires = "nvim-lua/plenary.nvim",
+			requires = {
+				"nvim-lua/plenary.nvim",
+				"nvim-tree/nvim-web-devicons",
+			},
 			config = function()
 				local actions = require("diffview.actions")
 
