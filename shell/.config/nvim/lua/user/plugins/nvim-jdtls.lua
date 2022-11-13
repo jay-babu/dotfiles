@@ -15,9 +15,25 @@ if root_dir then
 	end
 end
 
+local extendedClientCapabilities = require("jdtls").extendedClientCapabilities
+extendedClientCapabilities.resolveAdditionalTextEditsSupport = true
+
 local bundles = {}
 
+-- get the mason install path
+local install_path = require("mason-registry").get_package("jdtls"):get_install_path()
+
 vim.list_extend(bundles, vim.split(vim.fn.glob(home .. "/.local/share/vscode-java-decompiler/server/*jar"), "\n"))
+
+-- get the current OS
+local operating_system
+if vim.fn.has("macunix") then
+	operating_system = "mac"
+elseif vim.fn.has("win32") then
+	operating_system = "win"
+else
+	operating_system = "linux"
+end
 
 local config = {
 	cmd = {
@@ -28,12 +44,11 @@ local config = {
 		"-Dlog.protocol=true",
 		"-Dlog.level=ALL",
 		"-Xms1g",
-		"-javaagent:" .. vim.fn.stdpath("data") .. "/mason/packages/jdtls/lombok.jar",
+		"-javaagent:" .. install_path .. "/lombok.jar",
 		"-jar",
-		vim.fn.stdpath("data")
-			.. "/mason/packages/jdtls/plugins/org.eclipse.equinox.launcher_1.6.400.v20210924-0641.jar",
+		vim.fn.glob(install_path .. "/plugins/org.eclipse.equinox.launcher_*.jar"),
 		"-configuration",
-		vim.fn.stdpath("data") .. "/mason/packages/jdtls/config_linux",
+		vim.fn.stdpath("data") .. "/mason/packages/jdtls/config_" .. operating_system,
 		"-data",
 		eclipse_workspace,
 		"--add-modules=ALL-SYSTEM",
@@ -52,16 +67,60 @@ local config = {
 			signatureHelp = {
 				enabled = true,
 			},
+			eclipse = {
+				downloadSources = true,
+			},
+			configuration = {
 
+				updateBuildConfiguration = "interactive",
+				-- runtimes = {
+				--   {
+				--     name = "JavaSE-17",
+				--     path = "/home/jrakhman/.sdkman/candidates/java/17.0.4-oracle",
+				--   },
+				-- },
+			},
+			maven = {
+				downloadSources = true,
+			},
+			implementationsCodeLens = {
+				enabled = true,
+			},
+
+			referencesCodeLens = {
+				enabled = true,
+			},
+			references = {
+				includeDecompiledSources = true,
+			},
+			inlayHints = {
+				parameterNames = {
+					enabled = "all", -- literals, all, none
+				},
+			},
+			completion = {
+				favoriteStaticMembers = {
+					"org.hamcrest.MatcherAssert.assertThat",
+					"org.hamcrest.Matchers.*",
+					"org.hamcrest.CoreMatchers.*",
+					"org.junit.jupiter.api.Assertions.*",
+					"java.util.Objects.requireNonNull",
+					"java.util.Objects.requireNonNullElse",
+					"org.mockito.Mockito.*",
+				},
+			},
 			contentProvider = {
 				preferred = "fernflower",
 			},
+			extendedClientCapabilities = extendedClientCapabilities,
 			sources = {
-
 				organizeImports = {
 					starThreshold = 9999,
 					staticStartThreshold = 9999,
 				},
+			},
+			flags = {
+				allow_incremental_sync = true,
 			},
 		},
 	},
