@@ -36,16 +36,20 @@ return function()
 
 	return {
 		cmd = {
-			"java",
-			"-Declipse.application=org.eclipse.jdt.ls.core.id1",
-			"-Dosgi.bundles.defaultStartLevel=4",
-			"-Declipse.product=org.eclipse.jdt.ls.core.product",
-			"-Dlog.protocol=true",
-			"-Dlog.level=ALL",
-			"-Xms1g",
-			"-javaagent:" .. install_path .. "/lombok.jar",
-			"-jar",
-			vim.fn.glob(install_path .. "/plugins/org.eclipse.equinox.launcher_*.jar"),
+			"jdtls",
+			-- "java",
+			-- "-Declipse.application=org.eclipse.jdt.ls.core.id1",
+			-- "-Dosgi.bundles.defaultStartLevel=4",
+			-- "-Declipse.product=org.eclipse.jdt.ls.core.product",
+			-- "-Dlog.protocol=true",
+			-- "-Dlog.level=ALL",
+			-- "-Xms1g",
+			-- "-javaagent:" .. install_path .. "/lombok.jar",
+			"--jvm-arg=-javaagent:"
+				.. install_path
+				.. "/lombok.jar",
+			-- "-jar",
+			-- vim.fn.glob(install_path .. "/plugins/org.eclipse.equinox.launcher_*.jar"),
 			"-configuration",
 			vim.fn.stdpath("data") .. "/mason/packages/jdtls/config_" .. operating_system,
 			"-data",
@@ -98,6 +102,7 @@ return function()
 					},
 				},
 				completion = {
+					guessMethodArguments = true,
 					favoriteStaticMembers = {
 						"org.hamcrest.MatcherAssert.assertThat",
 						"org.hamcrest.Matchers.*",

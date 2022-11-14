@@ -5,6 +5,7 @@ require("neotest").setup({
 			dap = { justMyCode = false },
 		}),
 		require("neotest-go"),
+		require("neotest-vim-test")({ allow_file_types = { "java" } }),
 		require("neotest-jest")({
 			jestCommand = "npm test --",
 			env = { CI = true },

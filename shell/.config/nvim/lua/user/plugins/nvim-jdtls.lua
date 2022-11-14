@@ -11,11 +11,6 @@ if root_dir then
 	end
 end
 
-local config = astronvim.lsp.server_settings("jdtls")
-if config.root_dir and config.root_dir ~= "" then
-	require("jdtls").start_or_attach(config)
-end
-
 for _, line in ipairs(ws_folders_lsp) do
 	vim.lsp.buf.add_workspace_folder(line)
 end

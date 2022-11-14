@@ -187,20 +187,23 @@ return function(plugins)
 		},
 		{
 			"nvim-neotest/neotest",
-			opt = true,
 			requires = {
 				"nvim-lua/plenary.nvim",
 				"nvim-treesitter/nvim-treesitter",
 				"antoinemadec/FixCursorHold.nvim",
 				"haydenmeade/neotest-jest",
 				"nvim-neotest/neotest-go",
+				"nvim-neotest/neotest-vim-test",
 				"nvim-neotest/neotest-python",
 			},
-			module = "test",
+			module = "neotest",
 			config = function()
 				-- code
 				require("user.plugins.neotest")
 			end,
+		},
+		["vim-test/vim-test"] = {
+			after = "neotest",
 		},
 		{
 			"vuki656/package-info.nvim",
