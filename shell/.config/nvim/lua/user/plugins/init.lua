@@ -179,7 +179,7 @@ return function(plugins)
 				"java",
 			},
 			requires = {
-				"nvim-lspconfig",
+				"neovim/nvim-lspconfig",
 			},
 			config = function()
 				require("user.plugins.nvim-jdtls")

@@ -1,4 +1,7 @@
 return {
 	automatic_installation = true,
-	ensure_installed = { "tsserver" },
+	ensure_installed = {
+		"tsserver",
+		"jdtls",
+	},
 }
