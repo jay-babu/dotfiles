@@ -1,4 +1,4 @@
-return {
+return astronvim.user_plugin_opts("lsp.servers", {
 	"ansiblels",
 	"cssls",
 	"dockerls",
@@ -14,4 +14,4 @@ return {
 	"solc",
 	"sumneko_lua",
 	"tsserver",
-}
+}, nil, "work")

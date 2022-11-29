@@ -1,4 +1,4 @@
-return function()
+return astronvim.user_plugin_opts("polish", function()
 	-- code
 
 	vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, {
@@ -59,4 +59,4 @@ return function()
 			vim.cmd([[set filetype=smithy]])
 		end,
 	})
-end
+end, nil, "work")
