@@ -52,4 +52,11 @@ return function()
 			end
 		end,
 	})
+
+	vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+		pattern = "*.smithy",
+		callback = function()
+			vim.cmd([[set filetype=smithy]])
+		end,
+	})
 end
