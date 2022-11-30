@@ -5,4 +5,4 @@ if handle ~= nil then
 	handle:close()
 end
 
-return vim.fn.split(result, "\n")
+return astronvim.user_plugin_opts("header", vim.fn.split(result, "\n"), nil, "work")

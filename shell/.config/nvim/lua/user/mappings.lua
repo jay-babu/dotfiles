@@ -1,4 +1,4 @@
-return {
+return astronvim.user_plugin_opts("mappings", {
 	n = {
 		["<C-\\>"] = { "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
 		["<C-Down>"] = false,
@@ -77,4 +77,4 @@ return {
 	t = {
 		["<C-\\>"] = { "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
 	},
-}
+}, nil, "work")
