@@ -1,9 +1,9 @@
 # set brew_location (which brew)
-# fish_add_path $brew_location/.. 
+# fish_add_path $brew_location/..
 # fish_add_path $brew_location/../../opt/node@16/bin
 # fish_add_path $brew_location/../../opt/openjdk@11/bin
 # fish_add_path $brew_location/../../opt/nvim/bin
-# fish_add_path /home/linuxbrew/.linuxbrew/bin 
+# fish_add_path /home/linuxbrew/.linuxbrew/bin
 # fish_add_path (go env GOPATH)/bin
 
 bass source ~/.profile
@@ -19,7 +19,7 @@ if status is-interactive
 
     # set -gx FZF_DEFAULT_OPTS '--hidden --preview "bat --style=numbers --color=always --line-range :500 {}"'
 
-    function cd 
+    function cd
         builtin cd $argv && exa -a -F --icons
     end
 
@@ -47,3 +47,4 @@ end
 # tabtab source for packages
 # uninstall by removing these lines
 [ -f ~/.config/tabtab/fish/__tabtab.fish ]; and . ~/.config/tabtab/fish/__tabtab.fish; or true
+[ -f ~/.config/fish/conf.d/tokyonight_storm.fish ]; and . ~/.config/fish/conf.d/tokyonight_storm.fish; or true
