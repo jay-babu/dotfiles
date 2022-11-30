@@ -1,11 +1,11 @@
 return astronvim.user_plugin_opts("polish", function()
 	-- code
 
-	vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, {
-		desc = "Set up telescope theme",
-		pattern = "*",
-		callback = require("user.theme").telescope_theme,
-	})
+	-- vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, {
+	-- 	desc = "Set up telescope theme",
+	-- 	pattern = "*",
+	-- 	callback = require("user.theme").telescope_theme,
+	-- })
 
 	local numbertogglegroup = vim.api.nvim_create_augroup("numbertoggle", { clear = true })
 	vim.api.nvim_create_autocmd({ "BufEnter", "FocusGained", "InsertLeave" }, {

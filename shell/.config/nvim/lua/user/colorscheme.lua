@@ -1,3 +1,3 @@
-local colorscheme = "catppuccin"
+local colorscheme = "tokyonight"
 
 return colorscheme
