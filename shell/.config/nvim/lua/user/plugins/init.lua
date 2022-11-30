@@ -92,10 +92,9 @@ return astronvim.user_plugin_opts("plugins.init", {
 		"kylechui/nvim-surround",
 		tag = "*", -- Use for stability; omit to use `main` branch for the latest features
 		opt = true,
-		event = {
-			"BufRead",
-			"BufNewFile",
-		},
+		setup = function()
+			table.insert(astronvim.file_plugins, "nvim-surround")
+		end,
 		config = function()
 			require("nvim-surround").setup({})
 		end,
@@ -321,26 +320,15 @@ return astronvim.user_plugin_opts("plugins.init", {
 	},
 	["sindrets/diffview.nvim"] = {
 		opt = true,
-		event = {
-			"BufRead",
-			"BufNewFile",
-		},
 		requires = {
 			"nvim-lua/plenary.nvim",
 			"nvim-tree/nvim-web-devicons",
 		},
+		setup = function()
+			table.insert(astronvim.git_plugins, "diffview.nvim")
+		end,
 		config = function()
-			local actions = require("diffview.actions")
-
-			require("diffview").setup({
-				enhanced_diff_hl = true,
-				keymaps = {
-					view = {
-						["<leader>b"] = false,
-						["<leader>o"] = actions.toggle_files,
-					},
-				},
-			})
+			require("user.plugins.diffview")
 		end,
 	},
 	["jayp0521/mason-nvim-dap"] = {
@@ -373,5 +361,11 @@ return astronvim.user_plugin_opts("plugins.init", {
 	},
 	["MunifTanjim/nui.nvim"] = {
 		opt = false,
+	},
+	["ray-x/go.nvim"] = {
+		after = "mason-lspconfig.nvim",
+		config = function()
+			require("user.plugins.go")
+		end,
 	},
 }, nil, "work")
