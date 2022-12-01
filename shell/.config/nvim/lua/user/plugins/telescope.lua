@@ -1,3 +1,8 @@
+local telescope = require("telescope")
+local actions = require("telescope.actions")
+local fb_actions = require("telescope").extensions.file_browser.actions
+local hop = telescope.extensions.hop
+
 return function(default)
 	local overrides = {
 		defaults = {
@@ -79,10 +84,32 @@ return function(default)
 				hidden = true,
 			},
 		},
+		mappings = {
+			i = {
+				["<C-h>"] = hop.hop,
+				["<C-space>"] = function(prompt_bufnr)
+					hop._hop_loop(
+						prompt_bufnr,
+						{ callback = actions.toggle_selection, loop_callback = actions.send_selected_to_qflist }
+					)
+				end,
+			},
+		},
 		extensions = {
 			media_files = {
 				filetypes = { "png", "jpg", "mp4", "webm", "pdf", "gif" },
 				find_cmd = "rg",
+			},
+			file_browser = {
+				mappings = {
+					i = {
+						["<C-z>"] = fb_actions.toggle_hidden,
+					},
+
+					n = {
+						z = fb_actions.toggle_hidden,
+					},
+				},
 			},
 		},
 	}

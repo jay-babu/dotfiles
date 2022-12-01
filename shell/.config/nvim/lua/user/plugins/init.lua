@@ -166,6 +166,25 @@ return astronvim.user_plugin_opts("plugins.init", {
 			telescope.load_extension("media_files")
 		end,
 	},
+	["nvim-telescope/telescope-file-browser.nvim"] = {
+		after = "telescope.nvim",
+		config = function()
+			require("user.plugins.telescope-file-browser")
+		end,
+	},
+	["nvim-telescope/telescope-hop.nvim"] = {
+		after = "telescope.nvim",
+		config = function()
+			require("user.plugins.telescope-hop")
+		end,
+	},
+	["nvim-telescope/telescope-project.nvim"] = {
+		requires = "telescope-file-browser.nvim",
+		after = "telescope.nvim",
+		config = function()
+			require("user.plugins.telescope-project")
+		end,
+	},
 	{
 		"jabirali/vim-tmux-yank",
 		opt = true,
