@@ -118,10 +118,10 @@ return astronvim.user_plugin_opts("plugins.init", {
 	},
 	{
 		"ThePrimeagen/harpoon",
-		event = {
-			"BufRead",
-			"BufNewFile",
-		},
+		opt = true,
+		setup = function()
+			table.insert(astronvim.file_plugins, "harpoon")
+		end,
 		config = function()
 			local telescope = require("telescope")
 			telescope.load_extension("harpoon")
@@ -130,7 +130,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 	},
 	{
 		"vimpostor/vim-tpipeline",
-		disable = true,
 	},
 	{
 		"ThePrimeagen/git-worktree.nvim",
@@ -149,26 +148,30 @@ return astronvim.user_plugin_opts("plugins.init", {
 	},
 	{
 		"phaazon/hop.nvim",
-		event = {
-			"BufRead",
-			"BufNewFile",
-		},
+		opt = true,
+		setup = function()
+			table.insert(astronvim.file_plugins, "hop.nvim")
+		end,
 		config = function()
 			require("hop").setup()
 		end,
 	},
 	{
 		"nvim-telescope/telescope-media-files.nvim",
+		after = {
+			"telescope.nvim",
+		},
 		config = function()
 			local telescope = require("telescope")
 			telescope.load_extension("media_files")
 		end,
-		after = {
-			"telescope.nvim",
-		},
 	},
 	{
 		"jabirali/vim-tmux-yank",
+		opt = true,
+		setup = function()
+			table.insert(astronvim.file_plugins, "vim-tmux-yank")
+		end,
 	},
 	{
 		"edolphin-ydf/goimpl.nvim",
@@ -185,12 +188,10 @@ return astronvim.user_plugin_opts("plugins.init", {
 	},
 	{
 		"mfussenegger/nvim-dap",
-		module = "dap",
-		ft = {
-			"go",
-			"python",
-			"java",
-		},
+		opt = true,
+		setup = function()
+			table.insert(astronvim.file_plugins, "nvim-dap")
+		end,
 		config = function()
 			require("user.plugins.dap")
 		end,
@@ -236,7 +237,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		},
 		module = "neotest",
 		config = function()
-			-- code
 			require("user.plugins.neotest")
 		end,
 	},
@@ -256,18 +256,16 @@ return astronvim.user_plugin_opts("plugins.init", {
 	{
 		"f-person/git-blame.nvim",
 		opt = true,
-		event = {
-			"BufRead",
-			"BufNewFile",
-		},
+		setup = function()
+			table.insert(astronvim.file_plugins, "git-blame.nvim")
+		end,
 	},
 	{
 		"folke/twilight.nvim",
 		opt = true,
-		event = {
-			"BufRead",
-			"BufNewFile",
-		},
+		setup = function()
+			table.insert(astronvim.file_plugins, "twilight.nvim")
+		end,
 		config = function()
 			require("twilight").setup({
 				-- your configuration comes here
@@ -303,20 +301,18 @@ return astronvim.user_plugin_opts("plugins.init", {
 	},
 	["petertriho/nvim-scrollbar"] = {
 		opt = true,
-		event = {
-			"BufRead",
-			"BufNewFile",
-		},
+		setup = function()
+			table.insert(astronvim.file_plugins, "nvim-scrollbar")
+		end,
 		config = function()
 			require("scrollbar").setup()
 		end,
 	},
 	["romainl/vim-cool"] = {
 		opt = true,
-		event = {
-			"BufRead",
-			"BufNewFile",
-		},
+		setup = function()
+			table.insert(astronvim.file_plugins, "vim-cool")
+		end,
 	},
 	["sindrets/diffview.nvim"] = {
 		opt = true,
@@ -342,6 +338,16 @@ return astronvim.user_plugin_opts("plugins.init", {
 				automatic_setup = true,
 			})
 			require("mason-nvim-dap").setup_handlers()
+		end,
+	},
+	["theHamsta/nvim-dap-virtual-text"] = {
+		requires = {
+			"mfussenegger/nvim-dap",
+			"nvim-treesitter/nvim-treesitter",
+		},
+		after = "nvim-dap",
+		config = function()
+			require("nvim-dap-virtual-text").setup()
 		end,
 	},
 	["WhoIsSethDaniel/mason-tool-installer.nvim"] = {
