@@ -231,6 +231,12 @@ return astronvim.user_plugin_opts("plugins.init", {
 		end,
 		requires = "hrsh7th/nvim-cmp",
 	},
+	["lvimuser/lsp-inlayhints.nvim"] = {
+		module = "lsp-inlayhints",
+		config = function()
+			require("user.plugins.lsp-inlayhints")
+		end,
+	},
 	{
 		"mfussenegger/nvim-jdtls",
 		ft = {
@@ -378,6 +384,12 @@ return astronvim.user_plugin_opts("plugins.init", {
 	},
 	["jose-elias-alvarez/typescript.nvim"] = {
 		after = "mason-lspconfig.nvim",
+		ft = {
+			"typescript",
+			"typescriptreact",
+			"javascript",
+			"javascriptreact",
+		},
 		config = function()
 			require("typescript").setup({
 				server = astronvim.lsp.server_settings("tsserver"),
@@ -389,6 +401,9 @@ return astronvim.user_plugin_opts("plugins.init", {
 	},
 	["ray-x/go.nvim"] = {
 		after = "mason-lspconfig.nvim",
+		ft = {
+			"go",
+		},
 		config = function()
 			require("user.plugins.go")
 		end,
