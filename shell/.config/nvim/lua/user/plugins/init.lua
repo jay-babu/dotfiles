@@ -206,24 +206,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		end,
 	},
 	{
-		"mfussenegger/nvim-dap",
-		opt = true,
-		setup = function()
-			table.insert(astronvim.file_plugins, "nvim-dap")
-		end,
-		config = function()
-			require("user.plugins.dap")
-		end,
-	},
-	{
-		"rcarriga/nvim-dap-ui",
-		after = "nvim-dap",
-		config = function()
-			require("user.plugins.nvim-dap-ui")
-		end,
-		requires = { "mfussenegger/nvim-dap" },
-	},
-	{
 		"ray-x/lsp_signature.nvim",
 		after = "nvim-cmp",
 		config = function()
@@ -350,19 +332,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		end,
 		config = function()
 			require("user.plugins.diffview")
-		end,
-	},
-	["jayp0521/mason-nvim-dap"] = {
-		after = {
-			"mason.nvim",
-			"nvim-dap",
-		},
-		config = function()
-			require("mason-nvim-dap").setup({
-				automatic_installation = true,
-				automatic_setup = true,
-			})
-			require("mason-nvim-dap").setup_handlers()
 		end,
 	},
 	["theHamsta/nvim-dap-virtual-text"] = {
