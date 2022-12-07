@@ -77,21 +77,21 @@ return astronvim.user_plugin_opts("telescope", {
 				end
 			end,
 		},
+		mappings = {
+			i = {
+				["<C-h>"] = hop.hop,
+				["<C-space>"] = function(prompt_bufnr)
+					hop._hop_loop(
+						prompt_bufnr,
+						{ callback = actions.toggle_selection, loop_callback = actions.send_selected_to_qflist }
+					)
+				end,
+			},
+		},
 	},
 	pickers = {
 		find_files = {
 			hidden = true,
-		},
-	},
-	mappings = {
-		i = {
-			["<C-h>"] = hop.hop,
-			["<C-space>"] = function(prompt_bufnr)
-				hop._hop_loop(
-					prompt_bufnr,
-					{ callback = actions.toggle_selection, loop_callback = actions.send_selected_to_qflist }
-				)
-			end,
 		},
 	},
 	extensions = {
