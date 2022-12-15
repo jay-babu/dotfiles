@@ -377,4 +377,10 @@ return astronvim.user_plugin_opts("plugins.init", {
 			require("user.plugins.go")
 		end,
 	},
+	["christoomey/vim-tmux-navigator"] = {
+		opt = true,
+		setup = function()
+			table.insert(astronvim.file_plugins, "vim-tmux-navigator")
+		end,
+	},
 }, nil, "work")
