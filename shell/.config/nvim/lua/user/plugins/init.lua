@@ -110,13 +110,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		end,
 	},
 	{
-		"andymass/vim-matchup",
-		after = "nvim-treesitter",
-	},
-	{
-		"dstein64/vim-startuptime",
-	},
-	{
 		"ThePrimeagen/harpoon",
 		opt = true,
 		setup = function()
