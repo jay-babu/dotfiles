@@ -148,6 +148,7 @@ return astronvim.user_plugin_opts("plugins.init", {
 		config = function()
 			require("hop").setup()
 		end,
+		module = "hop",
 	},
 	{
 		"nvim-telescope/telescope-media-files.nvim",
@@ -368,6 +369,12 @@ return astronvim.user_plugin_opts("plugins.init", {
 		},
 		config = function()
 			require("user.plugins.go")
+		end,
+	},
+	["debugloop/telescope-undo.nvim"] = {
+		after = "telescope.nvim",
+		config = function()
+			require("telescope").load_extension("undo")
 		end,
 	},
 }, nil, "work")

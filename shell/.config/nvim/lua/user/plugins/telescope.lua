@@ -110,5 +110,12 @@ return astronvim.user_plugin_opts("telescope", {
 				},
 			},
 		},
+		undo = {
+			-- side_by_side = true,
+			-- layout_strategy = "vertical",
+			-- layout_config = {
+			-- 	preview_height = 0.8,
+			-- },
+		},
 	},
 }, nil, "work")
