@@ -81,10 +81,15 @@ return astronvim.user_plugin_opts(
 				"<cmd>lua require('hop').hint_lines()<cr>",
 			},
 			-- Treesitter Surfer
-			["<c-down>"] = { "<cmd>STSSwapDownNormal<cr>", desc = "Swap next tree-sitter object" },
-			["<c-right>"] = { "<cmd>STSSwapDownNormal<cr>", desc = "Swap next tree-sitter object" },
-			["<c-up>"] = { "<cmd>STSSwapUpNormal<cr>", desc = "Swap previous tree-sitter object" },
-			["<c-left>"] = { "<cmd>STSSwapUpNormal<cr>", desc = "Swap previous tree-sitter object" },
+			["<a-down>"] = { "<cmd>STSSwapDownNormal<cr>zz", desc = "Swap next tree-sitter object" },
+			["<a-right>"] = { "<cmd>STSSwapDownNormal<cr>zz", desc = "Swap next tree-sitter object" },
+			["<a-up>"] = { "<cmd>STSSwapUpNormal<cr>zz", desc = "Swap previous tree-sitter object" },
+			["<a-left>"] = { "<cmd>STSSwapUpNormal<cr>zz", desc = "Swap previous tree-sitter object" },
+			["<C-d>"] = { "<C-d>zz" },
+			["<C-u>"] = { "<C-u>zz" },
+			["n"] = { "nzzzv" },
+			["N"] = { "Nzzzv" },
+			["d"] = { [["_d]] },
 		},
 		v = {
 			["s"] = {
@@ -101,6 +106,7 @@ return astronvim.user_plugin_opts(
 				silent = true,
 				noremap = true,
 			},
+			["d"] = { [["_d]] },
 		},
 		[""] = {
 			[":"] = { ";" },
@@ -115,6 +121,7 @@ return astronvim.user_plugin_opts(
 			["<c-l>"] = { "<cmd>STSSwapNextVisual<cr>", desc = "Surf next tree-sitter object" },
 			["<c-k>"] = { "<cmd>STSSwapPrevVisual<cr>", desc = "Surf previous tree-sitter object" },
 			["<c-h>"] = { "<cmd>STSSwapPrevVisual<cr>", desc = "Surf previous tree-sitter object" },
+			["p"] = { [["_dP]] },
 		},
 		t = {
 			["<C-\\>"] = { "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
