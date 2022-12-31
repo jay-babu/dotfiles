@@ -21,8 +21,18 @@ return function()
 
 	-- get the mason install path
 	local install_path = require("mason-registry").get_package("jdtls"):get_install_path()
+	local java_test_path = require("mason-registry").get_package("java-test"):get_install_path()
+	local java_debug_adapter_path = require("mason-registry").get_package("java-debug-adapter"):get_install_path()
 
 	vim.list_extend(bundles, vim.split(vim.fn.glob(home .. "/.local/share/vscode-java-decompiler/server/*jar"), "\n"))
+	vim.list_extend(bundles, vim.split(vim.fn.glob(java_test_path .. "/extension/server/*.jar"), "\n"))
+	vim.list_extend(
+		bundles,
+		vim.split(
+			vim.fn.glob(java_debug_adapter_path .. "/extension/server/com.microsoft.java.debug.plugin-*.jar"),
+			"\n"
+		)
+	)
 
 	-- get the current OS
 	local operating_system
@@ -46,8 +56,8 @@ return function()
 			-- "-Xms1g",
 			-- "-javaagent:" .. install_path .. "/lombok.jar",
 			"--jvm-arg=-javaagent:"
-				.. install_path
-				.. "/lombok.jar",
+					.. install_path
+					.. "/lombok.jar",
 			-- "-jar",
 			-- vim.fn.glob(install_path .. "/plugins/org.eclipse.equinox.launcher_*.jar"),
 			"-configuration",
@@ -91,10 +101,10 @@ return function()
 				},
 
 				referencesCodeLens = {
-					enabled = true,
+					enabled = false,
 				},
 				references = {
-					includeDecompiledSources = true,
+					includeDecompiledSources = false,
 				},
 				inlayHints = {
 					parameterNames = {
@@ -104,12 +114,12 @@ return function()
 				completion = {
 					guessMethodArguments = true,
 					favoriteStaticMembers = {
-						"org.hamcrest.MatcherAssert.assertThat",
-						"org.hamcrest.Matchers.*",
-						"org.hamcrest.CoreMatchers.*",
-						"org.junit.jupiter.api.Assertions.*",
 						"java.util.Objects.requireNonNull",
 						"java.util.Objects.requireNonNullElse",
+						"org.assertj.core.api.Assertions.*",
+						"org.hamcrest.CoreMatchers.*",
+						"org.hamcrest.Matchers.*",
+						"org.junit.jupiter.api.Assertions.*",
 						"org.mockito.Mockito.*",
 					},
 				},
