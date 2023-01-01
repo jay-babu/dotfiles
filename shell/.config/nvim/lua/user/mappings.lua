@@ -13,6 +13,14 @@ maps.n["<leader>dr"] = maps.n["<leader>Dr"]
 maps.n["<leader>dR"] = maps.n["<leader>DR"]
 maps.n["<leader>du"] = maps.n["<leader>Du"]
 maps.n["<leader>dh"] = maps.n["<leader>Dh"]
+
+maps.n["<C-a>"] = {
+	require("dial.map").inc_normal(),
+}
+maps.n["<C-x>"] = {
+	require("dial.map").dec_normal(),
+}
+
 return astronvim.user_plugin_opts(
 	"mappings",
 	vim.tbl_deep_extend("force", maps, {
