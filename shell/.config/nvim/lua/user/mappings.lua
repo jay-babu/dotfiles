@@ -89,10 +89,34 @@ return astronvim.user_plugin_opts(
 				"<cmd>lua require('hop').hint_lines()<cr>",
 			},
 			-- Treesitter Surfer
-			["<a-down>"] = { "<cmd>STSSwapDownNormal<cr>zz", desc = "Swap next tree-sitter object" },
-			["<a-right>"] = { "<cmd>STSSwapDownNormal<cr>zz", desc = "Swap next tree-sitter object" },
-			["<a-up>"] = { "<cmd>STSSwapUpNormal<cr>zz", desc = "Swap previous tree-sitter object" },
-			["<a-left>"] = { "<cmd>STSSwapUpNormal<cr>zz", desc = "Swap previous tree-sitter object" },
+			["<a-down>"] = {
+				function()
+					require("syntax-tree-surfer").move("n", false)
+					vim.cmd(vim.api.nvim_replace_termcodes("normal zz", true, true, true))
+				end,
+				desc = "Swap next tree-sitter object",
+			},
+			["<a-right>"] = {
+				function()
+					require("syntax-tree-surfer").move("n", false)
+					vim.cmd(vim.api.nvim_replace_termcodes("normal zz", true, true, true))
+				end,
+				desc = "Swap next tree-sitter object",
+			},
+			["<a-up>"] = {
+				function()
+					require("syntax-tree-surfer").move("n", true)
+					vim.cmd(vim.api.nvim_replace_termcodes("normal zz", true, true, true))
+				end,
+				desc = "Swap previous tree-sitter object",
+			},
+			["<a-left>"] = {
+				function()
+					require("syntax-tree-surfer").move("n", true)
+					vim.cmd(vim.api.nvim_replace_termcodes("normal zz", true, true, true))
+				end,
+				desc = "Swap previous tree-sitter object",
+			},
 			["<C-d>"] = { "<C-d>zz" },
 			["<C-u>"] = { "<C-u>zz" },
 			["n"] = { "nzzzv" },
