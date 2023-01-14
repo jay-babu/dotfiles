@@ -129,20 +129,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		end,
 	},
 	{
-		"ray-x/lsp_signature.nvim",
-		after = "nvim-cmp",
-		config = function()
-			require("user.plugins.lsp_signature")
-		end,
-		requires = "hrsh7th/nvim-cmp",
-	},
-	["lvimuser/lsp-inlayhints.nvim"] = {
-		module = "lsp-inlayhints",
-		config = function()
-			require("user.plugins.lsp-inlayhints")
-		end,
-	},
-	{
 		"vuki656/package-info.nvim",
 		opt = true,
 		module = "package-info",
@@ -236,23 +222,8 @@ return astronvim.user_plugin_opts("plugins.init", {
 			require("nvim-dap-virtual-text").setup()
 		end,
 	},
-	["jose-elias-alvarez/typescript.nvim"] = {
-		after = "mason-lspconfig.nvim",
-		ft = {
-			"typescript",
-			"typescriptreact",
-			"javascript",
-			"javascriptreact",
-		},
-	},
 	["MunifTanjim/nui.nvim"] = {
 		opt = false,
-	},
-	["ray-x/go.nvim"] = {
-		after = "mason-lspconfig.nvim",
-		ft = {
-			"go",
-		},
 	},
 	["monaqa/dial.nvim"] = {
 		module = "dial",
