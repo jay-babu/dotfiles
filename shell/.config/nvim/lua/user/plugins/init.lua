@@ -85,10 +85,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		end,
 	},
 	{
-		"nvim-treesitter/nvim-treesitter-textobjects",
-		after = "nvim-treesitter",
-	},
-	{
 		"kylechui/nvim-surround",
 		tag = "*", -- Use for stability; omit to use `main` branch for the latest features
 		opt = true,
@@ -97,16 +93,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		end,
 		config = function()
 			require("nvim-surround").setup({})
-		end,
-	},
-	{
-		"nvim-treesitter/nvim-treesitter-context",
-		after = "nvim-treesitter",
-		config = function()
-			require("treesitter-context").setup({
-				enable = true,
-				trim_scope = "outer",
-			})
 		end,
 	},
 	{
@@ -155,25 +141,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		config = function()
 			require("user.plugins.lsp-inlayhints")
 		end,
-	},
-	{
-		"nvim-neotest/neotest",
-		requires = {
-			"nvim-lua/plenary.nvim",
-			"nvim-treesitter/nvim-treesitter",
-			"antoinemadec/FixCursorHold.nvim",
-			"haydenmeade/neotest-jest",
-			"nvim-neotest/neotest-go",
-			"nvim-neotest/neotest-vim-test",
-			"nvim-neotest/neotest-python",
-		},
-		module = "neotest",
-		config = function()
-			require("user.plugins.neotest")
-		end,
-	},
-	["vim-test/vim-test"] = {
-		after = "neotest",
 	},
 	{
 		"vuki656/package-info.nvim",
@@ -267,13 +234,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		after = "nvim-dap",
 		config = function()
 			require("nvim-dap-virtual-text").setup()
-		end,
-	},
-	["WhoIsSethDaniel/mason-tool-installer.nvim"] = {
-		after = "mason.nvim",
-		run = ":MasonToolsUpdate",
-		config = function()
-			require("mason-tool-installer").setup(require("user.plugins.mason-tool-installer"))
 		end,
 	},
 	["jose-elias-alvarez/typescript.nvim"] = {
