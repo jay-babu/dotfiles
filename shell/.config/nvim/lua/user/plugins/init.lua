@@ -212,16 +212,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 			require("user.plugins.diffview")
 		end,
 	},
-	["theHamsta/nvim-dap-virtual-text"] = {
-		requires = {
-			"mfussenegger/nvim-dap",
-			"nvim-treesitter/nvim-treesitter",
-		},
-		after = "nvim-dap",
-		config = function()
-			require("nvim-dap-virtual-text").setup()
-		end,
-	},
 	["MunifTanjim/nui.nvim"] = {
 		opt = false,
 	},
