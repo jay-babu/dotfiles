@@ -1,6 +1,5 @@
 return astronvim.user_plugin_opts("updater", {
-	auto_reload = true,
-	auto_quit = true,
 	channel = "nightly",
+	branch = "v3",
 	skip_prompts = true,
 }, nil, "work")
