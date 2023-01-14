@@ -1,30 +1,21 @@
-return function(default)
-	local overrides = {
-		ensure_installed = {
-			"bash",
-			"cpp",
-			"css",
-			"dockerfile",
-			"go",
-			"graphql",
-			"html",
-			"http",
-			"java",
-			"javascript",
-			"json",
-			"kotlin",
-			"lua",
-			"make",
-			"markdown",
-			"python",
-			"rust",
-			"solidity",
-			"toml",
-			"tsx",
-			"typescript",
-			"vim",
-			"yaml",
+return {
+	"nvim-treesitter/nvim-treesitter",
+	dependencies = {
+		"andymass/vim-matchup",
+		"nvim-treesitter/nvim-treesitter-textobjects",
+		{
+			"nvim-treesitter/nvim-treesitter-context",
+			config = function(_, _)
+				require("treesitter-context").setup({
+					enable = true,
+					trim_scope = "outer",
+				})
+			end,
 		},
+	},
+
+	opts = {
+		auto_install = vim.fn.executable("tree-sitter") == 1,
 		rainbow = {
 			enable = true,
 			extended_mode = true,
@@ -65,7 +56,25 @@ return function(default)
 				},
 			},
 			swap = {
-				enable = false,
+				enable = true,
+				swap_next = {
+					[">B"] = { query = "@block.outer", desc = "Swap next block" },
+					[">F"] = { query = "@function.outer", desc = "Swap next function" },
+					[">P"] = { query = "@parameter.inner", desc = "Swap next parameter" },
+				},
+				swap_previous = {
+					["<B"] = { query = "@block.outer", desc = "Swap previous block" },
+					["<F"] = { query = "@function.outer", desc = "Swap previous function" },
+					["<P"] = { query = "@parameter.inner", desc = "Swap previous parameter" },
+				},
+			},
+			lsp_interop = {
+				enable = true,
+				border = "single",
+				peek_definition_code = {
+					["<leader>lp"] = { query = "@function.outer", desc = "Peek function definition" },
+					["<leader>lP"] = { query = "@class.outer", desc = "Peek class definition" },
+				},
 			},
 		},
 		incremental_selection = {
