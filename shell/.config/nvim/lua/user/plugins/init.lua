@@ -395,4 +395,7 @@ return astronvim.user_plugin_opts("plugins.init", {
 			})
 		end,
 	},
+	["rebelot/heirline.nvim"] = {
+		commit = "556666aabb57c227cbb14a996b30b2934e5ff7b1",
+	}
 }, nil, "work")
