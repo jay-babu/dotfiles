@@ -125,21 +125,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		"vimpostor/vim-tpipeline",
 	},
 	{
-		"ThePrimeagen/git-worktree.nvim",
-		requires = {
-			"nvim-lua/plenary.nvim",
-		},
-		after = {
-			"telescope.nvim",
-		},
-		config = function()
-			require("git-worktree").setup({
-				autopush = true,
-			})
-			require("telescope").load_extension("git_worktree")
-		end,
-	},
-	{
 		"phaazon/hop.nvim",
 		opt = true,
 		setup = function()
@@ -151,52 +136,10 @@ return astronvim.user_plugin_opts("plugins.init", {
 		module = "hop",
 	},
 	{
-		"nvim-telescope/telescope-media-files.nvim",
-		after = {
-			"telescope.nvim",
-		},
-		config = function()
-			local telescope = require("telescope")
-			telescope.load_extension("media_files")
-		end,
-	},
-	["nvim-telescope/telescope-file-browser.nvim"] = {
-		after = "telescope.nvim",
-		config = function()
-			require("user.plugins.telescope-file-browser")
-		end,
-	},
-	["nvim-telescope/telescope-hop.nvim"] = {
-		after = "telescope.nvim",
-		config = function()
-			require("user.plugins.telescope-hop")
-		end,
-	},
-	["nvim-telescope/telescope-project.nvim"] = {
-		requires = "telescope-file-browser.nvim",
-		after = "telescope.nvim",
-		config = function()
-			require("user.plugins.telescope-project")
-		end,
-	},
-	{
 		"jabirali/vim-tmux-yank",
 		opt = true,
 		setup = function()
 			table.insert(astronvim.file_plugins, "vim-tmux-yank")
-		end,
-	},
-	{
-		"edolphin-ydf/goimpl.nvim",
-		ft = "go",
-		requires = {
-			{ "nvim-lua/plenary.nvim" },
-			{ "nvim-lua/popup.nvim" },
-			{ "nvim-telescope/telescope.nvim" },
-			{ "nvim-treesitter/nvim-treesitter" },
-		},
-		config = function()
-			require("telescope").load_extension("goimpl")
 		end,
 	},
 	{
@@ -350,12 +293,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		ft = {
 			"go",
 		},
-	},
-	["debugloop/telescope-undo.nvim"] = {
-		after = "telescope.nvim",
-		config = function()
-			require("telescope").load_extension("undo")
-		end,
 	},
 	["monaqa/dial.nvim"] = {
 		module = "dial",
