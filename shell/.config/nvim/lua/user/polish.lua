@@ -49,7 +49,7 @@ return astronvim.user_plugin_opts("polish", function()
 	vim.api.nvim_create_autocmd("Filetype", {
 		pattern = "java", -- autocmd to start jdtls
 		callback = function()
-			local config = astronvim.lsp.server_settings("jdtls")
+			local config = astronvim.lsp.config("jdtls")
 			if config.root_dir and config.root_dir ~= "" then
 				config["on_attach"] = function(client, bufnr)
 					vim.lsp.codelens.refresh()
