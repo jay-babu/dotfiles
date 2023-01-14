@@ -214,18 +214,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		end,
 	},
 	{
-		"mfussenegger/nvim-jdtls",
-		ft = {
-			"java",
-		},
-		requires = {
-			"neovim/nvim-lspconfig",
-		},
-		config = function()
-			require("user.plugins.nvim-jdtls")
-		end,
-	},
-	{
 		"nvim-neotest/neotest",
 		requires = {
 			"nvim-lua/plenary.nvim",
