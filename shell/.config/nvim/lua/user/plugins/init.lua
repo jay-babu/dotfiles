@@ -353,11 +353,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 			"javascript",
 			"javascriptreact",
 		},
-		config = function()
-			require("typescript").setup({
-				server = astronvim.lsp.server_settings("tsserver"),
-			})
-		end,
 	},
 	["MunifTanjim/nui.nvim"] = {
 		opt = false,
@@ -367,9 +362,6 @@ return astronvim.user_plugin_opts("plugins.init", {
 		ft = {
 			"go",
 		},
-		config = function()
-			require("user.plugins.go")
-		end,
 	},
 	["debugloop/telescope-undo.nvim"] = {
 		after = "telescope.nvim",
@@ -397,5 +389,5 @@ return astronvim.user_plugin_opts("plugins.init", {
 	},
 	["rebelot/heirline.nvim"] = {
 		commit = "556666aabb57c227cbb14a996b30b2934e5ff7b1",
-	}
+	},
 }, nil, "work")
