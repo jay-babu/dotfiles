@@ -2,24 +2,22 @@ return {
   {
     "WhoIsSethDaniel/mason-tool-installer.nvim",
     build = ":MasonToolsUpdate",
-    config = function(_, _)
-      require("mason-tool-installer").setup({
-        ensure_installed = {
-          "gofumpt",
-          "golines",
-          "gotests",
-          "chrome-debug-adapter",
-          "impl",
-          "json-to-struct",
-          "luacheck",
-          "pyright",
-          "rust-analyzer",
-          "solidity",
-        },
-        auto_update = true,
-        run_on_start = false,
-      })
-    end,
+    opts = {
+      ensure_installed = {
+        "gofumpt",
+        "golines",
+        "gotests",
+        "chrome-debug-adapter",
+        "impl",
+        "json-to-struct",
+        "luacheck",
+        "pyright",
+        "rust-analyzer",
+        "solidity",
+      },
+      auto_update = true,
+      run_on_start = false,
+    },
   },
   {
     "williamboman/mason-lspconfig.nvim",

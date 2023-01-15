@@ -17,7 +17,7 @@ local vopts = {
 	nowait = true, -- use `nowait` when creating keymaps
 }
 
-return astronvim.user_plugin_opts("polish", function()
+return function()
 	-- code
 
 	-- vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, {
@@ -93,4 +93,4 @@ return astronvim.user_plugin_opts("polish", function()
 			vim.cmd([[set filetype=smithy]])
 		end,
 	})
-end, nil, "work")
+end

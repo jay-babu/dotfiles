@@ -10,8 +10,8 @@ return {
 		"nvim-neotest/neotest-python",
 		"vim-test/vim-test",
 	},
-	config = function()
-		require("neotest").setup({
+	opts = function()
+		return {
 			adapters = {
 				require("neotest-python")({
 					-- Extra arguments for nvim-dap configuration
@@ -22,11 +22,11 @@ return {
 				require("neotest-jest")({
 					jestCommand = "npm test --",
 					env = { CI = true },
-					cwd = function(path)
+					cwd = function(_)
 						return vim.fn.getcwd()
 					end,
 				}),
 			},
-		})
+		}
 	end,
 }

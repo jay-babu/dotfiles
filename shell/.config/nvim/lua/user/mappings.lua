@@ -14,9 +14,7 @@ maps.n["<leader>dR"] = maps.n["<leader>DR"]
 maps.n["<leader>du"] = maps.n["<leader>Du"]
 maps.n["<leader>dh"] = maps.n["<leader>Dh"]
 
-return astronvim.user_plugin_opts(
-	"mappings",
-	vim.tbl_deep_extend("force", maps, {
+return vim.tbl_deep_extend("force", maps, {
 		n = {
 			["<C-\\>"] = { "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
 			["<C-Down>"] = false,
@@ -161,7 +159,4 @@ return astronvim.user_plugin_opts(
 		t = {
 			["<C-\\>"] = { "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
 		},
-	}),
-	nil,
-	"work"
-)
+	})
