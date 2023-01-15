@@ -68,20 +68,15 @@ return function(default)
 				enable = false,
 			},
 		},
+		incremental_selection = {
+			enable = true,
+			keymaps = {
+				init_selection = "<CR>",
+				node_incremental = "<CR>",
+				scope_incremental = "<S-CR>",
+				node_decremental = "<BS>",
+			},
+		},
 	}
-	-- vim.opt.foldmethod = "expr"
-	-- vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-	-- vim.opt.foldlevelstart = 99
-	-- vim.opt.foldnestmax = 3
-	-- vim.opt.foldminlines = 1
-	-- vim.o.foldtext =
-	-- 	[[substitute(getline(v:foldstart),'\\t',repeat('\ ',&tabstop),'g').'...'.trim(getline(v:foldend)) . ' (' . (v:foldend - v:foldstart + 1) . ' lines)']]
-	-- https://www.reddit.com/r/neovim/comments/psl8rq/sexy_folds/
-	-- vim.o.foldnestmax = 3
-	-- vim.o.foldlevel = 0
-	-- vim.o.foldexpr = "nvim_treesitter#foldexpr()"
-	-- vim.o.foldmethod = "expr"
-	-- vim.o.foldtext =
-	-- 	[[substitute(getline(v:foldstart),'\\t',repeat('\ ',&tabstop),'g').'...'.trim(getline(v:foldend)) . ' (' . (v:foldend - v:foldstart + 1) . ' lines)']]
 	return vim.tbl_deep_extend("force", default, overrides)
 end
