@@ -5,7 +5,4 @@ return {
 	o = {
 		signcolumn = "yes",
 	},
-	g = {
-		heirline_bufferline = true,
-	},
 }

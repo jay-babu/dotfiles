@@ -1,7 +1,7 @@
-return astronvim.user_plugin_opts("plugins.init", {
+return {
 	{
 		"catppuccin/nvim",
-		as = "catppuccin",
+		name = "catppuccin",
 		config = function()
 			-- code
 			require("catppuccin").setup({
@@ -43,9 +43,10 @@ return astronvim.user_plugin_opts("plugins.init", {
 				},
 			})
 		end,
-		disable = true,
+		enabled = false,
 	},
-	["folke/tokyonight.nvim"] = {
+	{
+		"folke/tokyonight.nvim",
 		config = function()
 			require("tokyonight").setup({
 				style = "storm",
@@ -86,137 +87,73 @@ return astronvim.user_plugin_opts("plugins.init", {
 	},
 	{
 		"kylechui/nvim-surround",
-		tag = "*", -- Use for stability; omit to use `main` branch for the latest features
-		opt = true,
-		setup = function()
+		version = "*", -- Use for stability; omit to use `main` branch for the latest features
+		init = function()
 			table.insert(astronvim.file_plugins, "nvim-surround")
 		end,
-		config = function()
-			require("nvim-surround").setup({})
+		opts = {},
+		config = function(_, opts)
+			require("nvim-surround").setup(opts)
 		end,
 	},
 	{
 		"ThePrimeagen/harpoon",
-		opt = true,
-		setup = function()
+		init = function()
 			table.insert(astronvim.file_plugins, "harpoon")
 		end,
 		config = function()
 			local telescope = require("telescope")
 			telescope.load_extension("harpoon")
 		end,
-		requires = "nvim-lua/plenary.nvim",
 	},
 	{
 		"vimpostor/vim-tpipeline",
+		lazy = false,
 	},
 	{
 		"phaazon/hop.nvim",
-		opt = true,
-		setup = function()
-			table.insert(astronvim.file_plugins, "hop.nvim")
-		end,
-		config = function()
-			require("hop").setup()
-		end,
-		module = "hop",
+		opts = {},
 	},
 	{
 		"jabirali/vim-tmux-yank",
-		opt = true,
-		setup = function()
+		init = function()
 			table.insert(astronvim.file_plugins, "vim-tmux-yank")
 		end,
 	},
 	{
 		"vuki656/package-info.nvim",
-		opt = true,
-		module = "package-info",
-		requires = "MunifTanjim/nui.nvim",
 		config = function()
-			-- code
 			require("package-info").setup()
 		end,
 	},
 	{
 		"f-person/git-blame.nvim",
-		opt = true,
-		setup = function()
+		init = function()
 			table.insert(astronvim.file_plugins, "git-blame.nvim")
 		end,
 	},
 	{
 		"folke/twilight.nvim",
-		opt = true,
-		setup = function()
+		init = function()
 			table.insert(astronvim.file_plugins, "twilight.nvim")
 		end,
-		config = function()
-			require("twilight").setup({
-				-- your configuration comes here
-				-- or leave it empty to use the default settings
-				-- refer to the configuration section below
-			})
-		end,
+		opts = {},
 	},
 	{
-		"Pocco81/true-zen.nvim",
-		after = "twilight.nvim",
-		config = function()
-			-- code
-			require("user.plugins.true-zen")
-		end,
-	},
-	["ziontee113/syntax-tree-surfer"] = {
-		cmd = {
-			"STSSelectChildNode",
-			"STSSelectCurrentNode",
-			"STSSelectMasterNode",
-			"STSSelectNextSiblingNode",
-			"STSSelectParentNode",
-			"STSSelectPrevSiblingNode",
-			"STSSwapDownNormal",
-			"STSSwapNextVisual",
-			"STSSwapPrevVisual",
-			"STSSwapUpNormal",
-		},
-		config = function()
-			require("user.plugins.syntax-tree-surfer")
-		end,
-	},
-	["petertriho/nvim-scrollbar"] = {
-		opt = true,
-		setup = function()
+		"petertriho/nvim-scrollbar",
+		init = function()
 			table.insert(astronvim.file_plugins, "nvim-scrollbar")
 		end,
-		config = function()
-			require("scrollbar").setup()
-		end,
+		opts = {},
 	},
-	["romainl/vim-cool"] = {
-		opt = true,
-		setup = function()
+	{
+		"romainl/vim-cool",
+		init = function()
 			table.insert(astronvim.file_plugins, "vim-cool")
 		end,
 	},
-	["sindrets/diffview.nvim"] = {
-		opt = true,
-		requires = {
-			"nvim-lua/plenary.nvim",
-			"nvim-tree/nvim-web-devicons",
-		},
-		setup = function()
-			table.insert(astronvim.git_plugins, "diffview.nvim")
-		end,
-		config = function()
-			require("user.plugins.diffview")
-		end,
-	},
-	["MunifTanjim/nui.nvim"] = {
-		opt = false,
-	},
-	["monaqa/dial.nvim"] = {
-		module = "dial",
+	{
+		"monaqa/dial.nvim",
 		config = function()
 			local augend = require("dial.augend")
 			require("dial.config").augends:register_group({
@@ -233,7 +170,4 @@ return astronvim.user_plugin_opts("plugins.init", {
 			})
 		end,
 	},
-	["rebelot/heirline.nvim"] = {
-		commit = "556666aabb57c227cbb14a996b30b2934e5ff7b1",
-	},
-}, nil, "work")
+}
