@@ -1,20 +1,9 @@
-local maps = { n = {} }
-maps.n["<leader>db"] = maps.n["<leader>Db"]
-maps.n["<leader>dB"] = maps.n["<leader>DB"]
-maps.n["<leader>dc"] = maps.n["<leader>Dc"]
-
-maps.n["<leader>di"] = maps.n["<leader>Di"]
-maps.n["<leader>do"] = maps.n["<leader>Do"]
-maps.n["<leader>dO"] = maps.n["<leader>DO"]
-maps.n["<leader>dq"] = maps.n["<leader>Dq"]
-maps.n["<leader>dQ"] = maps.n["<leader>DQ"]
-maps.n["<leader>dp"] = maps.n["<leader>Dp"]
-maps.n["<leader>dr"] = maps.n["<leader>Dr"]
-maps.n["<leader>dR"] = maps.n["<leader>DR"]
-maps.n["<leader>du"] = maps.n["<leader>Du"]
-maps.n["<leader>dh"] = maps.n["<leader>Dh"]
-
-return vim.tbl_deep_extend("force", maps, {
+return function(default)
+	default.n["<S-h>"] = default.n["[b"]
+	default.n["<S-l>"] = default.n["]b"]
+	default.n["[b"] = nil
+	default.n["]b"] = nil
+	return astronvim.extend_tbl(default, {
 		n = {
 			["<C-\\>"] = { "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
 			["<C-Down>"] = false,
@@ -25,12 +14,12 @@ return vim.tbl_deep_extend("force", maps, {
 			["<C-a>"] = {
 				function()
 					require("dial.map").inc_normal()
-				end
+				end,
 			},
 			["<C-x>"] = {
 				function()
 					require("dial.map").dec_normal()
-				end
+				end,
 			},
 			-- resize with arrows
 			["<Up>"] = {
@@ -160,3 +149,4 @@ return vim.tbl_deep_extend("force", maps, {
 			["<C-\\>"] = { "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
 		},
 	})
+end
