@@ -8,4 +8,10 @@ return {
   {
     "lvimuser/lsp-inlayhints.nvim",
   },
+  {
+    "folke/neodev.nvim",
+    opts = {
+      experimental = { pathStrict = true },
+    },
+  },
 }
