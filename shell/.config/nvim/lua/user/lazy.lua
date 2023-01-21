@@ -1,0 +1,5 @@
+return {
+	dev = {
+		path = "~/code",
+	},
+}
