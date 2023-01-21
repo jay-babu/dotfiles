@@ -15,6 +15,7 @@ return {
 		"nvim-telescope/telescope-hop.nvim",
 		{ "HendrikPetertje/telescope-media-files.nvim", branch = "fix-replace-ueber-with-viu" },
 		"nvim-telescope/telescope-project.nvim",
+		{ "jay-babu/telescope-wallpaper-engine.nvim", dev = true },
 	},
 	opts = function(_, opts)
 		local telescope = require("telescope")
@@ -115,5 +116,6 @@ return {
 		telescope.load_extension("project")
 		telescope.load_extension("undo")
 		telescope.load_extension("goimpl")
+		telescope.load_extension("wallpaper_engine")
 	end,
 }
