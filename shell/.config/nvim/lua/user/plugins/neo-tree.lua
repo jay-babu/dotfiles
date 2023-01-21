@@ -1,6 +1,5 @@
 return {
 	"nvim-neo-tree/neo-tree.nvim",
-	name = "neo-tree",
 	opts = {
 		close_if_last_window = true,
 		enable_diagnostics = true,
