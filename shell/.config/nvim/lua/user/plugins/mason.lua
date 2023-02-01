@@ -61,8 +61,9 @@ return {
         "todo_comments",
       },
     },
-    config = function(plugin, opts)
-      plugin.default_config(opts)
+    config = function(_, opts)
+      local mason_null_ls = require "mason-null-ls"
+      mason_null_ls.setup(opts)
       local null_ls = require("null-ls")
       require("mason-null-ls").setup_handlers({
         shellcheck = function()
