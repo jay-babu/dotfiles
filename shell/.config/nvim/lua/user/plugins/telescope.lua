@@ -106,7 +106,7 @@ return {
 		})
 	end,
 	config = function(plugin, opts)
-		plugin.default_config(opts)
+		require "plugins.configs.telescope" (plugin, opts)
 		local telescope = require("telescope")
 
 		telescope.load_extension("git_worktree")
