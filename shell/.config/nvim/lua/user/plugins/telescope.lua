@@ -17,6 +17,15 @@ return {
 		"nvim-telescope/telescope-project.nvim",
 		{ "jay-babu/telescope-wallpaper-engine.nvim", dev = true },
 	},
+	keys = {
+		{
+			"<leader>fe",
+			function()
+				require("telescope").extensions.wallpaper_engine.wallpaper_engine()
+			end,
+			desc = "Wallpaper Engine",
+		},
+	},
 	opts = function(_, opts)
 		local telescope = require("telescope")
 		local actions = require("telescope.actions")
@@ -106,7 +115,7 @@ return {
 		})
 	end,
 	config = function(plugin, opts)
-		require "plugins.configs.telescope" (plugin, opts)
+		require("plugins.configs.telescope")(plugin, opts)
 		local telescope = require("telescope")
 
 		telescope.load_extension("git_worktree")
