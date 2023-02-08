@@ -1,4 +1,4 @@
-return {
+return astronvim.user_opts("work.lsp.setup_handlers", {
   tsserver = function(_, opts)
     require("typescript").setup({ server = opts })
   end,
@@ -11,4 +11,4 @@ return {
     })
   end,
   jdtls = function(_, _) end,
-}
+})

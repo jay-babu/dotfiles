@@ -1,4 +1,4 @@
-return {
+return astronvim.user_opts("work.lsp.mappings", {
 	n = {
 		["gr"] = {
 			function()
@@ -9,4 +9,4 @@ return {
 			desc = "References of current symbol",
 		},
 	},
-}
+})
