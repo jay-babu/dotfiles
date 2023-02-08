@@ -150,6 +150,24 @@ return function(default)
 				["n"] = { "nzzzv" },
 				["N"] = { "Nzzzv" },
 				["d"] = { [["_d]] },
+				["<leader>tc"] = {
+					function()
+						require("neotest").run.run()
+					end,
+					desc = "Run nearest test",
+				},
+				["<leader>tm"] = {
+					function()
+						require("neotest").run.run(vim.fn.expand("%"))
+					end,
+					desc = "Run tests in file",
+				},
+				["<leader>to"] = {
+					function()
+						require("neotest").output.open({ enter = true })
+					end,
+					desc = "Toggle test output",
+				},
 			},
 			v = {
 				["s"] = {
