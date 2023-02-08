@@ -52,6 +52,42 @@ return function(default)
 				end,
 				desc = "Add File Harpoon",
 			},
+			["<leader>Y"] = {
+				function()
+					vim.cmd([[:%y]])
+				end,
+				desc = "Yank file to clipboard",
+			},
+			["<leader>ni"] = {
+				function()
+					require("package-info").install()
+				end,
+				desc = "Install a new dependency",
+			},
+			["<leader>nd"] = {
+				function()
+					require("package-info").delete()
+				end,
+				desc = "Delete a dependency",
+			},
+			["<leader>zf"] = {
+				function()
+					require("true-zen").focus()
+				end,
+				desc = "True Zen Focus",
+			},
+			["<leader>zm"] = {
+				function()
+					require("true-zen").minimalist()
+				end,
+				desc = "True Zen Minimalist",
+			},
+			["<leader>za"] = {
+				function()
+					require("true-zen").ataraxis()
+				end,
+				desc = "True Zen Ataraxis",
+			},
 			["s"] = {
 				function()
 					require("hop").hint_words()
