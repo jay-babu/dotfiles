@@ -91,4 +91,6 @@ return function()
 			vim.cmd([[set filetype=smithy]])
 		end,
 	})
+
+	astronvim.conditional_func(require("user.work.polish"))
 end
