@@ -120,28 +120,25 @@ return function(default)
 				["<a-down>"] = {
 					function()
 						require("syntax-tree-surfer").move("n", false)
-						vim.cmd(vim.api.nvim_replace_termcodes("normal zz", true, true, true))
+						-- vim.cmd(vim.api.nvim_replace_termcodes("normal zz", true, true, true))
 					end,
 					desc = "Swap next tree-sitter object",
 				},
 				["<a-right>"] = {
 					function()
 						require("syntax-tree-surfer").move("n", false)
-						vim.cmd(vim.api.nvim_replace_termcodes("normal zz", true, true, true))
 					end,
 					desc = "Swap next tree-sitter object",
 				},
 				["<a-up>"] = {
 					function()
 						require("syntax-tree-surfer").move("n", true)
-						vim.cmd(vim.api.nvim_replace_termcodes("normal zz", true, true, true))
 					end,
 					desc = "Swap previous tree-sitter object",
 				},
 				["<a-left>"] = {
 					function()
 						require("syntax-tree-surfer").move("n", true)
-						vim.cmd(vim.api.nvim_replace_termcodes("normal zz", true, true, true))
 					end,
 					desc = "Swap previous tree-sitter object",
 				},
