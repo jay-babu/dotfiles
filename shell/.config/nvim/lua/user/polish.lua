@@ -49,12 +49,12 @@ return function()
 	vim.api.nvim_create_autocmd("Filetype", {
 		pattern = "java", -- autocmd to start jdtls
 		callback = function()
-			local config = astronvim.lsp.config("jdtls")
+			local config = require("core.utils.lsp").config("jdtls")
 			config["on_attach"] = function(client, bufnr)
 				require("jdtls").setup_dap({ hotcodereplace = "auto" })
 				require("jdtls.dap").setup_dap_main_class_configs()
 				vim.lsp.codelens.refresh()
-				astronvim.lsp.on_attach(client, bufnr)
+				require("core.utils.lsp").on_attach(client, bufnr)
 			end
 
 			require("jdtls").start_or_attach(config)
@@ -94,6 +94,6 @@ return function()
 
 	local p, ok = pcall(require, "user.work.polish")
 	if ok then
-		astronvim.conditional_func(p)
+		require("core.utils").conditional_func(p)
 	end
 end

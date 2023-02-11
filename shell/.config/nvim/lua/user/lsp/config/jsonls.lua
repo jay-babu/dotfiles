@@ -1,9 +1,9 @@
 return {
-  settings = {
-    json = {
-      format = {
-        enable = true,
-      },
-    },
-  },
+	settings = {
+		json = {
+			format = {
+				enable = true,
+			},
+		},
+	},
 }
