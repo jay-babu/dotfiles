@@ -1,5 +1,5 @@
 return function(config)
-	config = vim.tbl_deep_extend("force", config, {
+	config = require("core.utils").extend_tbl(config, {
 		dev = {
 			path = "~/code",
 		},

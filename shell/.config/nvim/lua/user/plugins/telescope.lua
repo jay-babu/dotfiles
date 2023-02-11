@@ -36,7 +36,7 @@ return {
 		local fb_actions = require("telescope").extensions.file_browser.actions
 		local hop = telescope.extensions.hop
 
-		return astronvim.extend_tbl(opts, {
+		return require("core.utils").extend_tbl(opts, {
 			defaults = {
 				prompt_prefix = "  ",
 				borderchars = {
@@ -75,6 +75,7 @@ return {
 					"--line-number",
 					"--column",
 					"--hidden",
+					"--follow",
 				},
 				file_ignore_patterns = {
 					".git",
@@ -96,6 +97,7 @@ return {
 			pickers = {
 				find_files = {
 					hidden = true,
+					follow = true,
 				},
 			},
 			extensions = {
@@ -108,7 +110,6 @@ return {
 						i = {
 							["<C-z>"] = fb_actions.toggle_hidden,
 						},
-
 						n = {
 							z = fb_actions.toggle_hidden,
 						},

@@ -56,8 +56,8 @@ return function()
 			-- "-Xms1g",
 			-- "-javaagent:" .. install_path .. "/lombok.jar",
 			"--jvm-arg=-javaagent:"
-					.. install_path
-					.. "/lombok.jar",
+				.. install_path
+				.. "/lombok.jar",
 			-- "-jar",
 			-- vim.fn.glob(install_path .. "/plugins/org.eclipse.equinox.launcher_*.jar"),
 			"-configuration",

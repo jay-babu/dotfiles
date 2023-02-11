@@ -1,3 +1,3 @@
 return {
-	on_attach = astronvim.lsp.disable_formatting,
+	on_attach = require("core.utils.lsp").disable_formatting,
 }
