@@ -15,7 +15,11 @@ return {
 		"nvim-telescope/telescope-hop.nvim",
 		{ "HendrikPetertje/telescope-media-files.nvim", branch = "fix-replace-ueber-with-viu" },
 		"nvim-telescope/telescope-project.nvim",
-		{ "jay-babu/telescope-wallpaper-engine.nvim", dev = true },
+		{
+			"jay-babu/telescope-wallpaper-engine.nvim",
+			dev = true,
+			enabled = vim.fn.has("windows") == 1,
+		},
 	},
 	keys = {
 		{
@@ -125,6 +129,8 @@ return {
 		telescope.load_extension("project")
 		telescope.load_extension("undo")
 		telescope.load_extension("goimpl")
-		telescope.load_extension("wallpaper_engine")
+		if vim.fn.has("windows") == 1 then
+			telescope.load_extension("wallpaper_engine")
+		end
 	end,
 }
