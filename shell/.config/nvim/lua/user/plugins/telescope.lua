@@ -18,7 +18,7 @@ return {
 		{
 			"jay-babu/telescope-wallpaper-engine.nvim",
 			dev = true,
-			enabled = vim.fn.has("windows") == 1,
+			enabled = vim.fn.has("wsl") == 1,
 		},
 	},
 	keys = {
@@ -130,7 +130,7 @@ return {
 		telescope.load_extension("project")
 		telescope.load_extension("undo")
 		telescope.load_extension("goimpl")
-		if vim.fn.has("windows") == 1 then
+		if vim.fn.has("wsl") == 1 then
 			telescope.load_extension("wallpaper_engine")
 		end
 	end,
