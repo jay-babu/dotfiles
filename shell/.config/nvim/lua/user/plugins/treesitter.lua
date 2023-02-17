@@ -101,6 +101,5 @@ return {
 				node_decremental = "<BS>",
 			},
 		},
-	}
-	return vim.tbl_deep_extend("force", default, overrides)
-end
+	},
+}

@@ -42,7 +42,6 @@ return {
 	},
 	{
 		"jay-babu/mason-null-ls.nvim",
-		dev = true,
 		opts = {
 			ensure_installed = {
 				"black",
@@ -78,7 +77,6 @@ return {
 	},
 	{
 		"jay-babu/mason-nvim-dap.nvim",
-		branch = "func_or_extend",
 		opts = {
 			ensure_installed = {
 				"delve",
