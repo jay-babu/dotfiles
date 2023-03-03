@@ -5,7 +5,7 @@ return function(default)
 	default.n["]b"] = nil
 	return astronvim.user_opts(
 		"work.mappings",
-		require("core.utils").extend_tbl(default, {
+		require("astronvim.utils").extend_tbl(default, {
 			n = {
 				["<C-\\>"] = { "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
 				["<C-Down>"] = false,

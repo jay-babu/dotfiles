@@ -10,7 +10,7 @@ return {
 			local out = {}
 			local i = 1
 			for lhs, def in
-				pairs(require("core.utils").extend_tbl({
+				pairs(require("astronvim.utils").extend_tbl({
 					["<leader>dq"] = { "<cmd>DiffviewClose<cr>", desc = "Quit Diffview" }, -- Toggle the file panel.
 					["]D"] = { actions.select_next_entry, desc = "Next Difference" }, -- Open the diff for the next file
 					["[D"] = { actions.select_prev_entry, desc = "Previous Difference" }, -- Open the diff for the previous file

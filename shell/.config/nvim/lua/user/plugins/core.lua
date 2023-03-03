@@ -103,6 +103,7 @@ return {
 	{
 		"vimpostor/vim-tpipeline",
 		lazy = false,
+		enabled = false,
 	},
 	{
 		"phaazon/hop.nvim",

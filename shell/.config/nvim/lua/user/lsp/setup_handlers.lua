@@ -5,7 +5,7 @@ return astronvim.user_opts("work.lsp.setup_handlers", {
 	gopls = function(_, opts)
 		require("go").setup({
 			lsp_cfg = opts,
-			lsp_on_attach = require("core.utils.lsp").on_attach,
+			lsp_on_attach = require("astronvim.utils.lsp").on_attach,
 			lsp_keymaps = false,
 			lsp_inlay_hints = { enable = false },
 		})

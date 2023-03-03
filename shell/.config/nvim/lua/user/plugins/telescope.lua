@@ -36,7 +36,7 @@ return {
 		local fb_actions = require("telescope").extensions.file_browser.actions
 		local hop = telescope.extensions.hop
 
-		return require("core.utils").extend_tbl(opts, {
+		return require("astronvim.utils").extend_tbl(opts, {
 			defaults = {
 				prompt_prefix = "  ",
 				borderchars = {

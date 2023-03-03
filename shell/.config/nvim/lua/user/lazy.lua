@@ -1,5 +1,5 @@
 return function(config)
-	config = require("core.utils").extend_tbl(config, {
+	config = require("astronvim.utils").extend_tbl(config, {
 		dev = {
 			path = "~/code",
 		},
