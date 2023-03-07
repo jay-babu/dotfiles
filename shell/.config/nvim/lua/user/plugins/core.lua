@@ -82,9 +82,7 @@ return {
 	{
 		"kylechui/nvim-surround",
 		version = "*", -- Use for stability; omit to use `main` branch for the latest features
-		init = function()
-			table.insert(astronvim.file_plugins, "nvim-surround")
-		end,
+		event = "User AstroFile",
 		opts = {},
 		config = function(_, opts)
 			require("nvim-surround").setup(opts)
@@ -92,9 +90,7 @@ return {
 	},
 	{
 		"ThePrimeagen/harpoon",
-		init = function()
-			table.insert(astronvim.file_plugins, "harpoon")
-		end,
+		event = "User AstroFile",
 		config = function()
 			local telescope = require("telescope")
 			telescope.load_extension("harpoon")
@@ -111,9 +107,7 @@ return {
 	},
 	{
 		"jabirali/vim-tmux-yank",
-		init = function()
-			table.insert(astronvim.file_plugins, "vim-tmux-yank")
-		end,
+		event = "User AstroFile",
 	},
 	{
 		"vuki656/package-info.nvim",
@@ -123,29 +117,21 @@ return {
 	},
 	{
 		"f-person/git-blame.nvim",
-		init = function()
-			table.insert(astronvim.file_plugins, "git-blame.nvim")
-		end,
+		event = "User AstroFile",
 	},
 	{
 		"folke/twilight.nvim",
-		init = function()
-			table.insert(astronvim.file_plugins, "twilight.nvim")
-		end,
+		event = "User AstroFile",
 		opts = {},
 	},
 	{
 		"petertriho/nvim-scrollbar",
-		init = function()
-			table.insert(astronvim.file_plugins, "nvim-scrollbar")
-		end,
 		opts = {},
+		event = "User AstroFile",
 	},
 	{
 		"romainl/vim-cool",
-		init = function()
-			table.insert(astronvim.file_plugins, "vim-cool")
-		end,
+		event = "User AstroFile",
 	},
 	{
 		"monaqa/dial.nvim",

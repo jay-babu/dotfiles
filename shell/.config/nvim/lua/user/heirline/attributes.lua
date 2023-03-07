@@ -1,0 +1,3 @@
+return {
+	mode = { bold = true },
+}
