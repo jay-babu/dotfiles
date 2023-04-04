@@ -61,19 +61,15 @@ return {
 				"trim_whitespace",
 				"todo_comments",
 			},
-		},
-		config = function(_, opts)
-			local mason_null_ls = require("mason-null-ls")
-			mason_null_ls.setup(opts)
-			local null_ls = require("null-ls")
-			require("mason-null-ls").setup_handlers({
+			handlers = {
 				shellcheck = function()
+					local null_ls = require("null-ls")
 					null_ls.register(
 						null_ls.builtins.diagnostics.shellcheck.with({ diagnostics_format = "#{m} [#(c)]" })
 					)
 				end,
-			})
-		end,
+			},
+		},
 	},
 	{
 		"jay-babu/mason-nvim-dap.nvim",
