@@ -10,5 +10,4 @@ return astronvim.user_opts("work.lsp.setup_handlers", {
 			lsp_inlay_hints = { enable = false },
 		})
 	end,
-	jdtls = function(_, _) end,
 })

@@ -22,7 +22,6 @@ return {
 				"fish",
 				"go",
 				"graphql",
-				"java",
 				"json",
 				"kotlin",
 				"lua",
