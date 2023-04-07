@@ -25,8 +25,6 @@ return {
 				"json",
 				"kotlin",
 				"lua",
-				"markdown",
-				"markdown_inline",
 				"mermaid",
 				"python",
 				"regex",
