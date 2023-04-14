@@ -69,16 +69,26 @@ return {
 				end,
 			},
 		},
-		dev = true,
 	},
 	{
 		"jay-babu/mason-nvim-dap.nvim",
 		opts = {
 			ensure_installed = {
+				"bash",
+				"chrome",
+				"codelldb",
+				"dart",
 				"delve",
+				"firefox",
 				"js",
+				"kotlin",
+				"mix_task",
+				"node2",
+				"php",
 				"python",
 			},
+			handlers = {},
 		},
+		config = true,
 	},
 }
