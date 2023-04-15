@@ -59,6 +59,7 @@ return {
 				"gitsigns",
 				"trim_whitespace",
 				"todo_comments",
+				"prettierd",
 			},
 			handlers = {
 				shellcheck = function()
@@ -66,6 +67,10 @@ return {
 					null_ls.register(
 						null_ls.builtins.diagnostics.shellcheck.with({ diagnostics_format = "#{m} [#(c)]" })
 					)
+				end,
+				prettierd = function()
+					local null_ls = require("null-ls")
+					null_ls.register(null_ls.builtins.formatting.prettierd.with({ filetypes = { "yaml" } }))
 				end,
 			},
 		},
