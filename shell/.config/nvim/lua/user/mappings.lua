@@ -13,24 +13,6 @@ return function(default)
 				["<C-Right>"] = false,
 				["<C-Up>"] = false,
 				["<C-s>"] = false,
-				["<C-a>"] = {
-					desc = "Dial Inc",
-					function()
-						return require("dial.map").inc_normal()
-					end,
-					noremap = true,
-					silent = true,
-					expr = true,
-				},
-				["<C-x>"] = {
-					function()
-						return require("dial.map").dec_normal()
-					end,
-					desc = "Dial Dec",
-					noremap = true,
-					silent = true,
-					expr = true,
-				},
 				-- resize with arrows
 				["<Up>"] = {
 					function()
@@ -175,42 +157,6 @@ return function(default)
 				},
 			},
 			v = {
-				["<C-a>"] = {
-					desc = "Dial Inc",
-					function()
-						return require("dial.map").inc_visual()
-					end,
-					noremap = true,
-					silent = true,
-					expr = true,
-				},
-				["<C-x>"] = {
-					function()
-						return require("dial.map").inc_visual()
-					end,
-					desc = "Dial Dec",
-					noremap = true,
-					silent = true,
-					expr = true,
-				},
-				["g<C-a>"] = {
-					desc = "Dial Inc",
-					function()
-						return require("dial.map").inc_gvisual()
-					end,
-					noremap = true,
-					silent = true,
-					expr = true,
-				},
-				["g<C-x>"] = {
-					function()
-						return require("dial.map").inc_gvisual()
-					end,
-					desc = "Dial Dec",
-					noremap = true,
-					silent = true,
-					expr = true,
-				},
 				["s"] = {
 					"<cmd>lua require('hop').hint_words({ extend_visual = true })<cr>",
 				},

@@ -1,7 +1,16 @@
 return {
-	"AstroNvim/astrocommunity",
+	{ "AstroNvim/astrocommunity" },
 	{ import = "astrocommunity.debugging.nvim-bqf" },
 	{ import = "astrocommunity.project.neoconf-nvim" },
 	{ import = "astrocommunity.pack.java" },
 	{ import = "astrocommunity.pack.markdown" },
+	{ import = "astrocommunity.editing-support.dial-nvim" },
+	{ import = "astrocommunity.git.git-blame-nvim" },
+	{ import = "astrocommunity.scrolling.nvim-scrollbar" },
+	{ import = "astrocommunity.utility.noice-nvim" },
+	{ import = "astrocommunity.motion.nvim-surround" },
+	{ import = "astrocommunity.motion.vim-matchup" },
+	{ import = "astrocommunity.terminal-integration.vim-tmux-yank" },
+	{ import = "astrocommunity.terminal-integration.vim-tpipeline" },
+	{ import = "astrocommunity.syntax.vim-cool" },
 }

@@ -6,7 +6,4 @@ return astronvim.user_opts("work.options", {
 	o = {
 		signcolumn = "yes",
 	},
-	g = {
-		lsp_handlers_enabled = false,
-	},
 })

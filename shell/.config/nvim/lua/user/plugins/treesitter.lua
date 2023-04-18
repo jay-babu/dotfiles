@@ -2,7 +2,6 @@ return {
 	{
 		"nvim-treesitter/nvim-treesitter",
 		dependencies = {
-			"andymass/vim-matchup",
 			"nvim-treesitter/nvim-treesitter-textobjects",
 			{
 				"nvim-treesitter/nvim-treesitter-context",
@@ -18,7 +17,6 @@ return {
 		opts = {
 			auto_install = vim.fn.executable("tree-sitter") == 1,
 			ensure_installed = {
-				"bash",
 				"fish",
 				"go",
 				"graphql",
@@ -27,14 +25,9 @@ return {
 				"lua",
 				"mermaid",
 				"python",
-				"regex",
 				"rust",
 				"smithy",
 				"typescript",
-				"vim",
-			},
-			matchup = {
-				enable = true,
 			},
 			textobjects = {
 				select = {
