@@ -1,4 +1,4 @@
-return astronvim.user_opts("work.options", {
+local M = {
 	opt = {
 		wildmode = "longest:full,full",
 		shell = vim.fn.exepath("bash"),
@@ -6,4 +6,22 @@ return astronvim.user_opts("work.options", {
 	o = {
 		signcolumn = "yes",
 	},
-})
+}
+
+if vim.fn.has("wsl") == 1 then
+	M.g = {
+		clipboard = {
+			name = "win32yank-wsl",
+			copy = {
+				["+"] = "win32yank.exe -i --crlf",
+				["*"] = "win32yank.exe -i --crlf",
+			},
+			paste = {
+				["+"] = "win32yank.exe -o --lf",
+				["*"] = "win32yank.exe -o --lf",
+			},
+			cache_enabled = 0,
+		},
+	}
+end
+return astronvim.user_opts("work.options", M)

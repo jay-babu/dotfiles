@@ -38,12 +38,6 @@ return function(default)
 					end,
 					desc = "Resize split right",
 				},
-				["<leader>a"] = {
-					function()
-						require("harpoon.mark").add_file()
-					end,
-					desc = "Add File Harpoon",
-				},
 				["<leader>Y"] = {
 					function()
 						vim.cmd([[:%y]])
@@ -79,32 +73,6 @@ return function(default)
 						require("true-zen").ataraxis()
 					end,
 					desc = "True Zen Ataraxis",
-				},
-				["s"] = {
-					function()
-						require("hop").hint_words()
-					end,
-				},
-				["<c-e>"] = {
-					function()
-						require("harpoon.ui").toggle_quick_menu()
-					end,
-					desc = "View Harpoon Marks",
-				},
-				["<c-t>"] = {
-					function()
-						require("harpoon.ui").nav_prev()
-					end,
-					desc = "Harpoon Marks Previous",
-				},
-				["<c-s>"] = {
-					function()
-						require("harpoon.ui").nav_next()
-					end,
-					desc = "Harpoon Marks Next",
-				},
-				["<S-s>"] = {
-					"<cmd>lua require('hop').hint_lines()<cr>",
 				},
 				-- Treesitter Surfer
 				["<a-down>"] = {
@@ -157,20 +125,6 @@ return function(default)
 				},
 			},
 			v = {
-				["s"] = {
-					"<cmd>lua require('hop').hint_words({ extend_visual = true })<cr>",
-				},
-				["<S-s>"] = {
-					"<cmd>lua require('hop').hint_lines({ extend_visual = true })<cr>",
-				},
-				["<leader>im"] = {
-					function()
-						require("telescope").extensions.goimpl.goimpl({})
-					end,
-					desc = "Go Interface Impl",
-					silent = true,
-					noremap = true,
-				},
 				["d"] = { [["_d]] },
 			},
 			[""] = {

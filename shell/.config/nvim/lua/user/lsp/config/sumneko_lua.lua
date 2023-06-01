@@ -5,7 +5,7 @@ return {
 				enable = true,
 			},
 			workspace = {
-				checkThirdParty = false,
+				checkThirdParty = true,
 			},
 		},
 	},
