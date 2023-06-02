@@ -1,6 +1,6 @@
 return function()
-	local p, ok = pcall(require, "user.work.polish")
+	local ok, p = pcall(require, "user.work.polish")
 	if ok then
-		require("astronvim.utils").conditional_func(p)
+		require("astronvim.utils").conditional_func(p, true)
 	end
 end
