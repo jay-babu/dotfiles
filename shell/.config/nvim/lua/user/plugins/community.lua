@@ -1,7 +1,8 @@
 return {
-	"AstroNvim/astrocommunity",
+	{ "AstroNvim/astrocommunity" },
 	{ import = "astrocommunity.bars-and-lines.heirline-vscode-winbar" },
 	{ import = "astrocommunity.debugging.nvim-bqf" },
+	{ import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
 	{ import = "astrocommunity.diagnostics.trouble-nvim" },
 	{ import = "astrocommunity.editing-support.cutlass-nvim" },
 	{ import = "astrocommunity.editing-support.dial-nvim" },

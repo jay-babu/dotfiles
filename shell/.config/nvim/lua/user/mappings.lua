@@ -13,6 +13,9 @@ return function(default)
 				["<C-Right>"] = false,
 				["<C-Up>"] = false,
 				["<C-s>"] = false,
+				["<leader>db"] = false,
+				["<leader>dB"] = false,
+				["<leader>dC"] = false,
 				-- resize with arrows
 				["<Up>"] = {
 					function()
