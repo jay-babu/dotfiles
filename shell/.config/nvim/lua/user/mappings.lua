@@ -3,6 +3,9 @@ return function(default)
 	default.n["<S-l>"] = default.n["]b"]
 	default.n["[b"] = nil
 	default.n["]b"] = nil
+	default.n["<leader>db"] = nil
+	default.n["<leader>dB"] = nil
+	default.n["<leader>dC"] = nil
 	return astronvim.user_opts(
 		"work.mappings",
 		require("astronvim.utils").extend_tbl(default, {

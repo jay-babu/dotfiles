@@ -1,5 +1,5 @@
 return {
-	{ "AstroNvim/astrocommunity" },
+	{ "AstroNvim/astrocommunity", version = "*" },
 	{ import = "astrocommunity.bars-and-lines.heirline-vscode-winbar" },
 	{ import = "astrocommunity.debugging.nvim-bqf" },
 	{ import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
@@ -9,7 +9,7 @@ return {
 	{ import = "astrocommunity.editing-support.nvim-regexplainer" },
 	{ import = "astrocommunity.editing-support.refactoring-nvim" },
 	{
-		import = "astrocommunity.editing-support.treej",
+		import = "astrocommunity.editing-support.treesj",
 		opts = { max_join_length = 240 },
 	},
 	{ import = "astrocommunity.indent.indent-blankline-nvim" },
