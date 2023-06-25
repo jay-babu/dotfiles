@@ -21,13 +21,13 @@ return {
 	{ import = "astrocommunity.project.neoconf-nvim" },
 	{ import = "astrocommunity.scrolling.nvim-scrollbar" },
 	{ import = "astrocommunity.utility.noice-nvim" },
-	{
-		import = "astrocommunity.utility.transparent-nvim",
-		config = function(_, opts)
-			require("transparent").setup(opts)
-			vim.cmd([[TransparentEnable]])
-		end,
-	},
+	-- {
+	-- 	import = "astrocommunity.utility.transparent-nvim",
+	-- 	config = function(_, opts)
+	-- 		require("transparent").setup(opts)
+	-- 		vim.cmd([[TransparentEnable]])
+	-- 	end,
+	-- },
 	{ import = "astrocommunity.pack.docker" },
 	{ import = "astrocommunity.pack.go" },
 	{ import = "astrocommunity.pack.json" },
