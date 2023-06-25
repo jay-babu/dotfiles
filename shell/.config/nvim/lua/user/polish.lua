@@ -1,6 +1,6 @@
 return function()
 	vim.api.nvim_create_autocmd("User", {
-		pattern = "LazyPreSync",
+		pattern = "LazySyncPre",
 		callback = function()
 			require("astronvim.utils.updater").update()
 		end,
