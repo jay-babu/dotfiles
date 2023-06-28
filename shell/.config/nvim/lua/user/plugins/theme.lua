@@ -5,7 +5,7 @@ return {
 			transparent = true,
 		},
 	},
-	{ import = "astrocommunity.colorscheme.catppuccin" },
+	{ import = "astrocommunity.colorscheme.catppuccin", opts = { transparent_background = true } },
 	{ import = "astrocommunity.colorscheme.monokai-pro-nvim", opts = { transparent_background = true } },
 	{ import = "astrocommunity.colorscheme.nightfox-nvim", opts = { options = { transparent = true } } },
 	{
