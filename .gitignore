@@ -243,3 +243,9 @@ vim/pack/
 fish/.config/fish/fish_variables
 
 shell/.config/tmux/plugins/
+
+shell/.config/fish/completions/
+shell/.config/fish/conf.d/
+shell/.config/fish/fish_plugins
+shell/.config/fish/fish_variables
+shell/.config/fish/functions/
