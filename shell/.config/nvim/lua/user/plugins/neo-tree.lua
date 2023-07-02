@@ -8,9 +8,10 @@ return {
 				hide_dotfiles = false,
 				hide_gitignored = false,
 			},
+			group_empty_dirs = true,
+			follow_current_file = true,
 		},
 		sort_case_insensitive = true,
-		group_empty_dirs = true,
 		renderers = {
 			directory = {
 				{ "indent" },
