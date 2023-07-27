@@ -9,7 +9,9 @@ return {
 				hide_gitignored = false,
 			},
 			group_empty_dirs = true,
-			follow_current_file = true,
+			follow_current_file = {
+				enabled = true,
+			},
 		},
 		sort_case_insensitive = true,
 		renderers = {
