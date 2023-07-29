@@ -51,4 +51,5 @@ return {
 	-- { import = "astrocommunity.terminal-integration.vim-tpipeline" },
 	{ import = "astrocommunity.syntax.vim-cool" },
 	{ import = "astrocommunity.lsp.lsp-inlayhints-nvim" },
+	{ import = "astrocommunity.editing-support.rainbow-delimiters-nvim" },
 }

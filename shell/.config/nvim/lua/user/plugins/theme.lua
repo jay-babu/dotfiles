@@ -33,6 +33,7 @@ return {
 				"catppuccin-latte",
 				"dawnfox",
 				"dayfox",
+				"carbonfox",
 			},
 		},
 		event = "User AstroFile",
