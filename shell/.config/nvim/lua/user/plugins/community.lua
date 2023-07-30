@@ -18,6 +18,9 @@ return {
 	{ import = "astrocommunity.editing-support.refactoring-nvim" },
 	{
 		import = "astrocommunity.editing-support.treesj",
+	},
+	{
+		"Wansmer/treesj",
 		opts = { max_join_length = 240 },
 	},
 	{ import = "astrocommunity.indent.indent-blankline-nvim" },
