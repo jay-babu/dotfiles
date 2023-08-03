@@ -21,7 +21,7 @@ return {
 	},
 	{
 		"Wansmer/treesj",
-		opts = { max_join_length = 240 },
+		opts = { max_join_length = 9999 },
 	},
 	{ import = "astrocommunity.indent.indent-blankline-nvim" },
 	{ import = "astrocommunity.indent.mini-indentscope" },
@@ -55,4 +55,5 @@ return {
 	{ import = "astrocommunity.syntax.vim-cool" },
 	{ import = "astrocommunity.lsp.lsp-inlayhints-nvim" },
 	{ import = "astrocommunity.editing-support.rainbow-delimiters-nvim" },
+	{ import = "astrocommunity.editing-support.true-zen-nvim" },
 }

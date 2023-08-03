@@ -19,6 +19,9 @@ return function(default)
 				["<leader>db"] = false,
 				["<leader>dB"] = false,
 				["<leader>dC"] = false,
+				["<leader>z"] = {
+					desc = "True Zen",
+				},
 				-- resize with arrows
 				["<Up>"] = {
 					function()
@@ -61,24 +64,6 @@ return function(default)
 						require("package-info").delete()
 					end,
 					desc = "Delete a dependency",
-				},
-				["<leader>zf"] = {
-					function()
-						require("true-zen").focus()
-					end,
-					desc = "True Zen Focus",
-				},
-				["<leader>zm"] = {
-					function()
-						require("true-zen").minimalist()
-					end,
-					desc = "True Zen Minimalist",
-				},
-				["<leader>za"] = {
-					function()
-						require("true-zen").ataraxis()
-					end,
-					desc = "True Zen Ataraxis",
 				},
 				-- Treesitter Surfer
 				["<a-down>"] = {
