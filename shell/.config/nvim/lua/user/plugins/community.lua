@@ -1,5 +1,5 @@
 return {
-	{ "AstroNvim/astrocommunity", version = "*" },
+	{ "jay-babu/astrocommunity", version = "*", dev = true },
 	{ import = "astrocommunity.bars-and-lines.heirline-vscode-winbar" },
 	{ import = "astrocommunity.debugging.nvim-bqf" },
 	{ import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
@@ -56,4 +56,12 @@ return {
 	{ import = "astrocommunity.lsp.lsp-inlayhints-nvim" },
 	{ import = "astrocommunity.editing-support.rainbow-delimiters-nvim" },
 	{ import = "astrocommunity.editing-support.true-zen-nvim" },
+	{
+		"jay-babu/mason-null-ls.nvim",
+		opts = {
+			handlers = {
+				clang_format = function() end,
+			},
+		},
+	},
 }
