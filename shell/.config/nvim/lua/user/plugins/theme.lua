@@ -34,6 +34,8 @@ return {
 				"dawnfox",
 				"dayfox",
 				"carbonfox",
+				"duskfox",
+				"nordfox",
 			},
 		},
 		event = "User AstroFile",
