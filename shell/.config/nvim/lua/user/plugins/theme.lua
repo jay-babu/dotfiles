@@ -10,6 +10,7 @@ return {
 	{ import = "astrocommunity.colorscheme.nightfox-nvim", opts = { options = { transparent = true } } },
 	{
 		"jay-babu/colorscheme-randomizer.nvim",
+		enabled = false,
 		dependencies = {
 			{ "catppuccin/nvim", name = "catppuccin" },
 			{ "folke/tokyonight.nvim" },

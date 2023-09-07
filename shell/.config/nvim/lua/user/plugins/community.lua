@@ -1,5 +1,5 @@
 return {
-	{ "jay-babu/astrocommunity", version = "*", dev = true },
+	{ "jay-babu/astrocommunity", dev = true },
 	{ import = "astrocommunity.bars-and-lines.heirline-vscode-winbar" },
 	{ import = "astrocommunity.debugging.nvim-bqf" },
 	{ import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
