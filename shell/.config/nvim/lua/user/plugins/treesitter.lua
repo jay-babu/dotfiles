@@ -13,6 +13,10 @@ return {
 					},
 				},
 			},
+			{
+				"stevearc/aerial.nvim",
+				enabled = false,
+			},
 		},
 		opts = {
 			auto_install = vim.fn.executable("tree-sitter") == 1,
