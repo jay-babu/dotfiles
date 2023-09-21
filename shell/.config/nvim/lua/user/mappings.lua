@@ -19,6 +19,14 @@ return function(default)
 				["<leader>db"] = false,
 				["<leader>dB"] = false,
 				["<leader>dC"] = false,
+
+				-- disable <leader>b mappings
+				["<leader>b"] = false,
+				["<leader>bb"] = false,
+				["<leader>bd"] = false,
+				["<leader>b\\"] = false,
+				["<leader>b|"] = false,
+
 				["<leader>z"] = {
 					desc = "True Zen",
 				},

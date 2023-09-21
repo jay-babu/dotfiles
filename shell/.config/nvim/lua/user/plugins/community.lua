@@ -1,5 +1,15 @@
+local function removeFirstLeaderFromArray(inputArray)
+	local resultArray = {}
+
+	for _, str in ipairs(inputArray) do
+		local replacedString, _, count = string.gsub(str[1], "<leader>", "", 1)
+		table.insert(resultArray, str)
+	end
+	return resultArray
+end
+
 return {
-	{ "AstroNvim/astrocommunity", version = "*" },
+	{ "AstroNvim/astrocommunity" },
 	{ import = "astrocommunity.bars-and-lines.heirline-vscode-winbar" },
 	{ import = "astrocommunity.debugging.nvim-bqf" },
 	{ import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
@@ -21,11 +31,21 @@ return {
 	},
 	{
 		"Wansmer/treesj",
+		keys = { { "<leader><leader>m", "<CMD>TSJToggle<CR>", desc = "Toggle Treesitter Join" } },
+	},
+	{
+		"Wansmer/treesj",
 		opts = { max_join_length = 9999 },
 	},
 	{ import = "astrocommunity.indent.indent-blankline-nvim" },
 	{ import = "astrocommunity.indent.mini-indentscope" },
 	{ import = "astrocommunity.motion.harpoon" },
+	{
+		"ThePrimeagen/harpoon",
+		keys = function(_, keys)
+			return removeFirstLeaderFromArray(keys)
+		end,
+	},
 	{ import = "astrocommunity.motion.hop-nvim" },
 	{ import = "astrocommunity.motion.nvim-surround" },
 	{ import = "astrocommunity.motion.vim-matchup" },
