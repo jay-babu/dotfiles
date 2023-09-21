@@ -1,11 +1,9 @@
-zmodload zsh/zprof
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
+[[ -e ~/.profile ]] && source ~/.profile
+
 # Path to your oh-my-zsh installation.
-[[ -e ~/.profile ]] && emulate sh -c 'source ~/.profile'
-
-
 export ZSH="$HOME/.oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
@@ -83,6 +81,8 @@ plugins=(
   npm
   zsh-autosuggestions
   zsh-syntax-highlighting
+  sudo
+  gitfast
 )
 
 fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
@@ -114,5 +114,3 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-
-eval "$(starship init zsh)"
