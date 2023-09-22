@@ -55,6 +55,13 @@ return function(default)
 					end,
 					desc = "Resize split right",
 				},
+				["<leader>c"] = function()
+					if vim.o.filetype == "sql" then
+						require("astronvim.utils.buffer").close(0, true)
+					else
+						require("astronvim.utils.buffer").close()
+					end
+				end,
 				["<leader>Y"] = {
 					function()
 						vim.cmd([[:%y]])

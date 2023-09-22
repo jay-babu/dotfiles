@@ -63,6 +63,8 @@ function connect_to_rds() {
 }
 
 function dev_t() {
+	export DATASOURCE_URL=jdbc-secretsmanager:postgresql://transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/transformity_pos
+	export DATASOURCE_USERNAME=rds!cluster-cadc26c1-7647-4cd1-b34e-46d55017cfea
 	connect_to_rds 'rds!cluster-cadc26c1-7647-4cd1-b34e-46d55017cfea' "transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" "transformity_pos"
 }
 
