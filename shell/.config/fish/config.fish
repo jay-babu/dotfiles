@@ -57,14 +57,15 @@ function connect_to_rds
 
     set -l password (echo $secret_string | jq -r '.password')
 
-    set -x DBUI_URL "postgres://$username:$password@$rds_endpoint:5432/$database_name"
+    set -x -g DBUI_URL "postgres://$username:$password@$rds_endpoint:5432/$database_name"
 
     # PGPASSWORD="$password" psql -h "$rds_endpoint" -U "$username" -d "$database_name" -w
 end
 
 function dev_t
-    set -x DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/transformity_pos
-    set -x DATASOURCE_USERNAME rds!cluster-cadc26c1-7647-4cd1-b34e-46d55017cfea
+    set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/transformity_pos
+    set -x -g DATASOURCE_USERNAME rds!cluster-cadc26c1-7647-4cd1-b34e-46d55017cfea
+    echo $DATASOURCE_USERNAME
     connect_to_rds 'rds!cluster-cadc26c1-7647-4cd1-b34e-46d55017cfea' "transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" "transformity_pos"
 end
 
