@@ -11,6 +11,16 @@ return function()
 			require("astronvim.utils.mason").update()
 		end,
 	})
+	vim.api.nvim_create_autocmd("FileType", {
+		pattern = "sql,mysql,plsql",
+		callback = function()
+			require("cmp").setup.buffer({
+				sources = {
+					{ name = "vim-dadbod-completion" },
+				},
+			})
+		end,
+	})
 	local ok, p = pcall(require, "user.work.polish")
 	if ok then
 		require("astronvim.utils").conditional_func(p, true)
