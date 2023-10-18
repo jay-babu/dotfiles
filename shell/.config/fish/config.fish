@@ -64,9 +64,9 @@ end
 
 function dev_t
     set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/transformity_pos
-    set -x -g DATASOURCE_USERNAME rds!cluster-cadc26c1-7647-4cd1-b34e-46d55017cfea
+    set -x -g DATASOURCE_USERNAME rds!cluster-96cd49c6-1a15-4950-b89f-59fd040a22a6
     echo $DATASOURCE_USERNAME
-    connect_to_rds 'rds!cluster-cadc26c1-7647-4cd1-b34e-46d55017cfea' "transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" "transformity_pos"
+    connect_to_rds 'rds!cluster-96cd49c6-1a15-4950-b89f-59fd040a22a6' "transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" "transformity_pos"
 end
 
 function prod_t
