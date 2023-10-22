@@ -25,7 +25,6 @@ return {
 	},
 	{ import = "astrocommunity.editing-support.dial-nvim" },
 	{ import = "astrocommunity.editing-support.nvim-regexplainer" },
-	{ import = "astrocommunity.editing-support.refactoring-nvim" },
 	{
 		import = "astrocommunity.editing-support.treesj",
 	},
@@ -61,7 +60,6 @@ return {
 	{ import = "astrocommunity.pack.docker" },
 	{ import = "astrocommunity.pack.go" },
 	{ import = "astrocommunity.pack.json" },
-	{ import = "astrocommunity.pack.java" },
 	{ import = "astrocommunity.pack.lua" },
 	{ import = "astrocommunity.pack.markdown" },
 	{ import = "astrocommunity.pack.python" },
