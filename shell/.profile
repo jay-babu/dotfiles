@@ -45,29 +45,6 @@ if [ -d "$HOME/.local/share/gem/ruby/3.0.0/bin" ]; then
 	PATH="$HOME/.local/share/gem/ruby/3.0.0/bin:$PATH"
 fi
 
-function connect_to_rds() {
-	local secret_id="$1"
-	local rds_endpoint="$2"
-	local database_name="$3"
-
-	local username
-	local secret_string
-	secret_string=$(aws secretsmanager get-secret-value --secret-id "$secret_id" --query 'SecretString' --output text)
-	username=$(echo "$secret_string" | jq -r '.username')
-	local password
-	password=$(echo "$secret_string" | jq -r '.password')
-
-	export DBUI_URL="postgres://$username:$password@$rds_endpoint:5432/$database_name"
-
-	# PGPASSWORD="$password" psql -h "$rds_endpoint" -U "$username" -d "$database_name" -w
-}
-
-function dev_t() {
-	export DATASOURCE_URL=jdbc-secretsmanager:postgresql://transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/transformity_pos
-	export DATASOURCE_USERNAME=rds!cluster-cadc26c1-7647-4cd1-b34e-46d55017cfea
-	connect_to_rds 'rds!cluster-cadc26c1-7647-4cd1-b34e-46d55017cfea' "transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" "transformity_pos"
-}
-
 alias v="nvim"
 export EDITOR="nvim"
 export BROWSER="wslview"

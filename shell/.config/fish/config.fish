@@ -63,17 +63,19 @@ function connect_to_rds
 end
 
 function dev_t
-    set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/transformity_pos
-    set -x -g DATASOURCE_USERNAME rds!cluster-96cd49c6-1a15-4950-b89f-59fd040a22a6
-    echo $DATASOURCE_USERNAME
-    connect_to_rds 'rds!cluster-96cd49c6-1a15-4950-b89f-59fd040a22a6' "transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" "transformity_pos"
-end
-
-function prod_t
-    set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com:5432/transformity_pos
-    set -x -g DATASOURCE_USERNAME rds!cluster-ed2fdf32-bf0a-420b-af63-0aafc8364dd7
-    echo $DATASOURCE_USERNAME
-    connect_to_rds $DATASOURCE_USERNAME "transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com" "transformity_pos"
+    set -l account_number (aws sts get-caller-identity | jq -r ".Account")
+    if echo $account_number | string match -q "165569969323"
+		echo "Gamma"
+        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/transformity_pos
+        set -x -g DATASOURCE_USERNAME rds!cluster-96cd49c6-1a15-4950-b89f-59fd040a22a6
+        connect_to_rds $DATASOURCE_USERNAME "transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" "transformity_pos"
+    else if echo $account_number | string match -q "928004597368"
+		echo "Prod"
+        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com:5432/transformity_pos
+        set -x -g DATASOURCE_USERNAME rds!cluster-ed2fdf32-bf0a-420b-af63-0aafc8364dd7
+        echo $DATASOURCE_USERNAME
+        connect_to_rds $DATASOURCE_USERNAME "transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com" "transformity_pos"
+    end
 end
 
 complete --command aws --no-files --arguments '(begin; set --local --export COMP_SHELL fish; set --local --export COMP_LINE (commandline); aws_completer | sed \'s/ $//\'; end)'
