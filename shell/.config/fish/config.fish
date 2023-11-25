@@ -57,18 +57,20 @@ function connect_to_rds
 
     set -l password (echo $secret_string | jq -r '.password')
 
-    set -x -g DBUI_URL "postgres://$username:$password@$rds_endpoint:5432/$database_name"
+    set -l encoded_password (echo $password | jq "@uri" -jRr)
 
-    # PGPASSWORD="$password" psql -h "$rds_endpoint" -U "$username" -d "$database_name" -w
+    set -x -g DBUI_URL "postgres://$username:$password@$rds_endpoint:5432/$database_name"
+    set -x -g DBUI_URL_ENCODED "postgres://$username:$encoded_password@$rds_endpoint:5432/$database_name"
 end
 
 function dev_t
     set -l account_number (aws sts get-caller-identity | jq -r ".Account")
     if echo $account_number | string match -q "165569969323"
+        set -l database_name "postgres"
 		echo "Gamma"
-        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/transformity_pos
+        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/postgres
         set -x -g DATASOURCE_USERNAME rds!cluster-96cd49c6-1a15-4950-b89f-59fd040a22a6
-        connect_to_rds $DATASOURCE_USERNAME "transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" "transformity_pos"
+        connect_to_rds $DATASOURCE_USERNAME "transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" $database_name
     else if echo $account_number | string match -q "928004597368"
 		echo "Prod"
         set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com:5432/transformity_pos

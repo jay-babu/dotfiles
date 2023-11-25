@@ -68,6 +68,7 @@ return {
 	{ import = "astrocommunity.pack.rust" },
 	{ import = "astrocommunity.pack.yaml" },
 	{ import = "astrocommunity.pack.bash" },
+	{ import = "astrocommunity.file-explorer.oil-nvim" },
 	{ import = "astrocommunity.terminal-integration.vim-tmux-yank" },
 	-- { import = "astrocommunity.terminal-integration.vim-tpipeline" },
 	{ import = "astrocommunity.syntax.vim-cool" },
