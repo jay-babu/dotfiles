@@ -73,10 +73,10 @@ function dev_t
         connect_to_rds $DATASOURCE_USERNAME "transformity-gamma.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" $database_name
     else if echo $account_number | string match -q "928004597368"
 		echo "Prod"
-        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com:5432/transformity_pos
+        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com:5432/postgres
         set -x -g DATASOURCE_USERNAME rds!cluster-ed2fdf32-bf0a-420b-af63-0aafc8364dd7
         echo $DATASOURCE_USERNAME
-        connect_to_rds $DATASOURCE_USERNAME "transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com" "transformity_pos"
+        connect_to_rds $DATASOURCE_USERNAME "transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com" "postgres"
     end
 end
 
