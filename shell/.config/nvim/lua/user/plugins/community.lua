@@ -13,6 +13,7 @@ return {
 	{ import = "astrocommunity.bars-and-lines.heirline-vscode-winbar" },
 	{ import = "astrocommunity.debugging.nvim-bqf" },
 	{ import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
+	{ import = "astrocommunity.debugging.nvim-dap-repl-highlights" },
 	{ import = "astrocommunity.diagnostics.trouble-nvim" },
 	{
 		import = "astrocommunity.editing-support.cutlass-nvim",
