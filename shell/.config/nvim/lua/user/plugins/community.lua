@@ -60,6 +60,12 @@ return {
 	-- },
 	{ import = "astrocommunity.pack.docker" },
 	{ import = "astrocommunity.pack.go" },
+	{
+		"ray-x/go.nvim",
+		event = function(_, _)
+			return {}
+		end,
+	},
 	{ import = "astrocommunity.pack.json" },
 	{ import = "astrocommunity.pack.lua" },
 	{ import = "astrocommunity.pack.markdown" },
@@ -71,7 +77,6 @@ return {
 	{ import = "astrocommunity.pack.bash" },
 	{ import = "astrocommunity.file-explorer.oil-nvim" },
 	{ import = "astrocommunity.terminal-integration.vim-tmux-yank" },
-	{ import = "astrocommunity.terminal-integration.vim-tpipeline" },
 	{ import = "astrocommunity.syntax.vim-cool" },
 	{ import = "astrocommunity.lsp.lsp-inlayhints-nvim" },
 	{ import = "astrocommunity.editing-support.rainbow-delimiters-nvim" },

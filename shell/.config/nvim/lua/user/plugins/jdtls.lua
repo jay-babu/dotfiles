@@ -8,11 +8,7 @@ return {
 			{
 				"<leader>re",
 				function()
-					if vim.o.filetype == "java" then
-						require("jdtls").extract_method(true)
-					else
-						require("refactoring").refactor("Extract Function")
-					end
+					require("refactoring").refactor("Extract Function")
 				end,
 				{ silent = true, expr = false },
 				mode = {
@@ -24,11 +20,7 @@ return {
 			{
 				"<leader>rv",
 				function()
-					if vim.o.filetype == "java" then
-						require("jdtls").extract_variable(true)
-					else
-						require("refactoring").refactor("Extract Variable")
-					end
+					require("refactoring").refactor("Extract Variable")
 				end,
 				{ silent = true, expr = false },
 				mode = {
