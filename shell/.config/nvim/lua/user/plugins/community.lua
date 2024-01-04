@@ -80,6 +80,10 @@ return {
 	{ import = "astrocommunity.syntax.vim-cool" },
 	{ import = "astrocommunity.lsp.lsp-inlayhints-nvim" },
 	{ import = "astrocommunity.editing-support.rainbow-delimiters-nvim" },
+	{
+		"HiPhish/rainbow-delimiters.nvim",
+		event = "VeryLazy",
+	},
 	{ import = "astrocommunity.editing-support.true-zen-nvim" },
 	{
 		"jay-babu/mason-null-ls.nvim",
