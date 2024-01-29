@@ -11,8 +11,9 @@ return function()
 			require("astronvim.utils.mason").update()
 		end,
 	})
+	vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, { pattern = "*.pg", command = "set filetype=sql" })
 	vim.api.nvim_create_autocmd("FileType", {
-		pattern = "sql,mysql,plsql",
+		pattern = "sql,mysql,plsql,pg",
 		callback = function()
 			require("cmp").setup.buffer({
 				sources = {
