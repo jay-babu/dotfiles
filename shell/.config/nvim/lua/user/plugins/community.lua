@@ -81,6 +81,7 @@ return {
 	{ import = "astrocommunity.lsp.lsp-inlayhints-nvim" },
 	{ import = "astrocommunity.editing-support.rainbow-delimiters-nvim" },
 	{ import = "astrocommunity.motion.nvim-spider" },
+	{ import = "astrocommunity.media.vim-wakatime" },
 	{
 		"HiPhish/rainbow-delimiters.nvim",
 		event = "VeryLazy",
