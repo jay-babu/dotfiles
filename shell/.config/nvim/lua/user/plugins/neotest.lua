@@ -9,6 +9,7 @@ return {
 		"nvim-neotest/neotest-vim-test",
 		"nvim-neotest/neotest-python",
 		"vim-test/vim-test",
+		"thenbe/neotest-playwright",
 	},
 	config = function()
 		-- get neotest namespace (api call creates or returns namespace)
@@ -36,6 +37,12 @@ return {
 					cwd = function(_)
 						return vim.fn.getcwd()
 					end,
+				}),
+				require("neotest-playwright").adapter({
+					options = {
+						persist_project_selection = true,
+						enable_dynamic_test_discovery = true,
+					},
 				}),
 			},
 		})

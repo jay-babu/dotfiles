@@ -129,6 +129,12 @@ return function(default)
 					end,
 					desc = "Toggle test output",
 				},
+				["<leader>td"] = {
+					function()
+						require("neotest").run.run({ strategy = "dap" })
+					end,
+					desc = "Debug nearest test",
+				},
 			},
 			v = {
 				["d"] = { [["_d]] },

@@ -82,9 +82,11 @@ return {
 	{ import = "astrocommunity.editing-support.rainbow-delimiters-nvim" },
 	{ import = "astrocommunity.motion.nvim-spider" },
 	{ import = "astrocommunity.media.vim-wakatime" },
+	{ import = "astrocommunity.editing-support.nvim-regexplainer" },
 	{
 		"HiPhish/rainbow-delimiters.nvim",
 		event = "VeryLazy",
+		optional = true,
 	},
 	{ import = "astrocommunity.editing-support.true-zen-nvim" },
 	{
