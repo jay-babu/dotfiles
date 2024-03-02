@@ -32,4 +32,7 @@ return {
 		},
 	},
 	{ import = "astrocommunity.pack.java" },
+	{
+		import = "astrocommunity.pack.kotlin",
+	},
 }
