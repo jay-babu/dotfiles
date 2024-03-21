@@ -2,15 +2,19 @@
   "neodev": {
     "library": {
       "enabled": true,
-      "types": true
-      // "plugins": true
+      "plugins": true
     }
   },
   "neoconf": {
     "plugins": {
-      "sumneko_lua": {
+      "lua_ls": {
         "enabled": true
       }
+    }
+  },
+  "lspconfig": {
+    "lua_ls": {
+      "Lua.format.enable": false
     }
   }
 }
