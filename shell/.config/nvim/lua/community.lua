@@ -50,7 +50,6 @@ return {
   { import = "astrocommunity.pack.rust" },
   { import = "astrocommunity.pack.yaml" },
   { import = "astrocommunity.pack.bash" },
-  { import = "astrocommunity.file-explorer.oil-nvim" },
   { import = "astrocommunity.terminal-integration.vim-tmux-yank" },
   { import = "astrocommunity.syntax.vim-cool" },
   { import = "astrocommunity.lsp.lsp-inlayhints-nvim" },
@@ -76,4 +75,8 @@ return {
   { import = "astrocommunity.code-runner.overseer-nvim" },
   { import = "astrocommunity.recipes.telescope-nvchad-theme" },
   { import = "astrocommunity.recipes.vscode" },
+  { import = "astrocommunity.git.gist-nvim" },
+  { import = "astrocommunity.git.openingh-nvim" },
+  { import = "astrocommunity.project.nvim-spectre" },
+  { import = "astrocommunity.syntax.vim-easy-align" },
 }
