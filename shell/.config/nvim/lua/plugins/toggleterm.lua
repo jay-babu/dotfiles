@@ -71,7 +71,7 @@ return {
           },
           mappings = {
             n = {
-              ["<Tab>"] = { "<Cmd>Oil<CR>", desc = "Oil Filebrowser" },
+              ["-"] = { "<Cmd>Oil<CR>", desc = "Oil Filebrowser" },
             },
           },
         },
