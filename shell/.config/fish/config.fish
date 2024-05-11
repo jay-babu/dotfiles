@@ -6,8 +6,6 @@ set -x XDEB_PKGROOT ~/.config/xdeb
 
 set sponge_delay 100
 
-set -x spring_profiles_active local
-
 if status is-interactive
     # Commands to run in interactive sessions can go here
 
