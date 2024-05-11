@@ -46,7 +46,11 @@ if [ -d "$HOME/.local/share/gem/ruby/3.0.0/bin" ]; then
 fi
 
 alias v="nvim"
+alias lg="lazygit"
 export EDITOR="nvim"
 export BROWSER="wslview"
+export spring_profiles_active="local"
+export STRIPE_API_KEY="sk_test_51Oe0IbDCuRuHsY0oAHrWqh0uwlB25jaDojYIAPb9mNSApEO2xagYGS3jBzvtsI2rKKOFFbcw085p06h1z0kfgWOE00XLGFMku5"
+export AWS_PROFILE="Transformity"
 
 export DESKTOP_SESSION="bspwm"
