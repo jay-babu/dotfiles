@@ -4,7 +4,8 @@
 
 ---@type LazySpec
 return {
-  { "AstroNvim/astrocommunity", version = "^7" },
+  { "AstroNvim/astrocommunity", version = "^10" },
+  { import = "astrocommunity.recipes.telescope-nvchad-theme" },
   { import = "astrocommunity.pack.lua" },
   { import = "astrocommunity.debugging.nvim-bqf" },
   { import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
