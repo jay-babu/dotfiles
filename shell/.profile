@@ -54,3 +54,6 @@ export STRIPE_API_KEY="sk_test_51Oe0IbDCuRuHsY0oAHrWqh0uwlB25jaDojYIAPb9mNSApEO2
 export AWS_PROFILE="Transformity"
 
 export DESKTOP_SESSION="bspwm"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
