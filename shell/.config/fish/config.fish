@@ -63,9 +63,9 @@ function dev_t
     if echo $account_number | string match -q "165569969323"
         set -l database_name "postgres"
 		echo "Gamma"
-        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/postgres
-        set -x -g DATASOURCE_USERNAME rds!cluster-3d5c5013-6b03-49e3-bccf-ecaf005db2e0
-        connect_to_rds $DATASOURCE_USERNAME "transformity-gamma-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" $database_name
+        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-dev-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/postgres
+        set -x -g DATASOURCE_USERNAME rds!cluster-eb09bd27-b450-4552-9deb-24c7df34b0b8
+        connect_to_rds $DATASOURCE_USERNAME "transformity-dev-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" $database_name
     else if echo $account_number | string match -q "928004597368"
 		echo "Prod"
         set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com:5432/postgres
