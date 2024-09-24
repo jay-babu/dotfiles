@@ -4,19 +4,28 @@
 
 ---@type LazySpec
 return {
-  { "AstroNvim/astrocommunity", version = "^10" },
+  { "AstroNvim/astrocommunity", version = "^13" },
   { import = "astrocommunity.recipes.telescope-nvchad-theme" },
   { import = "astrocommunity.pack.lua" },
-  { import = "astrocommunity.debugging.nvim-bqf" },
+  { import = "astrocommunity.quickfix.nvim-bqf" },
   { import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
   { import = "astrocommunity.debugging.nvim-dap-repl-highlights" },
+  { import = "astrocommunity.markdown-and-latex.render-markdown-nvim" },
+  { import = "astrocommunity.completion.avante-nvim" },
+  {
+    "yetone/avante.nvim",
+    optional = true,
+    build = "make BUILD_FROM_SOURCE=true",
+  },
   { import = "astrocommunity.diagnostics.trouble-nvim" },
   {
     import = "astrocommunity.editing-support.cutlass-nvim",
   },
   {
     "gbprod/cutlass.nvim",
-    opts = function(_, opts) opts.exclude = vim.tbl_flatten { opts.exclude or {}, { "vx", "vX", "xx", "xX" } } end,
+    opts = function(_, opts)
+      opts.exclude = vim.iter({ opts.exclude or {}, { "vx", "vX", "xx", "xX" } }):flatten():totable()
+    end,
   },
   { import = "astrocommunity.editing-support.dial-nvim" },
   { import = "astrocommunity.editing-support.nvim-regexplainer" },
@@ -71,12 +80,12 @@ return {
       },
     },
   },
-  { import = "astrocommunity.completion.copilot-lua-cmp" },
+  -- { import = "astrocommunity.completion.copilot-lua-cmp" },
   { import = "astrocommunity.code-runner.overseer-nvim" },
   { import = "astrocommunity.recipes.telescope-nvchad-theme" },
   { import = "astrocommunity.recipes.vscode" },
   { import = "astrocommunity.git.gist-nvim" },
   { import = "astrocommunity.git.openingh-nvim" },
-  { import = "astrocommunity.project.nvim-spectre" },
+  { import = "astrocommunity.search.nvim-spectre" },
   { import = "astrocommunity.syntax.vim-easy-align" },
 }
