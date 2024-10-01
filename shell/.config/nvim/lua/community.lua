@@ -12,6 +12,7 @@ return {
   { import = "astrocommunity.debugging.nvim-dap-repl-highlights" },
   { import = "astrocommunity.markdown-and-latex.render-markdown-nvim" },
   { import = "astrocommunity.completion.avante-nvim" },
+  { import = "astrocommunity.editing-support.undotree" },
   {
     "yetone/avante.nvim",
     optional = true,
@@ -48,6 +49,7 @@ return {
   { import = "astrocommunity.pack.go" },
   {
     "ray-x/go.nvim",
+    optional = true,
     event = function(_, _) return {} end,
   },
   { import = "astrocommunity.pack.json" },
