@@ -11,7 +11,6 @@ return {
   { import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
   { import = "astrocommunity.debugging.nvim-dap-repl-highlights" },
   { import = "astrocommunity.markdown-and-latex.render-markdown-nvim" },
-  { import = "astrocommunity.completion.avante-nvim" },
   { import = "astrocommunity.editing-support.undotree" },
   {
     "yetone/avante.nvim",
@@ -25,7 +24,7 @@ return {
   {
     "gbprod/cutlass.nvim",
     opts = function(_, opts)
-      opts.exclude = vim.iter({ opts.exclude or {}, { "vx", "vX", "xx", "xX" } }):flatten():totable()
+      opts.exclude = vim.iter({ opts.exclude or {}, { "vx", "vX", "xx", "xX", "vc", "cc", "C" } }):flatten():totable()
     end,
   },
   { import = "astrocommunity.editing-support.dial-nvim" },
@@ -35,6 +34,7 @@ return {
   },
   {
     "Wansmer/treesj",
+    optional = true,
     keys = { { "<leader>m", "<CMD>TSJToggle<CR>", desc = "Toggle Treesitter Join" } },
     opts = { max_join_length = 9999 },
   },
@@ -82,7 +82,8 @@ return {
       },
     },
   },
-  -- { import = "astrocommunity.completion.copilot-lua-cmp" },
+  { import = "astrocommunity.completion.copilot-lua-cmp" },
+  { import = "astrocommunity.completion.avante-nvim" },
   { import = "astrocommunity.code-runner.overseer-nvim" },
   { import = "astrocommunity.recipes.telescope-nvchad-theme" },
   { import = "astrocommunity.recipes.vscode" },
