@@ -44,8 +44,7 @@ export BROWSER="wslview"
 export spring_profiles_active="local"
 export STRIPE_API_KEY="sk_test_51Oe0IbDCuRuHsY0oAHrWqh0uwlB25jaDojYIAPb9mNSApEO2xagYGS3jBzvtsI2rKKOFFbcw085p06h1z0kfgWOE00XLGFMku5"
 export AWS_PROFILE="Transformity"
-
-export DESKTOP_SESSION="bspwm"
+export AWS_REGION="us-east-1"
 
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm

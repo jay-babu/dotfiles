@@ -12,7 +12,7 @@ if status is-interactive
     # set -gx FZF_DEFAULT_OPTS '--hidden --preview "bat --style=numbers --color=always --line-range :500 {}"'
 
     function cd
-        builtin cd $argv && eza -a -F --icons
+        z $argv && eza -a -F --icons
     end
 
     # Enable VI Mode
@@ -63,9 +63,9 @@ function dev_t
     if echo $account_number | string match -q "165569969323"
         set -l database_name "postgres"
 		echo "Gamma"
-        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-dev-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/postgres
-        set -x -g DATASOURCE_USERNAME rds!cluster-eb09bd27-b450-4552-9deb-24c7df34b0b8
-        connect_to_rds $DATASOURCE_USERNAME "transformity-dev-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" $database_name
+        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma-cluster-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/postgres
+        set -x -g DATASOURCE_USERNAME rds!cluster-f926b0ad-9c96-4830-a7ec-246892c81719
+        connect_to_rds $DATASOURCE_USERNAME "transformity-gamma-cluster-cluster.cluster-ro-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" $database_name
     else if echo $account_number | string match -q "928004597368"
 		echo "Prod"
         set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com:5432/postgres
