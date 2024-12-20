@@ -61,6 +61,8 @@ return {
   { import = "astrocommunity.pack.rust" },
   { import = "astrocommunity.pack.yaml" },
   { import = "astrocommunity.pack.bash" },
+  { import = "astrocommunity.pack.templ" },
+  { import = "astrocommunity.fuzzy-finder.fzf-lua" },
   { import = "astrocommunity.terminal-integration.vim-tmux-yank" },
   { import = "astrocommunity.syntax.vim-cool" },
   { import = "astrocommunity.lsp.lsp-inlayhints-nvim" },
