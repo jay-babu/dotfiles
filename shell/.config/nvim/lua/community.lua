@@ -1,12 +1,17 @@
 -- AstroCommunity: import any community modules here
 -- We import this file in `lazy_setup.lua` before the `plugins/` folder.
 -- This guarantees that the specs are processed before any user plugins.
+local function has_words_before()
+  local line, col = (unpack or table.unpack)(vim.api.nvim_win_get_cursor(0))
+  return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match "%s" == nil
+end
 
 ---@type LazySpec
 return {
-  { "AstroNvim/astrocommunity", version = "^15" },
+  { "AstroNvim/astrocommunity" },
   { import = "astrocommunity.recipes.telescope-nvchad-theme" },
   { import = "astrocommunity.pack.lua" },
+  { import = "astrocommunity.pack.full-dadbod" },
   { import = "astrocommunity.quickfix.nvim-bqf" },
   { import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
   { import = "astrocommunity.debugging.nvim-dap-repl-highlights" },
@@ -84,10 +89,124 @@ return {
       },
     },
   },
-  { import = "astrocommunity.completion.copilot-lua-cmp" },
-  { import = "astrocommunity.completion.avante-nvim" },
+  { import = "astrocommunity.completion.blink-cmp" },
+  { import = "astrocommunity.completion.copilot-lua" },
+  {
+    "zbirenbaum/copilot.lua",
+    optional = true,
+    opts = {
+      suggestion = {
+        enabled = false,
+      },
+      panel = {
+        enabled = false,
+      },
+    },
+  },
+  { -- optional saghen/blink.cmp completion source
+    "saghen/blink.cmp",
+    optional = true,
+    dependencies = {
+      {
+        "giuxtaposition/blink-cmp-copilot",
+      },
+      {
+        "kristijanhusak/vim-dadbod-completion",
+      },
+      {
+        "kristijanhusak/vim-dadbod-ui",
+      },
+    },
+    version = false,
+    build = "cargo build --release",
+
+    ---@type blink.cmp.Config
+    opts = {
+      keymap = {
+        ["<Tab>"] = {
+          function(cmp)
+            if require("blink.cmp.completion.windows.ghost_text").is_open() then
+              return cmp.select_and_accept()
+            elseif cmp.is_visible() then
+              return cmp.select_next()
+            elseif cmp.snippet_active { direction = 1 } then
+              return cmp.snippet_forward()
+            elseif has_words_before() then
+              return cmp.show()
+            end
+          end,
+          "fallback",
+        },
+      },
+      sources = {
+        -- add vim-dadbod-completion to your completion providers
+        default = { "lsp", "path", "snippets", "buffer", "dadbod", "copilot" },
+        providers = {
+          dadbod = { name = "Dadbod", module = "vim_dadbod_completion.blink" },
+          copilot = {
+            name = "copilot",
+            module = "blink-cmp-copilot",
+            score_offset = 100,
+            async = true,
+            transform_items = function(_, items)
+              local CompletionItemKind = require("blink.cmp.types").CompletionItemKind
+              local kind_idx = #CompletionItemKind + 1
+              CompletionItemKind[kind_idx] = "Copilot"
+              for _, item in ipairs(items) do
+                item.kind = kind_idx
+              end
+              return items
+            end,
+          },
+        },
+      },
+      completion = {
+        ghost_text = {
+          enabled = true,
+        },
+        menu = {
+          auto_show = false,
+        },
+      },
+      appearance = {
+        -- Blink does not expose its default kind icons so you must copy them all (or set your custom ones) and add Copilot
+        kind_icons = {
+          Copilot = "",
+          Text = "󰉿",
+          Method = "󰊕",
+          Function = "󰊕",
+          Constructor = "󰒓",
+
+          Field = "󰜢",
+          Variable = "󰆦",
+          Property = "󰖷",
+
+          Class = "󱡠",
+          Interface = "󱡠",
+          Struct = "󱡠",
+          Module = "󰅩",
+
+          Unit = "󰪚",
+          Value = "󰦨",
+          Enum = "󰦨",
+          EnumMember = "󰦨",
+
+          Keyword = "󰻾",
+          Constant = "󰏿",
+
+          Snippet = "󱄽",
+          Color = "󰏘",
+          File = "󰈔",
+          Reference = "󰬲",
+          Folder = "󰉋",
+          Event = "󱐋",
+          Operator = "󰪚",
+          TypeParameter = "󰬛",
+        },
+      },
+    },
+  },
   { import = "astrocommunity.code-runner.overseer-nvim" },
-  { import = "astrocommunity.recipes.telescope-nvchad-theme" },
   { import = "astrocommunity.recipes.vscode" },
   { import = "astrocommunity.git.gist-nvim" },
   { import = "astrocommunity.git.openingh-nvim" },

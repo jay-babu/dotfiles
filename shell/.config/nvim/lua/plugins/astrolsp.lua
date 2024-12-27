@@ -14,6 +14,7 @@ return {
       codelens = true, -- enable/disable codelens refresh on start
       inlay_hints = false, -- enable/disable inlay hints on start
       semantic_tokens = true, -- enable/disable semantic token highlighting
+      signature_help = true, -- enable/disable signature help on start
     },
     -- customize lsp formatting options
     formatting = {
