@@ -1,10 +1,6 @@
 -- AstroCommunity: import any community modules here
 -- We import this file in `lazy_setup.lua` before the `plugins/` folder.
 -- This guarantees that the specs are processed before any user plugins.
-local function has_words_before()
-  local line, col = (unpack or table.unpack)(vim.api.nvim_win_get_cursor(0))
-  return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match "%s" == nil
-end
 
 ---@type LazySpec
 return {
@@ -90,26 +86,11 @@ return {
     },
   },
   { import = "astrocommunity.completion.blink-cmp" },
-  { import = "astrocommunity.completion.copilot-lua" },
-  {
-    "zbirenbaum/copilot.lua",
-    optional = true,
-    opts = {
-      suggestion = {
-        enabled = false,
-      },
-      panel = {
-        enabled = false,
-      },
-    },
-  },
+  { import = "astrocommunity.completion.copilot-lua-cmp" },
   { -- optional saghen/blink.cmp completion source
     "saghen/blink.cmp",
     optional = true,
     dependencies = {
-      {
-        "giuxtaposition/blink-cmp-copilot",
-      },
       {
         "kristijanhusak/vim-dadbod-completion",
       },
@@ -117,30 +98,13 @@ return {
         "kristijanhusak/vim-dadbod-ui",
       },
     },
-    version = false,
     build = "cargo build --release",
 
     ---@type blink.cmp.Config
     opts = {
-      keymap = {
-        ["<Tab>"] = {
-          function(cmp)
-            if require("blink.cmp.completion.windows.ghost_text").is_open() then
-              return cmp.select_and_accept()
-            elseif cmp.is_visible() then
-              return cmp.select_next()
-            elseif cmp.snippet_active { direction = 1 } then
-              return cmp.snippet_forward()
-            elseif has_words_before() then
-              return cmp.show()
-            end
-          end,
-          "fallback",
-        },
-      },
       sources = {
         -- add vim-dadbod-completion to your completion providers
-        default = { "lsp", "path", "snippets", "buffer", "dadbod", "copilot" },
+        default = { "dadbod" },
         providers = {
           dadbod = { name = "Dadbod", module = "vim_dadbod_completion.blink" },
           copilot = {
@@ -158,14 +122,6 @@ return {
               return items
             end,
           },
-        },
-      },
-      completion = {
-        ghost_text = {
-          enabled = true,
-        },
-        menu = {
-          auto_show = false,
         },
       },
       appearance = {

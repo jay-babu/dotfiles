@@ -37,6 +37,8 @@ if [ -d "$HOME/.local/share/gem/ruby/3.0.0/bin" ]; then
 	PATH="$HOME/.local/share/gem/ruby/3.0.0/bin:$PATH"
 fi
 
+PATH=$(echo "$PATH" | tr ':' '\n' | grep -v -e '/mnt/c/Windows/system32' -e '/mnt/c/Windows/System32/Wbem' | tr '\n' ':')
+
 alias v="nvim"
 alias lg="lazygit"
 export EDITOR="nvim"
