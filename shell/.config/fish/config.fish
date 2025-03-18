@@ -52,6 +52,7 @@ function connect_to_rds
     set -l encoded_password (echo $password | jq "@uri" -jRr)
 
     set -x -g DBUI_URL "postgres://$username:$password@$rds_endpoint:5432/$database_name"
+    set -x -g DB_HOST "$rds_endpoint"
     set -x -g DBUI_URL_ENCODED "postgres://$username:$encoded_password@$rds_endpoint:5432/$database_name"
 end
 

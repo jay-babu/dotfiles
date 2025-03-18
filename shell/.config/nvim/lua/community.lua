@@ -30,13 +30,10 @@ return {
   },
   { import = "astrocommunity.editing-support.dial-nvim" },
   { import = "astrocommunity.editing-support.nvim-regexplainer" },
-  {
-    import = "astrocommunity.editing-support.treesj",
-  },
+  { import = "astrocommunity.editing-support.treesj" },
   {
     "Wansmer/treesj",
     optional = true,
-    keys = { { "<leader>m", "<CMD>TSJToggle<CR>", desc = "Toggle Treesitter Join" } },
     opts = { max_join_length = 9999 },
   },
   { import = "astrocommunity.indent.indent-blankline-nvim" },
@@ -77,6 +74,7 @@ return {
     optional = true,
   },
   { import = "astrocommunity.editing-support.true-zen-nvim" },
+  { import = "astrocommunity.editing-support.conform-nvim" },
   {
     "jay-babu/mason-null-ls.nvim",
     opts = {
@@ -108,21 +106,6 @@ return {
         default = { "dadbod" },
         providers = {
           dadbod = { name = "Dadbod", module = "vim_dadbod_completion.blink" },
-          -- copilot = {
-          --   name = "copilot",
-          --   module = "blink-cmp-copilot",
-          --   score_offset = 100,
-          --   async = true,
-          --   transform_items = function(_, items)
-          --     local CompletionItemKind = require("blink.cmp.types").CompletionItemKind
-          --     local kind_idx = #CompletionItemKind + 1
-          --     CompletionItemKind[kind_idx] = "Copilot"
-          --     for _, item in ipairs(items) do
-          --       item.kind = kind_idx
-          --     end
-          --     return items
-          --   end,
-          -- },
         },
       },
       appearance = {
@@ -169,4 +152,5 @@ return {
   { import = "astrocommunity.git.openingh-nvim" },
   { import = "astrocommunity.search.nvim-spectre" },
   { import = "astrocommunity.syntax.vim-easy-align" },
+  { import = "astrocommunity.git.diffview-nvim" },
 }
