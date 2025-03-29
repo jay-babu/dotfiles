@@ -5,7 +5,6 @@
 ---@type LazySpec
 return {
   { "AstroNvim/astrocommunity" },
-  { import = "astrocommunity.recipes.telescope-nvchad-theme" },
   { import = "astrocommunity.pack.lua" },
   { import = "astrocommunity.pack.full-dadbod" },
   { import = "astrocommunity.quickfix.nvim-bqf" },
@@ -36,7 +35,6 @@ return {
     optional = true,
     opts = { max_join_length = 9999 },
   },
-  -- { import = "astrocommunity.indent.indent-blankline-nvim" },
   { import = "astrocommunity.indent.mini-indentscope" },
   { import = "astrocommunity.motion.hop-nvim" },
   { import = "astrocommunity.motion.nvim-surround" },
@@ -74,16 +72,17 @@ return {
     event = "VeryLazy",
     optional = true,
   },
-  { import = "astrocommunity.editing-support.true-zen-nvim" },
   { import = "astrocommunity.editing-support.conform-nvim" },
   {
     "jay-babu/mason-null-ls.nvim",
+    optional = true,
     opts = {
       handlers = {
         clang_format = function() end,
       },
     },
   },
+  { import = "astrocommunity.completion.avante-nvim" },
   { import = "astrocommunity.completion.blink-cmp" },
   { import = "astrocommunity.completion.copilot-lua-cmp" },
   { import = "astrocommunity.editing-support.copilotchat-nvim" },
