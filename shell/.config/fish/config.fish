@@ -58,9 +58,6 @@ end
 
 function dev_t
     set -l account_number (aws sts get-caller-identity | jq -r ".Account")
-    set -g -x FINIX_USERNAME 'USpxq2PKaCnagfZbq9gjeWGj'
-    set -g -x FINIX_PASSWORD '61bf02c4-a947-4324-8731-65c708b68498'
-    set -g -x FINIX_BASE_URL 'https://finix.sandbox-payments-api.com'
     if echo $account_number | string match -q "165569969323"
         set -l database_name "postgres"
 		echo "Gamma"
