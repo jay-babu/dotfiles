@@ -6,6 +6,7 @@
 return {
   { "AstroNvim/astrocommunity" },
   { import = "astrocommunity.pack.lua" },
+  { import = "astrocommunity.pack.sql" },
   { import = "astrocommunity.pack.full-dadbod" },
   { import = "astrocommunity.quickfix.nvim-bqf" },
   { import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
@@ -72,6 +73,7 @@ return {
     event = "VeryLazy",
     optional = true,
   },
+  { import = "astrocommunity.lsp.nvim-lint" },
   { import = "astrocommunity.editing-support.conform-nvim" },
   {
     "jay-babu/mason-null-ls.nvim",
