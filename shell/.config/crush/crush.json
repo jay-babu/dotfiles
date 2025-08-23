@@ -25,6 +25,11 @@
 			"type": "stdio",
 			"command": "uvx",
 			"args": ["mcp-server-time"]
+		},
+		"git": {
+			"type": "stdio",
+			"command": "uvx",
+			"args": ["mcp-server-git"]
 		}
 	},
 	"lsp": {
