@@ -128,6 +128,7 @@ return {
     )
       opts.servers = opts.servers or {}
       table.insert(opts.servers, "kotlin_lsp")
+      table.insert(opts.servers, "postgres_lsp")
 
       -- extend our configuration table to have our new prolog server
       opts.config = require("astrocore").extend_tbl(opts.config or {}, {
@@ -137,6 +138,12 @@ return {
           single_file_support = true,
           filetypes = { "kotlin" },
           root_markers = { "build.gradle", "build.gradle.kts", "pom.xml" },
+        },
+        postgres_lsp = {
+          cmd = { "postgrestools", "lsp-proxy" },
+          single_file_support = true,
+          filetypes = { "sql" },
+          root_markers = { "postgrestools.jsonc", ".git" },
         },
       })
     end,

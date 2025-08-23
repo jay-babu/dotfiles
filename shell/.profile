@@ -48,6 +48,11 @@ export STRIPE_API_KEY="sk_test_51Oe0IbDCuRuHsY0oAHrWqh0uwlB25jaDojYIAPb9mNSApEO2
 export AWS_PROFILE="Transformity"
 export AWS_REGION="us-east-1"
 
+# Add easy way to navigate to /mnt/g/My Drive/Store Exports/Data/
+export STORE_DATA="/mnt/g/My Drive/Store Exports/Data/"
+
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 . "$HOME/.cargo/env"
+
+eval "$(aws configure export-credentials --profile Transformity --format env)"

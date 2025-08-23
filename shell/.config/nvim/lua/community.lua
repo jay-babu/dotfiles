@@ -7,6 +7,64 @@ return {
   { "AstroNvim/astrocommunity" },
   { import = "astrocommunity.pack.lua" },
   { import = "astrocommunity.pack.sql" },
+
+  {
+    "williamboman/mason-lspconfig.nvim",
+    optional = true,
+    opts = function(_, opts)
+      -- filter out the kotlin_language_server if it is already installed
+      opts.ensure_installed = vim.tbl_filter(
+        function(server) return server ~= "kotlin_language_server" end,
+        opts.ensure_installed
+      )
+      opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqls" end, opts.ensure_installed)
+    end,
+  },
+  {
+    "jay-babu/mason-null-ls.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqlfluff" end, opts.ensure_installed)
+      opts.handlers = opts.handlers or {}
+      opts.handlers.sqlfluff = function() end
+    end,
+  },
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqlfluff" end, opts.ensure_installed)
+      opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqls" end, opts.ensure_installed)
+      opts.ensure_installed = table.insert(opts.ensure_installed, "pg_format")
+    end,
+  },
+  {
+    "stevearc/conform.nvim",
+    optional = true,
+    opts = {
+      formatters_by_ft = {
+        sql = { "pg_format" },
+      },
+      formatters = {
+        pg_format = {
+          command = "pg_format",
+          args = { "--function-case=2" },
+          stdin = true,
+        },
+      },
+    },
+  },
+  {
+    "mfussenegger/nvim-lint",
+    optional = true,
+    opts = {
+      linters_by_ft = {
+        python = { "ruff", "mypy" },
+        go = { "staticcheck" },
+      },
+    },
+  },
+
   { import = "astrocommunity.pack.full-dadbod" },
   { import = "astrocommunity.quickfix.nvim-bqf" },
   { import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
@@ -19,6 +77,15 @@ return {
     build = "make BUILD_FROM_SOURCE=true",
   },
   { import = "astrocommunity.diagnostics.trouble-nvim" },
+  { import = "astrocommunity.editing-support.mcphub-nvim" },
+  {
+    "ravitemer/mcphub.nvim",
+    build = "bun install -g mcp-hub@latest",
+    opts = {
+      config = vim.fn.expand "~/.config/mcphub/servers.json", -- Absolute path to MCP Servers config file (will create if not exists)
+      port = 37373, -- The port `mcp-hub` server listens to
+    },
+  },
   {
     import = "astrocommunity.editing-support.cutlass-nvim",
   },
@@ -55,6 +122,7 @@ return {
   { import = "astrocommunity.pack.markdown" },
   { import = "astrocommunity.pack.python-ruff" },
   { import = "astrocommunity.pack.typescript" },
+  { import = "astrocommunity.pack.biome" },
   { import = "astrocommunity.git.git-blame-nvim" },
   { import = "astrocommunity.pack.rust" },
   { import = "astrocommunity.pack.yaml" },
@@ -95,6 +163,7 @@ return {
       {
         "kristijanhusak/vim-dadbod-completion",
       },
+      { "Kaiser-Yang/blink-cmp-avante" },
       {
         "kristijanhusak/vim-dadbod-ui",
       },
@@ -105,9 +174,16 @@ return {
     opts = {
       sources = {
         -- add vim-dadbod-completion to your completion providers
-        default = { "dadbod" },
+        default = { "avante", "dadbod" },
         providers = {
           dadbod = { name = "Dadbod", module = "vim_dadbod_completion.blink" },
+          avante = {
+            module = "blink-cmp-avante",
+            name = "Avante",
+            opts = {
+              -- options for blink-cmp-avante
+            },
+          },
         },
       },
       appearance = {

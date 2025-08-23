@@ -1,0 +1,47 @@
+{
+	"$schema": "https://charm.land/crush.json",
+	"mcp": {
+		"context7": {
+			"type": "http",
+			"url": "https://mcp.context7.com/mcp",
+			"headers": {
+				"CONTEXT7_API_KEY": "$(echo $CONTEXT7_API_KEY)"
+			}
+		},
+		"deepwiki": {
+			"type": "http",
+			"url": "https://mcp.deepwiki.com/mcp"
+		},
+		"sequential-thinking": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+		},
+		"visidata": {
+			"type": "stdio",
+			"command": "visidata-mcp"
+		},
+		"time": {
+			"type": "stdio",
+			"command": "uvx",
+			"args": ["mcp-server-time"]
+		}
+	},
+	"lsp": {
+		"rust_analyzer": {
+			"command": "rust-analyzer"
+		},
+		"go": {
+			"command": "gopls"
+		},
+		"typescript": {
+			"command": "vtsls",
+			"args": ["--stdio"]
+		}
+	},
+	"options": {
+		"tui": {
+			"diff_mode": "split"
+		}
+	}
+}
