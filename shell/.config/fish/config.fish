@@ -57,6 +57,13 @@ function connect_to_rds
 end
 
 function dev_t
+    for line in (aws configure export-credentials --profile Transformity --format env)
+        set -l clean_line (string replace "export " "" $line)
+        set -l parts (string split "=" $clean_line)
+        if test (count $parts) -eq 2
+            set -gx $parts[1] $parts[2]
+        end
+    end
     set -l account_number (aws sts get-caller-identity | jq -r ".Account")
     if echo $account_number | string match -q "165569969323"
         set -l database_name "postgres"

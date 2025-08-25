@@ -54,5 +54,3 @@ export STORE_DATA="/mnt/g/My Drive/Store Exports/Data/"
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 . "$HOME/.cargo/env"
-
-eval "$(aws configure export-credentials --profile Transformity --format env)"

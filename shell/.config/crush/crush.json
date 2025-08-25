@@ -12,6 +12,11 @@
 			"type": "http",
 			"url": "https://mcp.deepwiki.com/mcp"
 		},
+		"playwright": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["@playwright/mcp@latest"]
+		},
 		"sequential-thinking": {
 			"type": "stdio",
 			"command": "npx",
