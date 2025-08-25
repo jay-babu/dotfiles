@@ -1,12 +1,10 @@
-print "Loading Kotlin LSP config"
-vim.print "Loading Kotlin LSP config"
 ---@type LazySpec
 return {
   "AstroNvim/astrolsp",
   opts = function(
-    _,
-    ---@type AstroLSPOpts
-    opts
+      _,
+      ---@type AstroLSPOpts
+      opts
   )
     opts.servers = opts.servers or {}
     table.insert(opts.servers, "kotlin_lsp")

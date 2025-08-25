@@ -17,19 +17,10 @@
 			"command": "npx",
 			"args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
 		},
-		"visidata": {
+		"memory": {
 			"type": "stdio",
-			"command": "visidata-mcp"
-		},
-		"time": {
-			"type": "stdio",
-			"command": "uvx",
-			"args": ["mcp-server-time"]
-		},
-		"git": {
-			"type": "stdio",
-			"command": "uvx",
-			"args": ["mcp-server-git"]
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-memory"]
 		}
 	},
 	"lsp": {
