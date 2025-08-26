@@ -5,6 +5,7 @@
 ---@type LazySpec
 return {
   { "AstroNvim/astrocommunity" },
+  { "jay-babu/moody-lines.nvim", opts = {} },
   { import = "astrocommunity.pack.lua" },
   { import = "astrocommunity.pack.sql" },
 

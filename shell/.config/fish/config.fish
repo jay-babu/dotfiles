@@ -81,6 +81,9 @@ function dev_t
         echo $DATASOURCE_USERNAME
         connect_to_rds $DATASOURCE_USERNAME "transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com" "postgres"
         pulumi login s3://transformity-pulumi-prod
+    else if echo $account_number | string match -q "741448959376"
+        echo "DNS"
+        pulumi login s3://margin-pulumi-dns-management
     end
 end
 
