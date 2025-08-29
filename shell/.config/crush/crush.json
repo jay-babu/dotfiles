@@ -30,14 +30,24 @@
 	},
 	"lsp": {
 		"rust_analyzer": {
-			"command": "rust-analyzer"
+			"command": "rust-analyzer",
+			"filetypes": ["rust", "rs"]
 		},
 		"go": {
-			"command": "gopls"
+			"command": "gopls",
+			"filetypes": ["go", "gomod", "gowork", "gotmpl"]
 		},
 		"typescript": {
 			"command": "vtsls",
-			"args": ["--stdio"]
+			"args": ["--stdio"],
+			"filetypes": [
+				"typescript",
+				"typescriptreact",
+				"javascript",
+				"javascriptreact",
+				"vue",
+				"svelte"
+			]
 		}
 	},
 	"options": {
