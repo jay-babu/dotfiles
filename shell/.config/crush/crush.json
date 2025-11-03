@@ -1,5 +1,8 @@
 {
 	"$schema": "https://charm.land/crush.json",
+	"tools": {
+		"ls": {}
+	},
 	"mcp": {
 		"context7": {
 			"type": "http",
@@ -65,11 +68,18 @@
 				"vue",
 				"svelte"
 			]
+		},
+		"kotlin": {
+			"command": "kotlin-ls",
+			"args": ["--stdio"],
+			"filetypes": ["kotlin", "kt", "kts"]
 		}
 	},
 	"options": {
 		"tui": {
-			"diff_mode": "split"
-		}
+			"diff_mode": "split",
+			"completions": {}
+		},
+		"disabled_tools": []
 	}
 }
