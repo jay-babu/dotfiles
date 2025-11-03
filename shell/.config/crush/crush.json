@@ -8,15 +8,6 @@
 				"CONTEXT7_API_KEY": "$(echo $CONTEXT7_API_KEY)"
 			}
 		},
-		"deepwiki": {
-			"type": "http",
-			"url": "https://mcp.deepwiki.com/mcp"
-		},
-		"playwright": {
-			"type": "stdio",
-			"command": "npx",
-			"args": ["@playwright/mcp@latest"]
-		},
 		"sequential-thinking": {
 			"type": "stdio",
 			"command": "npx",
@@ -27,16 +18,32 @@
 			"command": "npx",
 			"args": ["-y", "@modelcontextprotocol/server-memory"]
 		},
-	    "v0": {
-	      "type": "stdio",
-	      "command": "npx",
-	      "args": [
-	        "mcp-remote",
-	        "https://mcp.v0.dev",
-	        "--header",
-	        "Authorization: Bearer ${V0_API_KEY}"
-	      ]
-	    }
+		"v0": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"mcp-remote",
+				"https://mcp.v0.dev",
+				"--header",
+				"Authorization: Bearer ${V0_API_KEY}"
+			]
+		},
+		"sentry": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "mcp-remote@latest", "https://mcp.sentry.dev/mcp"]
+		}
+	},
+	"permissions": {
+		"allowed_tools": [
+			"view",
+			"ls",
+			"sourcegraph",
+			"fetch",
+			"grep",
+			"edit",
+			"mcp_context7_get-library-doc"
+		]
 	},
 	"lsp": {
 		"rust_analyzer": {
