@@ -35,6 +35,11 @@
 			"type": "stdio",
 			"command": "npx",
 			"args": ["-y", "mcp-remote@latest", "https://mcp.sentry.dev/mcp"]
+		},
+		"linear": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "mcp-remote", "https://mcp.linear.app/mcp"]
 		}
 	},
 	"permissions": {
@@ -45,7 +50,8 @@
 			"fetch",
 			"grep",
 			"edit",
-			"mcp_context7_get-library-doc"
+			"mcp_context7_get-library-doc",
+			"mcp_sequential-thinking_sequentialthinking"
 		]
 	},
 	"lsp": {
