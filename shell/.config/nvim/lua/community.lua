@@ -5,7 +5,7 @@
 ---@type LazySpec
 return {
   { "AstroNvim/astrocommunity" },
-  { "jay-babu/moody-lines.nvim", opts = {} },
+  { "jay-babu/moody-lines.nvim",       opts = {} },
   { import = "astrocommunity.pack.lua" },
   { import = "astrocommunity.pack.sql" },
 
@@ -84,7 +84,7 @@ return {
     build = "bun install -g mcp-hub@latest",
     opts = {
       config = vim.fn.expand "~/.config/mcphub/servers.json", -- Absolute path to MCP Servers config file (will create if not exists)
-      port = 37373, -- The port `mcp-hub` server listens to
+      port = 37373,                                           -- The port `mcp-hub` server listens to
     },
   },
   {
