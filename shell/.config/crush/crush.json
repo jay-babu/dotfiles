@@ -40,6 +40,17 @@
 			"type": "stdio",
 			"command": "npx",
 			"args": ["-y", "mcp-remote", "https://mcp.linear.app/mcp"]
+		},
+		"pagerduty": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"mcp-remote",
+				"https://mcp.pagerduty.com/mcp",
+				"--header",
+				"Authorization: Token ${PAGERDUTY_TOKEN}"
+			]
 		}
 	},
 	"permissions": {
@@ -51,7 +62,8 @@
 			"grep",
 			"edit",
 			"mcp_context7_get-library-doc",
-			"mcp_sequential-thinking_sequentialthinking"
+			"mcp_sequential-thinking_sequentialthinking",
+			"multiedit"
 		]
 	},
 	"lsp": {
