@@ -51,6 +51,14 @@
 				"--header",
 				"Authorization: Token ${PAGERDUTY_TOKEN}"
 			]
+		},
+		"github": {
+			"type": "http",
+			"url": "https://api.githubcopilot.com/mcp/",
+			"timeout": 30,
+			"headers": {
+				"Authorization": "$(echo Bearer $(gh auth token))"
+			}
 		}
 	},
 	"permissions": {
