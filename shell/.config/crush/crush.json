@@ -59,6 +59,11 @@
 			"headers": {
 				"Authorization": "$(echo Bearer $(gh auth token))"
 			}
+		},
+		"playwright": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@playwright/mcp@latest"]
 		}
 	},
 	"permissions": {
@@ -71,7 +76,10 @@
 			"edit",
 			"mcp_context7_get-library-doc",
 			"mcp_sequential-thinking_sequentialthinking",
-			"multiedit"
+			"multiedit",
+			"mcp_github_pull_request_read",
+			"mcp_linear_get_issue",
+			"agentic_fetch"
 		]
 	},
 	"lsp": {
