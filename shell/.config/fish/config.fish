@@ -69,7 +69,7 @@ function dev_t
         set -l database_name "postgres"
 		echo "Gamma"
         set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma-cluster-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/postgres
-        set -x -g DATASOURCE_USERNAME rds!cluster-f926b0ad-9c96-4830-a7ec-246892c81719
+        set -x -g DATASOURCE_USERNAME rds!cluster-99629e8b-3f13-4fc2-99c6-82d224376d93
         set -e -g USER_REQUEST_LOCK_TABLE_NAME
         connect_to_rds $DATASOURCE_USERNAME "transformity-gamma-cluster-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" $database_name
         pulumi login s3://transformity-pulumi-gamma
@@ -93,3 +93,9 @@ complete --command aws --no-files --arguments '(begin; set --local --export COMP
 # uninstall by removing these lines
 [ -f ~/.config/tabtab/fish/__tabtab.fish ]; and . ~/.config/tabtab/fish/__tabtab.fish; or true
 [ -f ~/.config/fish/conf.d/tokyonight_storm.fish ]; and . ~/.config/fish/conf.d/tokyonight_storm.fish; or true
+
+# bun
+set --export BUN_INSTALL "$HOME/.bun"
+set --export PATH $BUN_INSTALL/bin $PATH
+
+~/.local/bin/mise activate fish | source

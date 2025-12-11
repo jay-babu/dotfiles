@@ -79,7 +79,9 @@
 			"multiedit",
 			"mcp_github_pull_request_read",
 			"mcp_linear_get_issue",
-			"agentic_fetch"
+			"agentic_fetch",
+			"mcp_context7_resolve-library-id",
+			"mcp_playwright_browser_navigate"
 		]
 	},
 	"lsp": {
@@ -106,7 +108,7 @@
 		"kotlin": {
 			"command": "kotlin-ls",
 			"args": ["--stdio"],
-			"filetypes": ["kotlin", "kt", "kts"]
+			"filetypes": ["kt"]
 		}
 	},
 	"options": {

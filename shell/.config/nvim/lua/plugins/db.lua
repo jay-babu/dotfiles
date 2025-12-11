@@ -1,7 +1,9 @@
+---@type LazySpec
 return {
   {
     "kristijanhusak/vim-dadbod-ui",
     optional = true,
+    dev = true,
     specs = {
       {
         "AstroNvim/astrocore",
