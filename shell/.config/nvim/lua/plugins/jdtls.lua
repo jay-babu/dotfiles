@@ -13,6 +13,7 @@ return {
         function(server) return server ~= "kotlin_language_server" end,
         opts.ensure_installed
       )
+      opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "lemminx" end, opts.ensure_installed)
     end,
   },
   {
