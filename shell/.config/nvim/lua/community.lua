@@ -13,7 +13,7 @@ return {
     "williamboman/mason-lspconfig.nvim",
     optional = true,
     opts = function(_, opts)
-      if not opts.ensure_installed then opts.ensure_installed = {} end
+      opts.ensure_installed = opts.ensure_installed or {}
       -- filter out the kotlin_language_server if it is already installed
       opts.ensure_installed = vim.tbl_filter(
         function(server) return server ~= "kotlin_language_server" end,
@@ -26,6 +26,7 @@ return {
     "jay-babu/mason-null-ls.nvim",
     optional = true,
     opts = function(_, opts)
+      opts.ensure_installed = opts.ensure_installed or {}
       opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqlfluff" end, opts.ensure_installed)
       opts.handlers = opts.handlers or {}
       opts.handlers.sqlfluff = function() end
@@ -35,9 +36,10 @@ return {
     "WhoIsSethDaniel/mason-tool-installer.nvim",
     optional = true,
     opts = function(_, opts)
+      if not opts.ensure_installed then opts.ensure_installed = {} end
       opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqlfluff" end, opts.ensure_installed)
       opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqls" end, opts.ensure_installed)
-      opts.ensure_installed = table.insert(opts.ensure_installed, "pg_format")
+      table.insert(opts.ensure_installed, "pgformatter")
     end,
   },
   {
