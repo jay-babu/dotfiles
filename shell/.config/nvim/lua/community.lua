@@ -13,6 +13,7 @@ return {
     "williamboman/mason-lspconfig.nvim",
     optional = true,
     opts = function(_, opts)
+      if not opts.ensure_installed then opts.ensure_installed = {} end
       -- filter out the kotlin_language_server if it is already installed
       opts.ensure_installed = vim.tbl_filter(
         function(server) return server ~= "kotlin_language_server" end,
