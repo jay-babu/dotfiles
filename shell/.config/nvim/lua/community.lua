@@ -21,9 +21,7 @@ return {
       opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqls" end, opts.ensure_installed)
       table.insert(opts.ensure_installed, "tsp_server")
     end,
-    config = function(_, opts)
-      require("mason-lspconfig").setup(opts)
-    end,
+    config = function(_, opts) require("mason-lspconfig").setup(opts) end,
   },
   {
     "jay-babu/mason-null-ls.nvim",
@@ -84,15 +82,6 @@ return {
     build = "make BUILD_FROM_SOURCE=true",
   },
   { import = "astrocommunity.diagnostics.trouble-nvim" },
-  { import = "astrocommunity.editing-support.mcphub-nvim" },
-  {
-    "ravitemer/mcphub.nvim",
-    build = "bun install -g mcp-hub@latest",
-    opts = {
-      config = vim.fn.expand "~/.config/mcphub/servers.json", -- Absolute path to MCP Servers config file (will create if not exists)
-      port = 37373,                                           -- The port `mcp-hub` server listens to
-    },
-  },
   {
     import = "astrocommunity.editing-support.cutlass-nvim",
   },
