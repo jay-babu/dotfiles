@@ -29,8 +29,11 @@ return {
     opts = function(_, opts)
       opts.ensure_installed = opts.ensure_installed or {}
       opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqlfluff" end, opts.ensure_installed)
+      table.insert(opts.ensure_installed, "golangci_lint")
+
       opts.handlers = opts.handlers or {}
       opts.handlers.sqlfluff = function() end
+      opts.handlers.clang_format = function() end
     end,
   },
   {
@@ -41,6 +44,7 @@ return {
       opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqlfluff" end, opts.ensure_installed)
       opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqls" end, opts.ensure_installed)
       table.insert(opts.ensure_installed, "pgformatter")
+      table.insert(opts.ensure_installed, "golangci-lint")
     end,
   },
   {
@@ -65,7 +69,7 @@ return {
     opts = {
       linters_by_ft = {
         python = { "ruff", "mypy" },
-        go = { "staticcheck" },
+        go = { "golangcilint" },
       },
     },
   },
@@ -105,7 +109,7 @@ return {
   { import = "astrocommunity.motion.vim-matchup" },
   { import = "astrocommunity.scrolling.nvim-scrollbar" },
   { import = "astrocommunity.utility.noice-nvim" },
-  { import = "astrocommunity.pack.docker" },
+  -- { import = "astrocommunity.pack.docker" },
   { import = "astrocommunity.pack.go" },
   {
     "ray-x/go.nvim",
@@ -139,15 +143,6 @@ return {
   },
   { import = "astrocommunity.lsp.nvim-lint" },
   { import = "astrocommunity.editing-support.conform-nvim" },
-  {
-    "jay-babu/mason-null-ls.nvim",
-    optional = true,
-    opts = {
-      handlers = {
-        clang_format = function() end,
-      },
-    },
-  },
   { import = "astrocommunity.completion.avante-nvim" },
   { import = "astrocommunity.completion.blink-cmp" },
   { import = "astrocommunity.completion.copilot-lua-cmp" },
