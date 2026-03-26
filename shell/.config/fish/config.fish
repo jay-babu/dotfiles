@@ -7,12 +7,14 @@ set -x XDEB_PKGROOT ~/.config/xdeb
 set sponge_delay 100
 
 if status is-interactive
+    functions --copy cd cd_wrapper
+
     # Commands to run in interactive sessions can go here
 
     # set -gx FZF_DEFAULT_OPTS '--hidden --preview "bat --style=numbers --color=always --line-range :500 {}"'
 
     function cd
-        z $argv && eza -a -F --icons
+        cd_wrapper $argv && eza -a -F --icons
     end
 
     # Enable VI Mode
