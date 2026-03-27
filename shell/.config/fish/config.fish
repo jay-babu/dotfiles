@@ -70,14 +70,14 @@ function dev_t
     if echo $account_number | string match -q "165569969323"
         set -l database_name "postgres"
 		echo "Gamma"
-        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma-cluster-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/postgres
+        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma-cluster-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/postgres?sslmode=verify-full&sslrootcert=src/main/resources/global-bundle.pem
         set -x -g DATASOURCE_USERNAME rds!cluster-99629e8b-3f13-4fc2-99c6-82d224376d93
         set -e -g USER_REQUEST_LOCK_TABLE_NAME
         connect_to_rds $DATASOURCE_USERNAME "transformity-gamma-cluster-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" $database_name
         pulumi login s3://transformity-pulumi-gamma
     else if echo $account_number | string match -q "928004597368"
 		echo "Prod"
-        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com:5432/postgres
+        set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com:5432/postgres?sslmode=verify-full&sslrootcert=src/main/resources/global-bundle.pem
         set -x -g DATASOURCE_USERNAME rds!cluster-ed2fdf32-bf0a-420b-af63-0aafc8364dd7
         set -x -g USER_REQUEST_LOCK_TABLE_NAME drinks-pos-api-lock-table-c3dc622
         echo $DATASOURCE_USERNAME

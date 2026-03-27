@@ -5,7 +5,7 @@
 ---@type LazySpec
 return {
   { "AstroNvim/astrocommunity" },
-  { "jay-babu/moody-lines.nvim",       opts = {} },
+  { "jay-babu/moody-lines.nvim", opts = {} },
   { import = "astrocommunity.pack.lua" },
   { import = "astrocommunity.pack.sql" },
 
@@ -74,17 +74,11 @@ return {
     },
   },
 
-  { import = "astrocommunity.pack.full-dadbod" },
   { import = "astrocommunity.quickfix.nvim-bqf" },
   { import = "astrocommunity.debugging.persistent-breakpoints-nvim" },
   { import = "astrocommunity.debugging.nvim-dap-repl-highlights" },
   { import = "astrocommunity.markdown-and-latex.render-markdown-nvim" },
   { import = "astrocommunity.editing-support.undotree" },
-  {
-    "yetone/avante.nvim",
-    optional = true,
-    build = "make BUILD_FROM_SOURCE=true",
-  },
   { import = "astrocommunity.diagnostics.trouble-nvim" },
   {
     import = "astrocommunity.editing-support.cutlass-nvim",
@@ -143,10 +137,9 @@ return {
   },
   { import = "astrocommunity.lsp.nvim-lint" },
   { import = "astrocommunity.editing-support.conform-nvim" },
-  { import = "astrocommunity.completion.avante-nvim" },
   { import = "astrocommunity.completion.blink-cmp" },
+  { import = "astrocommunity.pack.full-dadbod" },
   { import = "astrocommunity.completion.copilot-lua-cmp" },
-  { import = "astrocommunity.editing-support.copilotchat-nvim" },
   { -- optional saghen/blink.cmp completion source
     "saghen/blink.cmp",
     optional = true,
@@ -154,32 +147,15 @@ return {
       {
         "kristijanhusak/vim-dadbod-completion",
       },
-      { "Kaiser-Yang/blink-cmp-avante" },
       {
         "kristijanhusak/vim-dadbod-ui",
       },
     },
-    build = "cargo build --release",
+    -- build = "cargo build --release",
 
+    ---@module 'blink.cmp'
     ---@type blink.cmp.Config
     opts = {
-      sources = {
-        -- add vim-dadbod-completion to your completion providers
-        -- default = { "avante", "dadbod" },
-        per_filetype = {
-          sql = { "snippets", "dadbod", "buffer" },
-        },
-        providers = {
-          dadbod = { name = "Dadbod", module = "vim_dadbod_completion.blink" },
-          avante = {
-            module = "blink-cmp-avante",
-            name = "Avante",
-            opts = {
-              -- options for blink-cmp-avante
-            },
-          },
-        },
-      },
       appearance = {
         -- Blink does not expose its default kind icons so you must copy them all (or set your custom ones) and add Copilot
         kind_icons = {
