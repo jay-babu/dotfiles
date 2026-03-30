@@ -101,3 +101,7 @@ set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
 
 ~/.local/bin/mise activate fish | source
+
+if type -q starship
+    starship init fish | source
+end

@@ -3,7 +3,7 @@ return {
   {
     "kristijanhusak/vim-dadbod-ui",
     optional = true,
-    dev = true,
+    -- dev = true,
     specs = {
       {
         "AstroNvim/astrocore",
