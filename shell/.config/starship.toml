@@ -56,9 +56,28 @@ symbol = " "
 
 [git_branch]
 symbol = " "
+format = "[$symbol$branch]($style) "
+truncation_length = 24
+truncation_symbol = "…"
 
 [git_commit]
 tag_symbol = '  '
+
+[git_status]
+format = '([\[$all_status$ahead_behind\]]($style) )'
+style = "bold yellow"
+
+conflicted = "!"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+up_to_date = ""
+untracked = "?${count}"
+stashed = "*${count}"
+modified = "~${count}"
+staged = "+${count}"
+renamed = "»${count}"
+deleted = "✘${count}"
 
 [golang]
 symbol = " "
@@ -80,6 +99,7 @@ symbol = " "
 
 [hostname]
 ssh_symbol = " "
+disabled = true
 
 [java]
 symbol = " "
@@ -197,6 +217,9 @@ symbol = " "
 
 [swift]
 symbol = " "
+
+[username]
+disabled = true
 
 [xmake]
 symbol = " "
