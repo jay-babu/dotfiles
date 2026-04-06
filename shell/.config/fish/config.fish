@@ -99,3 +99,7 @@ set --export PATH $BUN_INSTALL/bin $PATH
 if type -q starship
     starship init fish | source
 end
+
+if test -x ~/.local/bin/mise
+    ~/.local/bin/mise activate fish | source
+end
