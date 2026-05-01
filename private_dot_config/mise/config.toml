@@ -2,7 +2,7 @@
 actionlint = "latest"
 atlas = "latest"
 aws = { version = "latest", symlink_bins = "true" }
-btop = "latest"
+btop = "1.4.5"
 bun = "latest"
 codex = "latest"
 fzf = "latest"
