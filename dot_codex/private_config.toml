@@ -1,0 +1,106 @@
+approvals_reviewer = "guardian_subagent"
+plan_mode_reasoning_effort = "xhigh"
+model = "gpt-5.5"
+model_reasoning_effort = "high"
+service_tier = "fast"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+[projects."/home/jay/code"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/POSBackend"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/TransformityPOSFrontend"]
+trust_level = "trusted"
+
+[projects."/home/jay/drive/Store Exports/Data/Liquor World West Warwick/2026-03-29"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/zeus"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/CustomerDataUpload"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/zeus/main/libs/model/pos-db"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/loyalty-processor"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/messaging-service"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/gradle"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/backend-speed"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/backend-dependencies"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/transformity-scheduler"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/backend-test-speed"]
+trust_level = "trusted"
+
+[projects."/home/jay/dev"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/bob"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/POSBackend/pos-db"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/zeus/customer-fetch/libs/model/pos-db"]
+trust_level = "trusted"
+
+[projects."/home/jay/dev/total_top"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/Adv360-Pro-ZMK"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/neovim"]
+trust_level = "trusted"
+
+[projects."/home/jay"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/phoenix"]
+trust_level = "trusted"
+
+[projects."/home/jay/drive/Vendor Pricing/CT/2026_05"]
+trust_level = "trusted"
+
+[projects."/home/jay/code/MasterPricingTableUploaderLambda"]
+trust_level = "trusted"
+
+[projects."/home/jay/dotfiles"]
+trust_level = "trusted"
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
+
+[mcp_servers.linear]
+url = "https://mcp.linear.app/mcp"
+
+[mcp_servers.github]
+url = "https://api.githubcopilot.com/mcp/"
+bearer_token_env_var = "GITHUB_TOKEN"
+
+[mcp_servers.sentry]
+url = "https://mcp.sentry.dev/mcp"
+
+[features]
+js_repl = true
+guardian_approval = true
+prevent_idle_sleep = true
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4
