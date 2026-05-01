@@ -48,6 +48,10 @@ export STRIPE_API_KEY="sk_test_51Oe0IbDCuRuHsY0oAHrWqh0uwlB25jaDojYIAPb9mNSApEO2
 export AWS_PROFILE="Transformity"
 export AWS_REGION="us-east-1"
 
+if command -v gh >/dev/null 2>&1 && [ -z "${GITHUB_TOKEN:-}" ]; then
+	export GITHUB_TOKEN="$(gh auth token 2>/dev/null)"
+fi
+
 # Add easy way to navigate to /mnt/g/My Drive/Store Exports/Data/
 export STORE_DATA="/mnt/g/My Drive/Store Exports/Data/"
 
