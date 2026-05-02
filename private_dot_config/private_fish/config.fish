@@ -1,4 +1,6 @@
-bass source ~/.profile
+if type -q bass
+    bass source ~/.profile
+end
 
 set -x DONT_PROMPT_WSL_INSTALL true
 
