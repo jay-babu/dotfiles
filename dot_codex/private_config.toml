@@ -92,6 +92,9 @@ trust_level = "trusted"
 [projects."/root/code/bob"]
 trust_level = "trusted"
 
+[projects."/root/dev"]
+trust_level = "trusted"
+
 [mcp_servers.linear]
 url = "https://mcp.linear.app/mcp"
 
