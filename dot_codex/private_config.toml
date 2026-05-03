@@ -83,9 +83,14 @@ trust_level = "trusted"
 [projects."/home/jay/dotfiles"]
 trust_level = "trusted"
 
-[mcp_servers.playwright]
-command = "npx"
-args = ["@playwright/mcp@latest"]
+[projects."/root/code/zeus"]
+trust_level = "trusted"
+
+[projects."/root/code/POSBackend"]
+trust_level = "trusted"
+
+[projects."/root/code/bob"]
+trust_level = "trusted"
 
 [mcp_servers.linear]
 url = "https://mcp.linear.app/mcp"
@@ -101,6 +106,10 @@ url = "https://mcp.sentry.dev/mcp"
 js_repl = true
 guardian_approval = true
 prevent_idle_sleep = true
+memories = true
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
+
+[plugins."github@openai-curated"]
+enabled = true
