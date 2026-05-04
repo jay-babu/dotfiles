@@ -27,17 +27,29 @@ if command -v gh &>/dev/null && gh auth status &>/dev/null; then
   AUTH="gh"
 else
   AUTH="git"
-  # Ensure we have a token for API calls
+  # Ensure we have a token for API calls. Do not print token values.
   if [ -z "$GITHUB_TOKEN" ]; then
     if [ -f ~/.hermes/.env ] && grep -q "^GITHUB_TOKEN=" ~/.hermes/.env; then
-      GITHUB_TOKEN=$(grep "^GITHUB_TOKEN=" ~/.hermes/.env | head -1 | cut -d= -f2 | tr -d '\n\r')
+      GITHUB_TOKEN=$(grep "^GITHUB_TOKEN=" ~/.hermes/.env | head -1 | cut -d= -f2- | tr -d '\n\r' | sed 's/^['\''"]//; s/['\''"]$//')
+    elif [ -n "$GH_TOKEN" ]; then
+      GITHUB_TOKEN="$GH_TOKEN"
+    elif [ -n "$GITHUB_PAT" ]; then
+      GITHUB_TOKEN="$GITHUB_PAT"
+    elif git credential fill >/tmp/github-cred.$$ 2>/dev/null <<<'protocol=https
+host=github.com
+'; then
+      GITHUB_TOKEN=$(awk -F= '$1=="password" {print $2; exit}' /tmp/github-cred.$$)
+      rm -f /tmp/github-cred.$$
     elif grep -q "github.com" ~/.git-credentials 2>/dev/null; then
       GITHUB_TOKEN=$(grep "github.com" ~/.git-credentials 2>/dev/null | head -1 | sed 's|https://[^:]*:\([^@]*\)@.*|\1|')
     fi
   fi
 fi
 echo "Using: $AUTH"
+[ -n "$GITHUB_TOKEN" ] && echo "GitHub API credential: available" || echo "GitHub API credential: missing"
 ```
+
+Pitfall: many machines can `git push` because a credential helper is configured even when `gh` and `GITHUB_TOKEN` are absent. For API PR creation/check polling, use `git credential fill` as a fallback and never echo the credential value.
 
 ### Extracting Owner/Repo from the Git Remote
 
@@ -73,6 +85,19 @@ Branch naming conventions:
 - `refactor/description` — code restructuring
 - `docs/description` — documentation
 - `ci/description` — CI/CD changes
+
+### Worktree/branch hygiene for incident or hotfix PRs
+
+Before committing, especially in repos with multiple worktrees or generated files, verify the branch and staged scope:
+
+```bash
+git branch --show-current
+git worktree list
+git status --short
+git diff --cached --name-only
+```
+
+If a fix was accidentally committed on the wrong branch or alongside unrelated dirty files, do not open a PR from that branch. Create a clean branch/worktree from `main`, cherry-pick only the intended commit or re-apply only the intended files, then verify `git diff --name-only main...HEAD` contains only the PR's files. This prevents unrelated generated/model changes from leaking into urgent incident PRs.
 
 ## 2. Making Commits
 
@@ -151,6 +176,11 @@ To create as a draft, add `"draft": true` to the JSON body.
 ## 4. Monitoring CI Status
 
 ### Check CI Status
+
+Before polling, know what counts as actionable:
+- Query both the combined commit status endpoint and the check-runs endpoint; modern GitHub Actions normally appear as check runs, while integrations may still use commit statuses.
+- A failed integration/agent check can be infrastructure noise rather than a code failure. Inspect logs before changing code. Examples: Stably reporter authentication/config failures (`STABLY_API_KEY`/`STABLY_PROJECT_ID`) or autoheal context fetch failures should be reported as CI infrastructure blockers unless the PR changed that integration config.
+- If a required check remains `in_progress`, continue polling when possible; if tool/time limits stop you, report the last observed state precisely instead of saying checks passed.
 
 **With gh:**
 

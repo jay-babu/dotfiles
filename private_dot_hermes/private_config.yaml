@@ -9,7 +9,7 @@ worktree: true
 toolsets:
 - hermes-cli
 agent:
-  max_turns: 90
+  max_turns: 150
   gateway_timeout: 1800
   restart_drain_timeout: 180
   api_max_retries: 3
@@ -308,7 +308,7 @@ delegation:
   base_url: ''
   api_key: ''
   inherit_mcp_toolsets: true
-  max_iterations: 50
+  max_iterations: 150
   child_timeout_seconds: 600
   reasoning_effort: ''
   max_concurrent_children: 3
@@ -400,7 +400,8 @@ sessions:
   vacuum_after_prune: true
   min_interval_hours: 24
 onboarding:
-  seen: {}
+  seen:
+    busy_input_prompt: true
 updates:
   pre_update_backup: false
   backup_keep: 5

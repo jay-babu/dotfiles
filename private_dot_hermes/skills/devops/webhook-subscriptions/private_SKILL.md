@@ -156,7 +156,11 @@ hermes webhook subscribe alerts \
 
 ### PagerDuty incident remediation
 
-Use this pattern when PagerDuty incidents should trigger an agent to triage, reproduce, debug, verify, and create a PR. Load `references/pagerduty-incident-remediation.md` before designing or changing this workflow. For PagerDuty V3 native signature verification and Hermes/Caddy setup details, also load `references/pagerduty-v3-hermes-signatures.md`. For Transformity/Margin-specific endpoint, repo, Sentry, and verification conventions, load `references/transformity-pagerduty-incident-automation.md`.
+- `references/transformity-pagerduty-incident-automation.md`.
+- For rewards-service Lambda/container deployment-wiring incidents, also load `references/rewards-service-lambda-deploy-wiring.md`.
+- For rewards-service listener DLQ incidents that may map to database role/grant problems, load `references/pos-db-rewards-service-role-incidents.md`.
+- For rewards-service listener/canceller DLQ or Lambda errors with RDS IAM auth failures for `user=rewards_service`, also load `references/rewards-service-db-iam-auth.md`.
+- For rewards-service listener DLQ incidents where auth succeeds but logs show `permission denied for table loyalty_redemption_offer` or `permission denied for table reward_option`, also load `references/rewards-service-db-role-permissions.md`.
 
 Key defaults from that pattern:
 - If the agent is running on a public VM/droplet, prefer a real HTTPS reverse proxy to `localhost:8644` over tunnel services.
@@ -218,7 +222,7 @@ If webhooks aren't working:
 
 ### Approval prompts from webhook runs
 
-If logs show `Dangerous command requires approval` for a webhook route, first inspect delivery:
+If logs show `Dangerous command requires approval` for a webhook route, load `references/webhook-approval-delivery.md` before changing config or code, then inspect delivery:
 
 ```bash
 hermes webhook list
@@ -227,3 +231,4 @@ hermes webhook list
 - `Deliver: log` means approval prompts and final responses are only written to gateway logs. Change the subscription to a chat target (for example `slack`) if the user needs to see the prompt.
 - Be careful updating an existing subscription with `hermes webhook subscribe <same-name>`: if `--secret` is omitted, the CLI may generate a new route secret and break upstream HMAC verification. Prefer editing `~/.hermes/webhook_subscriptions.json` while preserving `secret`, or pass the existing secret explicitly.
 - Cross-platform approval is not the same as cross-platform notification. Posting the plain fallback text to Slack/Telegram does not necessarily let `/approve` unblock the webhook run, because approvals are keyed to the original webhook session (`webhook:<route>:<delivery_id>`), not the target chat's session. A robust Slack fix should use the target adapter's interactive approval method (e.g. Slack `send_exec_approval(..., session_key=<webhook-session-key>)`) so button clicks resolve the webhook session. Otherwise consider `approvals.mode: smart/off` only as a deliberate safety tradeoff.
+- Python adapter changes require a gateway restart; subscription JSON changes hot-reload only for new deliveries. Restarting can interrupt active webhook runs, so check active incident/remediation work before restarting.
