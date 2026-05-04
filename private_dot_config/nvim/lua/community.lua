@@ -10,7 +10,7 @@ return {
   { import = "astrocommunity.pack.sql" },
 
   {
-    "williamboman/mason-lspconfig.nvim",
+    "mason-org/mason-lspconfig.nvim",
     opts = function(_, opts)
       opts.ensure_installed = opts.ensure_installed or {}
       -- filter out the kotlin_language_server if it is already installed
@@ -19,9 +19,8 @@ return {
         opts.ensure_installed
       )
       opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqls" end, opts.ensure_installed)
-      table.insert(opts.ensure_installed, "tsp_server")
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "tsp_server" })
     end,
-    config = function(_, opts) require("mason-lspconfig").setup(opts) end,
   },
   {
     "jay-babu/mason-null-ls.nvim",

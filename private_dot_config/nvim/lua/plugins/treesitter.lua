@@ -20,10 +20,17 @@ return {
         enabled = false,
       },
     },
+  },
+  {
+    "AstroNvim/astrocore",
+    ---@type AstroCoreOpts
     opts = function(_, opts)
-      -- add more things to the ensure_installed table protecting against community packs modifying it
-      opts.auto_install = vim.fn.executable "tree-sitter" == 1
-      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, {
+      local astrocore = require "astrocore"
+      opts.treesitter = opts.treesitter or {}
+      opts.treesitter.highlight = true
+      opts.treesitter.indent = true
+      opts.treesitter.auto_install = vim.fn.executable "tree-sitter" == 1
+      opts.treesitter.ensure_installed = astrocore.list_insert_unique(opts.treesitter.ensure_installed or {}, {
         "fish",
         "go",
         "graphql",
@@ -35,41 +42,35 @@ return {
         "rust",
         "smithy",
         "typescript",
-        -- add more arguments for adding more treesitter parsers
       })
-      opts.textobjects = {
+      opts.treesitter.textobjects = astrocore.extend_tbl(opts.treesitter.textobjects or {}, {
         select = {
-          enable = true,
-          lookahead = true,
-          keymaps = {
-            ["af"] = "@function.outer",
-            ["if"] = "@function.inner",
-            ["ax"] = "@class.outer",
-            ["ix"] = "@class.inner",
+          select_textobject = {
+            ["af"] = { query = "@function.outer", desc = "Around function" },
+            ["if"] = { query = "@function.inner", desc = "Inside function" },
+            ["ax"] = { query = "@class.outer", desc = "Around class" },
+            ["ix"] = { query = "@class.inner", desc = "Inside class" },
           },
         },
         move = {
-          enable = true,
-          set_jumps = true,
           goto_next_start = {
-            ["]f"] = "@function.outer",
-            ["]x"] = "@class.outer",
+            ["]f"] = { query = "@function.outer", desc = "Next function start" },
+            ["]x"] = { query = "@class.outer", desc = "Next class start" },
           },
           goto_next_end = {
-            ["]F"] = "@function.outer",
-            ["]X"] = "@class.outer",
+            ["]F"] = { query = "@function.outer", desc = "Next function end" },
+            ["]X"] = { query = "@class.outer", desc = "Next class end" },
           },
           goto_previous_start = {
-            ["[f"] = "@function.outer",
-            ["[x"] = "@class.outer",
+            ["[f"] = { query = "@function.outer", desc = "Previous function start" },
+            ["[x"] = { query = "@class.outer", desc = "Previous class start" },
           },
           goto_previous_end = {
-            ["[F"] = "@function.outer",
-            ["[X"] = "@class.outer",
+            ["[F"] = { query = "@function.outer", desc = "Previous function end" },
+            ["[X"] = { query = "@class.outer", desc = "Previous class end" },
           },
         },
         swap = {
-          enable = true,
           swap_next = {
             [">B"] = { query = "@block.outer", desc = "Swap next block" },
             [">F"] = { query = "@function.outer", desc = "Swap next function" },
@@ -81,15 +82,8 @@ return {
             ["<P"] = { query = "@parameter.inner", desc = "Swap previous parameter" },
           },
         },
-        lsp_interop = {
-          enable = true,
-          border = "single",
-          peek_definition_code = {
-            ["<leader>lp"] = { query = "@function.outer", desc = "Peek function definition" },
-            ["<leader>lP"] = { query = "@class.outer", desc = "Peek class definition" },
-          },
-        },
-      }
+      })
+      return opts
     end,
   },
   {
@@ -130,9 +124,8 @@ return {
       table.insert(opts.servers, "kotlin_lsp")
       table.insert(opts.servers, "postgres_lsp")
 
-      -- extend our configuration table to have our new prolog server
+      -- extend our configuration table with manually configured servers
       opts.config = require("astrocore").extend_tbl(opts.config or {}, {
-        -- this must be a function to get access to the `lspconfig` module
         kotlin_lsp = {
           cmd = { "kotlin-ls", "--stdio" },
           single_file_support = true,
