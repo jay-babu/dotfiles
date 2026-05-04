@@ -247,6 +247,12 @@ pytest tests/test_module.py::test_regression -v
 pytest tests/ -q
 ```
 
+For production incidents and user-reported bugs, automated tests are necessary but may not be sufficient. Also re-run the original dynamic reproduction path after the fix:
+
+- API/backend/non-UI bug: repeat the failing API call, CLI command, integration script, or local service request and capture the before/after output.
+- UI/interaction bug: repeat the browser/UI steps with Playwright/browser automation or manual click evidence when available.
+- If the issue cannot be reproduced dynamically, do not claim it is fixed; report what is missing and what was statically validated.
+
 ### 4. If Fix Doesn't Work — The Rule of Three
 
 - **STOP.**

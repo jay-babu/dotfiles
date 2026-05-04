@@ -475,3 +475,9 @@ known_plugin_toolsets:
   - spotify
   slack:
   - spotify
+platforms:
+  webhook:
+    enabled: true
+    extra:
+      host: 127.0.0.1
+      port: 8644

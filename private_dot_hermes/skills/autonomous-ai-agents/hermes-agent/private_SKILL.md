@@ -610,10 +610,14 @@ Check logs first:
 grep -i "failed to send\|error" ~/.hermes/logs/gateway.log | tail -20
 ```
 
+For gateway/webhook session transcript questions, especially when `session_<id>.json` exists but `<id>.jsonl` or SQLite `messages` rows appear missing, load `references/gateway-session-persistence.md`. Do not call missing `.jsonl` a regression until logs show the run completed; active long-running webhook turns can have only the raw `session_<id>.json` live log until the gateway response is committed.
+
 Common gateway problems:
 - **Gateway dies on SSH logout**: Enable linger: `sudo loginctl enable-linger $USER`
 - **Gateway dies on WSL2 close**: WSL2 requires `systemd=true` in `/etc/wsl.conf` for systemd services to work. Without it, gateway falls back to `nohup` (dies when session closes).
 - **Gateway crash loop**: Reset the failed state: `systemctl --user reset-failed hermes-gateway`
+- **System gateway stuck `activating (auto-restart)` after restart**: reset and explicitly start it: `sudo systemctl reset-failed hermes-gateway.service && sudo systemctl start hermes-gateway.service`, then verify `curl http://127.0.0.1:<port>/health` for webhook/API platforms.
+- **Webhook platform still says disabled after `.env` changes**: this Hermes build may require `~/.hermes/config.yaml` too. Add `platforms.webhook.enabled: true` and `platforms.webhook.extra.host/port`, then restart the gateway.
 
 ### Platform-specific issues
 - **Discord bot silent**: Must enable **Message Content Intent** in Bot → Privileged Gateway Intents.

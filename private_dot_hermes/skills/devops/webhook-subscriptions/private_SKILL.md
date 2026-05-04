@@ -154,6 +154,20 @@ hermes webhook subscribe alerts \
   --deliver origin
 ```
 
+### PagerDuty incident remediation
+
+Use this pattern when PagerDuty incidents should trigger an agent to triage, reproduce, debug, verify, and create a PR. Load `references/pagerduty-incident-remediation.md` before designing or changing this workflow. For PagerDuty V3 native signature verification and Hermes/Caddy setup details, also load `references/pagerduty-v3-hermes-signatures.md`. For Transformity/Margin-specific endpoint, repo, Sentry, and verification conventions, load `references/transformity-pagerduty-incident-automation.md`.
+
+Key defaults from that pattern:
+- If the agent is running on a public VM/droplet, prefer a real HTTPS reverse proxy to `localhost:8644` over tunnel services.
+- If the user says PagerDuty webhooks are reliable, do not add a polling fallback.
+- The agent may comment on PagerDuty only if authorized; do not acknowledge or resolve incidents unless explicitly authorized.
+- A fix is only a fix after dynamic reproduction and dynamic verification. API calls count for non-UI bugs; UI bugs should be reproduced with browser/UI automation where possible.
+- Prefer PagerDuty V3's documented `X-PagerDuty-Signature: v1=<hmac>` verification over repurposing compatibility headers such as `X-Gitlab-Token`.
+- For PagerDuty scope type, use Account for all services/incidents, Team only when coverage should be limited to a team, and Service only for one service.
+
+- For PagerDuty V3 webhooks, prefer PagerDuty's native `X-PagerDuty-Signature` verification over compatibility headers. Verify `v1=<hex HMAC-SHA256(raw request body, route secret)>` against comma-separated signature values with constant-time comparison. Unauthenticated or invalid public POSTs should return `401 Invalid signature`.
+
 ### Direct delivery (no agent, zero LLM cost)
 
 For use cases where you just want to push a notification through to a user's chat — no reasoning, no agent loop — add `--deliver-only`. The rendered `--prompt` template becomes the literal message body and is dispatched directly to the target adapter.
@@ -201,3 +215,15 @@ If webhooks aren't working:
 4. **Signature mismatch?** Verify the secret in your service matches the one from `hermes webhook list`. GitHub sends `X-Hub-Signature-256`, GitLab sends `X-Gitlab-Token`.
 5. **Firewall/NAT?** The webhook URL must be reachable from the service. For local development, use a tunnel (ngrok, cloudflared).
 6. **Wrong event type?** Check `--events` filter matches what the service sends. Use `hermes webhook test <name>` to verify the route works.
+
+### Approval prompts from webhook runs
+
+If logs show `Dangerous command requires approval` for a webhook route, first inspect delivery:
+
+```bash
+hermes webhook list
+```
+
+- `Deliver: log` means approval prompts and final responses are only written to gateway logs. Change the subscription to a chat target (for example `slack`) if the user needs to see the prompt.
+- Be careful updating an existing subscription with `hermes webhook subscribe <same-name>`: if `--secret` is omitted, the CLI may generate a new route secret and break upstream HMAC verification. Prefer editing `~/.hermes/webhook_subscriptions.json` while preserving `secret`, or pass the existing secret explicitly.
+- Cross-platform approval is not the same as cross-platform notification. Posting the plain fallback text to Slack/Telegram does not necessarily let `/approve` unblock the webhook run, because approvals are keyed to the original webhook session (`webhook:<route>:<delivery_id>`), not the target chat's session. A robust Slack fix should use the target adapter's interactive approval method (e.g. Slack `send_exec_approval(..., session_key=<webhook-session-key>)`) so button clicks resolve the webhook session. Otherwise consider `approvals.mode: smart/off` only as a deliberate safety tradeoff.
