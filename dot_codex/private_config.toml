@@ -95,6 +95,9 @@ trust_level = "trusted"
 [projects."/root/dev"]
 trust_level = "trusted"
 
+[projects."/root/.config/nvim"]
+trust_level = "trusted"
+
 [mcp_servers.linear]
 url = "https://mcp.linear.app/mcp"
 

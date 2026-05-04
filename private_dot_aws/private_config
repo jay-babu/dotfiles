@@ -1,0 +1,9 @@
+[profile gamma]
+region = us-east-1
+output = json
+credential_process = /usr/local/bin/aws_signing_helper credential-process --certificate /root/.aws/rolesanywhere/hermes-agent.crt --private-key /root/.aws/rolesanywhere/hermes-agent.key --trust-anchor-arn arn:aws:rolesanywhere:us-east-1:165569969323:trust-anchor/88962c58-4bbf-47fc-a805-0c3c4c2ac556 --profile-arn arn:aws:rolesanywhere:us-east-1:165569969323:profile/1d822998-d218-4560-8705-b3d928e0d5c9 --role-arn arn:aws:iam::165569969323:role/HermesAgentPowerUser --role-session-name hermes-agent-gamma --region us-east-1
+
+[profile production]
+region = us-east-1
+output = json
+credential_process = /usr/local/bin/aws_signing_helper credential-process --certificate /root/.aws/rolesanywhere/hermes-agent.crt --private-key /root/.aws/rolesanywhere/hermes-agent.key --trust-anchor-arn arn:aws:rolesanywhere:us-east-1:928004597368:trust-anchor/1fe14ff3-1d98-45b0-879a-5bb3c26b90ba --profile-arn arn:aws:rolesanywhere:us-east-1:928004597368:profile/d3cb878e-01af-46ce-8867-d21faae59bdc --role-arn arn:aws:iam::928004597368:role/HermesAgentReadOnly --role-session-name hermes-agent-production --region us-east-1
