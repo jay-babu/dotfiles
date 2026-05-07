@@ -188,6 +188,10 @@ Key defaults from that pattern:
 
 - For PagerDuty V3 webhooks, prefer PagerDuty's native `X-PagerDuty-Signature` verification over compatibility headers. Verify `v1=<hex HMAC-SHA256(raw request body, route secret)>` against comma-separated signature values with constant-time comparison. Unauthenticated or invalid public POSTs should return `401 Invalid signature`.
 
+#### Identifying the PagerDuty event that triggered a Slack thread
+
+When asked which webhook/event caused a PagerDuty Slack thread, answer from the actual payload, not from subscription defaults. First identify the Hermes route with `hermes webhook list` and the PagerDuty subscription via the PagerDuty API if needed, then search `~/.hermes/sessions/`, `~/.hermes/logs/`, and `~/.hermes/webhook_threads.jsonl` for the incident ID, PagerDuty note ID, or thread title. The raw webhook payload in the matching session contains `event.event_type`; for example, a PagerDuty note/comment webhook appears as `event_type: "incident.annotated"` with `data.type: "incident_note"`. Give the user the exact event name concisely so they can unsubscribe the right event.
+
 ### Direct delivery (no agent, zero LLM cost)
 
 For use cases where you just want to push a notification through to a user's chat — no reasoning, no agent loop — add `--deliver-only`. The rendered `--prompt` template becomes the literal message body and is dispatched directly to the target adapter.

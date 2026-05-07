@@ -116,6 +116,8 @@ If a fix was accidentally committed on the wrong branch or alongside unrelated d
 
 When a PR changes API/model definitions stored in a git submodule, make a real branch+commit in the submodule, push it, then commit the parent repo's submodule pointer plus any parent tests/code. See `references/submodule-api-schema-prs.md` for the full workflow and pitfalls.
 
+For Zeus `libs/model/pos-db` database migration work, the PR usually belongs directly in the `Transformity/pos-db` submodule repo rather than the parent Zeus repo. See `references/pos-db-migration-prs.md` for Atlas/Squawk/concurrent-index/FK-validation workflow details and CI pitfalls.
+
 Use the agent's file tools (`write_file`, `patch`) to make changes, then commit:
 
 ```bash
