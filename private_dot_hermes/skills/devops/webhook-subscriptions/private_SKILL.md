@@ -156,11 +156,27 @@ hermes webhook subscribe alerts \
 
 ### PagerDuty incident remediation
 
-- `references/transformity-pagerduty-incident-automation.md`.
+- references/scraper-execution-dlq-incidents.md
+- references/transformity-pagerduty-incident-automation.md
+- For TransformityPOSFrontend incidents titled like `Stably tests failed on main` or pointing to a GitHub Actions Stably workflow, also load `references/stably-github-actions-incident-remediation.md`.
+- For TransformityPOSFrontend/POS frontend incidents involving ServiceWorker registration/update failures or `InvalidStateError: Failed to update a ServiceWorker`, also load `references/transformity-pos-service-worker-incidents.md`.
+- For TransformityPOSFrontend/POS frontend incidents involving Electric SQL/PGlite shape sync crashes, offline sync startup failures, or `SyntaxError: Cannot convert ... to a BigInt`, also load `references/transformity-pos-electric-pglite-sync-incidents.md`.
+- For TransformityPOSFrontend/POS frontend incidents titled like `Error: Invalid number of in-store sales channels: 0` (or any non-1 count), with culprit/location `SalePageConfigProvider.tsx`, or affecting `/sale/` sales-channel initialization, also load `references/transformity-pos-in-store-sales-channel-incidents.md`.
+- For TransformityPOSFrontend/POS frontend incidents titled like `AxiosError: GET /invoiceApi/list → 401`, tagged `api.normalized_url=/invoiceApi/list`, or showing unauthenticated invoice-list requests on `/signin` or `/register/open/`, also load `references/transformity-pos-invoice-list-401-incidents.md`.
 - For rewards-service Lambda/container deployment-wiring incidents, also load `references/rewards-service-lambda-deploy-wiring.md`.
 - For rewards-service listener DLQ incidents that may map to database role/grant problems, load `references/pos-db-rewards-service-role-incidents.md`.
 - For rewards-service listener/canceller DLQ or Lambda errors with RDS IAM auth failures for `user=rewards_service`, also load `references/rewards-service-db-iam-auth.md`.
 - For rewards-service listener DLQ incidents where auth succeeds but logs show `permission denied for table loyalty_redemption_offer` or `permission denied for table reward_option`, also load `references/rewards-service-db-role-permissions.md`.
+- For POSBackend/Sentry incidents titled `IOException: Broken pipe`, `ClientAbortException`, `AsyncRequestNotUsableException`, or involving client disconnects during streaming endpoints such as `GET /items/exports`, also load `references/posbackend-client-abort-broken-pipe-incidents.md`.
+- For POSBackend/Sentry incidents titled like `NullPointerException: Parameter specified as non-null is null: method com.transformity.pos.campaign.database.model.Campaign.setType`, involving `POST /api/v1/campaign`, `Campaign.kt`, or stack frames in `CampaignMapperImpl.create` / `CampaignService.create`, also load `references/posbackend-campaign-type-null-incidents.md`.
+- For POSBackend/Sentry incidents titled `JpaSystemException: transaction timeout expired` or `TransactionTimedOutException` involving `PurchaseOrderService.streamCandidatePurchaseOrderItems`, `PurchaseOrderService.kt`, `/purchaseOrderCandidateItem/stream`, `PurchaseOrderItemTransferController`, or `createInventoryTransferFromPurchaseOrder`, also load `references/posbackend-purchase-order-candidate-timeout-incidents.md`.
+- For POSBackend/Sentry or Axios incidents involving `TransactionTimedOutException`, `POST /purchaseOrderItemTransfer/createInventoryTransferFromPurchaseOrder/{id}`, `PurchaseOrderItemTransferController.kt`, or repeated `EntityItemRepository.findByEntity_IdAndCohortItem_Id` stack frames, also load `references/posbackend-inventory-transfer-timeout-incidents.md`.
+- For POSBackend/Sentry incidents involving `Campaign.setType`, `CampaignMapperImpl.create`, `POST /api/v1/campaign`, or Kotlin null-parameter errors like `Parameter specified as non-null is null: method com.transformity.pos.campaign.database.model.Campaign.setType`, also load `references/posbackend-campaign-type-null-incidents.md`.
+- For POSBackend/AWS CloudWatch incidents involving Hikari/HikariCP, `hikaricp.connections.*`, `PG Connections`, `Connection Limit Too Many`, or `Connection Limit Too Low`, also load `references/hikari-cloudwatch-missing-data-incidents.md`.
+- For POS Shift DLQ / Step Functions incidents involving `pos-shift-*-dlq-*`, `pos-shift-orchestrator-dlq-*`, `pos-shift-inventory-complete-dlq-*`, EventBridge Step Functions failure rules, or state machines named `pos-shift-*-orchestrator-*`, also load `references/pos-shift-dlq-incidents.md`.
+- For scraper-service CloudWatch/SQS/Step Functions incidents involving `scraper-execution-dlq-*`, `scraper-*-dlq-*`, `Service=scraper` queue tags, or state machines named `scraper-orchestrator-*`, also load `references/scraper-execution-dlq-incidents.md`.
+- For PagerDuty incidents from `Zapier Automation Alerts` or email subjects like `ALERT: Zap Turned Off - ...`, also load `references/zapier-automation-alert-incidents.md`.
+- For `Zapier Automation Alerts` incidents, especially `ALERT: Zap Turned Off - ...`, also load `references/zapier-automation-alert-incidents.md`.
 
 Key defaults from that pattern:
 - If the agent is running on a public VM/droplet, prefer a real HTTPS reverse proxy to `localhost:8644` over tunnel services.
@@ -180,7 +196,7 @@ Use this for:
 - External service push notifications (Supabase/Firebase webhooks → Telegram)
 - Monitoring alerts that should forward verbatim
 - Inter-agent pings where one agent is telling another agent's user something
-- Any webhook where an LLM round trip would be wasted effort
+Before creating a branch, modifying files, or adding more than a blocker/duplicate note, check for active work already tied to the same PagerDuty incident. Re-run this guard immediately before creating/editing a worktree or touching code, even if it passed earlier, because another webhook run may have started while enrichment/reproduction was in progress. Treat **any non-empty output** from the process/worktree checks as a stop signal unless you can prove it is only the current shell command itself; do not continue to branch creation while interpreting the output.
 
 ```bash
 hermes webhook subscribe antenna-matches \
@@ -201,6 +217,7 @@ Requires `--deliver` to be a real target (telegram, discord, slack, github_comme
 - The webhook adapter validates signatures on every incoming POST
 - Static routes from config.yaml cannot be overwritten by dynamic subscriptions
 - Subscriptions persist to `~/.hermes/webhook_subscriptions.json`
+- When checking PagerDuty/GitHub/Sentry/AWS credentials during incident runs, never print raw `.env`, config, credential-helper, or environment values. Print only variable/key names or redact values inline (for `.env` lines, split on the first `=` and output `NAME=[REDACTED]`). A shell/Python probe that intends to redact must handle both YAML `key: value` and dotenv `KEY=value` formats before emitting output.
 
 ## How It Works
 
@@ -222,7 +239,7 @@ If webhooks aren't working:
 
 ### Approval prompts from webhook runs
 
-If logs show `Dangerous command requires approval` for a webhook route, load `references/webhook-approval-delivery.md` before changing config or code, then inspect delivery:
+Before creating a branch, modifying files, or adding more than a blocker/duplicate note, check for active work already tied to the same PagerDuty incident. Re-run this guard immediately before creating/editing a worktree or touching code, even if it passed earlier, because another webhook run may have started while enrichment/reproduction was in progress. Treat **any non-empty output** from the process/worktree checks as a stop signal unless you can prove it is only the current shell command itself; do not continue to branch creation while interpreting the output.
 
 ```bash
 hermes webhook list

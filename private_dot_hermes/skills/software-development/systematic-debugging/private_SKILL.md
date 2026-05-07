@@ -107,7 +107,9 @@ git log -p --follow src/problematic_file.py | head -100
 
 ### 4. Gather Evidence in Multi-Component Systems
 
-**WHEN system has multiple components (API → service → database, CI → build → deploy):**
+**Shell startup / prompt issues:** before proposing fixes, distinguish login vs interactive shell behavior and inspect initialization order. Useful probes include `getent passwd $USER`, `/etc/shells`, `~/.profile`, shell-specific config such as `~/.config/fish/config.fish`, and clean-environment reproductions like `env -i HOME=$HOME USER=$USER LOGNAME=$USER TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin fish -lic '...'`. For prompt-manager failures, check whether the prompt binary is available before version-manager activation (e.g. Starship installed by mise but initialized before `mise activate`). Verify by inspecting the loaded prompt function or equivalent (`functions fish_prompt` for fish) rather than relying only on visual prompt text.
+
+**WHEN system has multiple components (API  service  database, CI  build  deploy):**
 
 **BEFORE proposing fixes, add diagnostic instrumentation:**
 
@@ -246,6 +248,8 @@ pytest tests/test_module.py::test_regression -v
 # Run full suite — no regressions
 pytest tests/ -q
 ```
+
+If an integration test fails before the test body runs because environment infrastructure cannot start (for example, Testcontainers migration/helper container timeout), classify it as a verification environment blocker rather than a product regression. Change strategy: inspect container/logs or use compile/unit tests plus remote CI status, and state precisely that the local test was blocked before execution.
 
 For production incidents and user-reported bugs, automated tests are necessary but may not be sufficient. Also re-run the original dynamic reproduction path after the fix:
 

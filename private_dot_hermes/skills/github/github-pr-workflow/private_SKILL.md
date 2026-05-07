@@ -49,7 +49,7 @@ echo "Using: $AUTH"
 [ -n "$GITHUB_TOKEN" ] && echo "GitHub API credential: available" || echo "GitHub API credential: missing"
 ```
 
-Pitfall: many machines can `git push` because a credential helper is configured even when `gh` and `GITHUB_TOKEN` are absent. For API PR creation/check polling, use `git credential fill` as a fallback and never echo the credential value.
+Pitfall: many machines can `git push` because a credential helper is configured even when `gh` and `GITHUB_TOKEN` are absent. Conversely, `~/.config/gh/hosts.yml` may contain a usable GitHub token even when the `gh` binary is not installed and `git push` has no credentials. For API PR creation/check polling, use `git credential fill` or the gh hosts token as fallbacks, but never echo credential values. When testing push credentials, set `GIT_TERMINAL_PROMPT=0` so missing credentials fail fast instead of hanging.
 
 ### Extracting Owner/Repo from the Git Remote
 
@@ -67,6 +67,17 @@ echo "Owner: $OWNER, Repo: $REPO"
 ---
 
 ## 1. Branch Creation
+
+Before cloning a repository or creating a new worktree, check whether the repo is already organized as a worktree collection and reuse the existing branch worktree when present. Users may expect this; cloning over/around an existing worktree wastes time and can put changes in the wrong checkout.
+
+```bash
+# From likely repo parent locations
+find /root/code -maxdepth 3 \( -name .git -type f -o -name .git -type d \) 2>/dev/null | head
+
+# Inside an existing checkout/worktree
+git worktree list
+git branch -a | grep -i '<topic-or-pr-keyword>'
+```
 
 This part is pure `git` — identical either way:
 
@@ -88,7 +99,7 @@ Branch naming conventions:
 
 ### Worktree/branch hygiene for incident or hotfix PRs
 
-Before committing, especially in repos with multiple worktrees or generated files, verify the branch and staged scope:
+Before committing, especially in repos with multiple worktrees, submodules, or generated files, verify the branch and staged scope:
 
 ```bash
 git branch --show-current
@@ -97,9 +108,13 @@ git status --short
 git diff --cached --name-only
 ```
 
-If a fix was accidentally committed on the wrong branch or alongside unrelated dirty files, do not open a PR from that branch. Create a clean branch/worktree from `main`, cherry-pick only the intended commit or re-apply only the intended files, then verify `git diff --name-only main...HEAD` contains only the PR's files. This prevents unrelated generated/model changes from leaking into urgent incident PRs.
+If a fix was accidentally committed on the wrong branch or alongside unrelated dirty files, do not open a PR from that branch. Create or switch to a clean branch/worktree from the intended base, cherry-pick only the intended commit or re-apply only the intended files, then verify `git diff --name-only <base>...HEAD` contains only the PR's files. This prevents unrelated generated/model/submodule changes from leaking into urgent PRs.
 
 ## 2. Making Commits
+
+### Submodule-backed schema/API changes
+
+When a PR changes API/model definitions stored in a git submodule, make a real branch+commit in the submodule, push it, then commit the parent repo's submodule pointer plus any parent tests/code. See `references/submodule-api-schema-prs.md` for the full workflow and pitfalls.
 
 Use the agent's file tools (`write_file`, `patch`) to make changes, then commit:
 
@@ -173,13 +188,21 @@ The response JSON includes the PR `number` — save it for later commands.
 
 To create as a draft, add `"draft": true` to the JSON body.
 
+Pitfalls:
+- If `gh` is not installed after you have already pushed the branch, do not stop. Use the REST `POST /repos/{owner}/{repo}/pulls` fallback with a token from `git credential fill` or another configured source, and print only PR number/URL/SHA.
+- If PR creation returns HTTP 422, check whether an open PR already exists for the same head branch (`GET /repos/{owner}/{repo}/pulls?head={owner}:{branch}&state=open`) before treating it as a hard failure.
+- Avoid shell-quoting bugs for long PR bodies: write the body to a temp file and have a short Python/JSON script read it and call the REST API, rather than interpolating multiline Markdown into a shell JSON string.
+
 ## 4. Monitoring CI Status
 
 ### Check CI Status
 
 Before polling, know what counts as actionable:
 - Query both the combined commit status endpoint and the check-runs endpoint; modern GitHub Actions normally appear as check runs, while integrations may still use commit statuses.
-- A failed integration/agent check can be infrastructure noise rather than a code failure. Inspect logs before changing code. Examples: Stably reporter authentication/config failures (`STABLY_API_KEY`/`STABLY_PROJECT_ID`) or autoheal context fetch failures should be reported as CI infrastructure blockers unless the PR changed that integration config.
+- GitHub's combined commit status can remain `pending` even when all visible check runs are `completed / success` (for example when no legacy statuses exist or a separate expected status has not reported). Report the per-check-run results explicitly rather than treating combined-status `pending` alone as a failure.
+- A failed integration/agent check can be infrastructure noise rather than a code failure. Inspect logs before changing code. Examples: Stably reporter authentication/config failures (`STABLY_API_KEY`/`STABLY_PROJECT_ID`), autoheal context fetch failures, or Pulumi preview comment failures caused by GitHub/Octokit timeouts after the preview itself completed.
+- For transient infrastructure failures on a single GitHub Actions job, rerun the failed job via REST (`POST /repos/{owner}/{repo}/actions/jobs/{job_id}/rerun`) or `gh run rerun --failed` when available, then poll again instead of changing code.
+- After rerunning a check, the check-runs endpoint may contain multiple runs with the same name. When deciding whether CI is green, group by check name and use the latest `started_at`/run for each name; otherwise an older failed run can mask a successful rerun.
 - If a required check remains `in_progress`, continue polling when possible; if tool/time limits stop you, report the last observed state precisely instead of saying checks passed.
 
 **With gh:**
@@ -276,7 +299,21 @@ curl -s -L \
   https://api.github.com/repos/$OWNER/$REPO/actions/runs/$RUN_ID/logs \
   -o /tmp/ci-logs.zip
 cd /tmp && unzip -o ci-logs.zip -d ci-logs && cat ci-logs/*.txt
+
+# Alternative: a single job log endpoint returns a 302 to a short-lived signed URL.
+# If following the redirect with Authorization returns a storage-provider 401,
+# fetch the Location URL again without the GitHub Authorization header.
+JOB_ID=<job_id>
+curl -sD /tmp/job-log.headers \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github+json" \
+  https://api.github.com/repos/$OWNER/$REPO/actions/jobs/$JOB_ID/logs \
+  -o /tmp/job-log.body
+LOG_URL=$(awk 'BEGIN{IGNORECASE=1} /^location:/ {sub(/\r$/, "", $2); print $2}' /tmp/job-log.headers)
+[ -n "$LOG_URL" ] && curl -sL "$LOG_URL" -o /tmp/job-$JOB_ID.log
 ```
+
+Pitfall: if `gh` is not installed but `~/.config/gh/hosts.yml` exists, the `oauth_token` in that file can be used for REST calls. Print only that a credential key exists; never print the token or raw hosts file.
 
 ### Step 2: Fix and Push
 
