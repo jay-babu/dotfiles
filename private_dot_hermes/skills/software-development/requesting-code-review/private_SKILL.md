@@ -31,14 +31,16 @@ quality gates, an independent reviewer subagent, and an auto-fix loop.
 
 ## Step 1 — Get the diff
 
+For pre-commit verification of your own in-progress work, inspect both staged and unstaged changes. Do not require staging before review unless the user specifically asked for commit-ready staged-only verification.
+
 ```bash
 git diff --cached
+git diff
 ```
 
-If empty, try `git diff` then `git diff HEAD~1 HEAD`.
+If both are empty, try `git diff HEAD~1 HEAD`.
 
-If `git diff --cached` is empty but `git diff` shows changes, tell the user to
-`git add <files>` first. If still empty, run `git status` — nothing to verify.
+If all diffs are empty, run `git status` — nothing to verify.
 
 If the diff exceeds 15,000 characters, split by file:
 ```bash
@@ -69,9 +71,11 @@ git diff --cached | grep "^+" | grep -E "execute\(f\"|\.format\(.*SELECT|\.forma
 
 ## Step 3 — Baseline tests and linting
 
-Detect the project language and run the appropriate tools. Capture the failure
-count BEFORE your changes as **baseline_failures** (stash changes, run, pop).
+Detect the project language and run the appropriate tools. Prefer targeted tests for the changed behavior first, then broader tests when time permits. Capture the failure
+count BEFORE your changes as **baseline_failures** when feasible (stash changes, run, pop), especially before treating full-suite failures as blockers.
 Only NEW failures introduced by your changes block the commit.
+
+If the full suite is slow or produces known/unrelated failures after targeted tests pass, inspect test-result XML or reports to classify failures by subsystem and report them as unrelated unless they touch the changed area.
 
 **Test frameworks** (auto-detect by project files):
 ```bash
@@ -236,6 +240,12 @@ The `[verified]` prefix indicates an independent reviewer approved this change.
 
 ## Reference: Common Patterns to Flag
 
+### JPA/entity listeners and scoped bypasses
+
+If a change uses a scoped bypass for entity listeners (for example a `ThreadLocal` skip set), verify that the database flush or `saveAndFlush` that triggers `@PreUpdate`/`@PrePersist` happens **inside** the bypass scope. Mark as a logic error if the code only mutates a managed entity inside the scope but defers flush/commit until after the scope exits; the listener may run later without the bypass and undo the intended behavior.
+
+Prefer ID-scoped bypasses over broad boolean thread-local flags so unrelated entity updates in the same transaction/thread do not accidentally skip validation.
+
 ### Python
 ```python
 # Bad: SQL injection
@@ -259,6 +269,8 @@ element.textContent = userInput;
 
 ## Integration with Other Skills
 
+**Reference:** `references/jpa-listener-bypass-scope.md` captures a recurring review pitfall for JPA listener bypasses and deferred flush/commit timing.
+
 **subagent-driven-development:** Run this after EACH task as the quality gate.
 The two-stage review (spec compliance + code quality) uses this pipeline.
 
@@ -277,3 +289,6 @@ tests exist, tests pass, no regressions.
 - **No test framework found** — skip regression check, reviewer verdict still runs
 - **Lint tools not installed** — skip that check silently, don't fail
 - **Auto-fix introduces new issues** — counts as a new failure, cycle continues
+- **Entity listener bypass scope** — if bypassing listener validation with ThreadLocal/context, ensure the actual flush/`saveAndFlush` occurs before the bypass context exits; dirty managed entities flushed later will run listeners outside the skip
+- **Broad listener bypasses** — flag broad boolean skips when an ID/entity-scoped skip would avoid suppressing validation for unrelated updates in the same thread/transaction
+- **Full suite has unrelated failures** — after targeted tests pass, inspect XML/report failures and summarize unrelated subsystems separately; don't silently claim all-green if full suite fails

@@ -49,7 +49,7 @@ echo "Using: $AUTH"
 [ -n "$GITHUB_TOKEN" ] && echo "GitHub API credential: available" || echo "GitHub API credential: missing"
 ```
 
-Pitfall: many machines can `git push` because a credential helper is configured even when `gh` and `GITHUB_TOKEN` are absent. Conversely, `~/.config/gh/hosts.yml` may contain a usable GitHub token even when the `gh` binary is not installed and `git push` has no credentials. For API PR creation/check polling, use `git credential fill` or the gh hosts token as fallbacks, but never echo credential values. When testing push credentials, set `GIT_TERMINAL_PROMPT=0` so missing credentials fail fast instead of hanging.
+Pitfall: many machines can `git push` because a credential helper is configured even when `gh` and `GITHUB_TOKEN` are absent. Conversely, `~/.config/gh/hosts.yml` may contain a usable GitHub token even when the `gh` binary is not installed and `git push` has no credentials. If the user prefers mise-managed tools, `gh` may be installed under `~/.local/share/mise/installs/github-cli/<version>/.../bin/gh` but not on PATH; probe that location before falling back to raw REST. For API PR creation/check polling, use `git credential fill`, a mise-installed `gh`, or the gh hosts token as fallbacks, but never echo credential values. When testing push credentials, set `GIT_TERMINAL_PROMPT=0` so missing credentials fail fast instead of hanging; if a credential-helper command still times out or is blocked, do not retry the same command—switch to another credential source such as the gh hosts file.
 
 ### Extracting Owner/Repo from the Git Remote
 
@@ -118,7 +118,17 @@ When a PR changes API/model definitions stored in a git submodule, make a real b
 
 For Zeus `libs/model/pos-db` database migration work, the PR usually belongs directly in the `Transformity/pos-db` submodule repo rather than the parent Zeus repo. See `references/pos-db-migration-prs.md` for Atlas/Squawk/concurrent-index/FK-validation workflow details and CI pitfalls.
 
-Use the agent's file tools (`write_file`, `patch`) to make changes, then commit:
+When adding or maintaining cross-repo CI that runs Zeus tests from a `pos-db` PR, see `references/pos-db-zeus-ci.md` for the proven checkout/overlay pattern, generation command, test scoping, and CI-failure interpretation pitfalls.
+
+For Transformity POSBackend PRs, see `references/posbackend-pr-workflow.md` for fresh-clone/submodule setup, Gradle verification commands, Testcontainers Docker-subnet cleanup, REST PR creation when `gh` is absent, and POSBackend-specific CI interpretation notes.
+
+Use the agent's file tools (`write_file`, `patch`) to make changes, then commit. If the repository uses Husky/lint-staged and the user's Node toolchain is managed by mise, run the commit itself through mise so hooks use the intended `node`/`npx` binaries:
+
+```bash
+mise exec node@22 -- git commit -m "fix: handle rejected customer update mutations"
+```
+
+Then commit normally when no toolchain wrapper is needed:
 
 ```bash
 # Stage specific files
@@ -132,6 +142,10 @@ git commit -m "feat: add JWT-based user authentication
 - Add auth middleware for protected routes
 - Add unit tests for auth flow"
 ```
+
+Pitfall: a plain `git commit` can fail inside Husky hooks with errors like `/usr/local/bin/npx: ... /tmp/node-v22.../bin/npx: not found` even after tests passed under `mise exec node@22 -- npm ...`. Retry the commit through the same mise Node version before changing code or bypassing hooks.
+
+Pitfall: isolated git worktrees may contain `.husky/pre-commit` but be missing `.husky/_/husky.sh`, causing `git commit` to fail before running the real hook. Do not treat this as a code/test failure. Run the hook payload explicitly through the repo's toolchain (for example `mise exec node@22 -- npx lint-staged`), confirm it passes and restages any formatting changes, then commit with `HUSKY=0 git commit --no-verify ...` and mention the hook-bootstrap issue if relevant.
 
 Commit message format (Conventional Commits):
 ```
@@ -149,6 +163,32 @@ Types: `feat`, `fix`, `refactor`, `docs`, `test`, `ci`, `chore`, `perf`
 ```bash
 git push -u origin HEAD
 ```
+
+If a normal push or force-push hangs/timeouts but gh auth is configured, retry once with terminal prompts disabled and the gh credential helper explicitly wired. For force-pushes after an amend, capture the old remote SHA first and use an explicit lease:
+
+```bash
+BRANCH=$(git branch --show-current)
+OLD_REMOTE_SHA=$(git ls-remote origin "refs/heads/$BRANCH" | awk '{print $1}')
+GIT_TERMINAL_PROMPT=0 git \
+  -c credential.helper='!gh auth git-credential' \
+  push origin "HEAD:refs/heads/$BRANCH" \
+  --force-with-lease="refs/heads/$BRANCH:$OLD_REMOTE_SHA"
+```
+
+When `gh` is mise-installed but not on PATH, replace `gh` in the helper with the absolute mise binary path.
+
+If the wrapper blocks that push with a hard “do not retry this command” timeout, switch strategies rather than retrying the same git push. If the desired tree already exists locally but local HEAD was amended/diverged from the remote branch, create a normal descendant commit from the current remote branch and push that commit (no force required):
+
+```bash
+BRANCH=$(git branch --show-current)
+REMOTE_REF="refs/remotes/origin/$BRANCH"
+NEW_SHA=$(git commit-tree HEAD^{tree} -p "$REMOTE_REF" -m "Format/fix follow-up")
+git push origin "$NEW_SHA:refs/heads/$BRANCH"
+```
+
+This is useful for formatting-only follow-ups after a blocked force-push: it preserves the remote PR history, avoids retrying a blocked force-push, and updates the branch with a normal fast-forward commit. Verify `git rev-parse HEAD` versus `git rev-parse $REMOTE_REF` afterward because local HEAD may still point at the amended commit rather than the pushed `commit-tree` commit.
+
+For more complex or file-specific changes, use the GitHub REST Git API as a safe fallback: read the branch ref, create blob(s) for changed file contents, create a tree with `base_tree` from the branch head, create a commit with the branch head as parent, then PATCH `git/refs/heads/<branch>` to the new commit SHA. This avoids shell/credential-helper push hangs; print only old/new SHAs and the PR URL, never token or credential-helper output.
 
 ### Create the PR
 
@@ -194,6 +234,7 @@ Pitfalls:
 - If `gh` is not installed after you have already pushed the branch, do not stop. Use the REST `POST /repos/{owner}/{repo}/pulls` fallback with a token from `git credential fill` or another configured source, and print only PR number/URL/SHA.
 - If PR creation returns HTTP 422, check whether an open PR already exists for the same head branch (`GET /repos/{owner}/{repo}/pulls?head={owner}:{branch}&state=open`) before treating it as a hard failure.
 - Avoid shell-quoting bugs for long PR bodies: write the body to a temp file and have a short Python/JSON script read it and call the REST API, rather than interpolating multiline Markdown into a shell JSON string.
+- If the terminal wrapper blocks or times out while running a long inline/temp-file Python PR creation script, clean up the temp file and retry the minimal REST call with `execute_code`. Keep the same secret-handling rules: read `git credential fill` internally, print only PR number/URL/SHA, and never echo tokens or raw credential-helper output.
 
 ## 4. Monitoring CI Status
 
@@ -203,9 +244,15 @@ Before polling, know what counts as actionable:
 - Query both the combined commit status endpoint and the check-runs endpoint; modern GitHub Actions normally appear as check runs, while integrations may still use commit statuses.
 - GitHub's combined commit status can remain `pending` even when all visible check runs are `completed / success` (for example when no legacy statuses exist or a separate expected status has not reported). Report the per-check-run results explicitly rather than treating combined-status `pending` alone as a failure.
 - A failed integration/agent check can be infrastructure noise rather than a code failure. Inspect logs before changing code. Examples: Stably reporter authentication/config failures (`STABLY_API_KEY`/`STABLY_PROJECT_ID`), autoheal context fetch failures, or Pulumi preview comment failures caused by GitHub/Octokit timeouts after the preview itself completed.
+- For Stably PR failures, the primary `stably-test` log may hide the actual failing Playwright assertion and only show a Stably results URL plus `exit 1`. If the workflow has a follow-up `fix-tests` / `stably fix` job, inspect that job's logs too; its autoheal report often contains the actionable cause (for example backend/infrastructure replay failures) and whether code changes were intentionally not made.
 - For transient infrastructure failures on a single GitHub Actions job, rerun the failed job via REST (`POST /repos/{owner}/{repo}/actions/jobs/{job_id}/rerun`) or `gh run rerun --failed` when available, then poll again instead of changing code.
 - After rerunning a check, the check-runs endpoint may contain multiple runs with the same name. When deciding whether CI is green, group by check name and use the latest `started_at`/run for each name; otherwise an older failed run can mask a successful rerun.
-- If a required check remains `in_progress`, continue polling when possible; if tool/time limits stop you, report the last observed state precisely instead of saying checks passed.
+- A PR can report `mergeable_state`/state such as `blocked` even when every latest check-run is successful; this usually reflects branch protection, missing review, required conversation resolution, or merge queue policy rather than a CI failure. Report it separately as “checks green, PR blocked for merge/review policy” and do not keep rerunning checks or changing code solely because the PR state says `blocked`.
+- A PR can report `mergeable_state: dirty` after visible checks pass because the base branch already merged overlapping work. Fetch the PR's actual `base.sha`/`base.ref` from the GitHub API, then fetch/rebase against `FETCH_HEAD` or the exact base SHA rather than trusting a stale or broken local `origin/main` ref. If the conflict shows the functional change is already present on the base branch, close/comment the PR as a duplicate/no-op instead of resolving conflicts just to recreate the same change.
+- For Go repositories using `golangci/golangci-lint-action@v8` with `version: v2.1`, a fast-failing lint job may be a config/toolchain problem rather than code lint. v2 needs `version: "2"` in `.golangci.yml` plus the v2 output/exclusion schema (for example `output.formats.text.path: stdout`, `linters.exclusions.rules`, `linters.exclusions.paths`). Verify locally with `go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6 config verify`. If the action uses `go-version: stable` and analyzer errors appear from a newer Go version than the module expects, pin `actions/setup-go` to the module's Go version before changing production code.
+- For GitHub Actions deployments that are path-filtered and expensive (for example Pulumi `up` only when `iac/**` changes), do not rely only on `on.push.paths` if a failed/cancelled deployment must be retried by later app-only pushes. That pattern is edge-triggered and loses “undeployed infra debt.” Prefer running a cheap detection job on every main push (and optionally schedule/workflow_dispatch), compare `HEAD` to the latest successful workflow-run SHA for infra-relevant paths via `gh api .../actions/workflows/<file>/runs?branch=main&status=success&per_page=1`, and gate the expensive deploy job on whether infra changed since that SHA. Set deploy `concurrency.cancel-in-progress: false` so app-only pushes do not cancel the sticky retry. This workflow-level approach is simple and safe; for per-environment precision, store a deployed content hash per stack/environment (Pulumi stack tags, SSM, or S3) and compare against that instead.
+- If a required check remains `in_progress`, continue polling when possible; if tool/time limits stop you, report the last observed state precisely instead of saying checks passed. Long-running build checks can remain pending after quick checks like `spotless`, `preview`, and `submit-gradle` pass; do not add a final incident/PR-success note until the required build check has actually completed successfully. Job logs for in-progress runs may 302 and then return storage-provider 404/`blob does not exist`; treat that as “logs not yet available” and poll check status again rather than diagnosing from an empty log.
+- For autonomous incident PRs where the incident workflow requires a final PagerDuty/Slack note after CI, and a single required check is still pending near the tool time limit, start a guarded background follow-up poller rather than posting a premature final note. The poller should re-fetch PR checks and incident notes before posting; post the final note only when latest required checks pass, or a concise CI-blocker note if checks fail/time out. Print only PR/check metadata and never tokens or raw credential-helper output.
 
 **With gh:**
 
@@ -243,6 +290,13 @@ import sys, json
 data = json.load(sys.stdin)
 for cr in data.get('check_runs', []):
     print(f\"  {cr['name']}: {cr['status']} / {cr['conclusion'] or 'pending'}\")"
+```
+
+With `gh api`, keep query parameters in the URL or pass `-X GET`; adding `-f per_page=100` without `-X GET` can make `gh` send a POST and return a misleading `HTTP 404` for endpoints such as commit check-runs:
+
+```bash
+gh api -X GET "repos/$OWNER/$REPO/commits/$SHA/check-runs?per_page=100" \
+  -H "Accept: application/vnd.github+json"
 ```
 
 ### Poll Until Complete (git + curl)
@@ -305,6 +359,9 @@ cd /tmp && unzip -o ci-logs.zip -d ci-logs && cat ci-logs/*.txt
 # Alternative: a single job log endpoint returns a 302 to a short-lived signed URL.
 # If following the redirect with Authorization returns a storage-provider 401,
 # fetch the Location URL again without the GitHub Authorization header.
+# In Python/urllib, the default opener follows the 302 and may preserve the
+# GitHub Authorization header to Azure/S3, causing `InvalidAuthenticationInfo`.
+# Use a no-redirect opener to capture Location, then issue a second unauthenticated request.
 JOB_ID=<job_id>
 curl -sD /tmp/job-log.headers \
   -H "Authorization: token $GITHUB_TOKEN" \
@@ -341,6 +398,25 @@ When asked to auto-fix CI, follow this loop:
 4. `git add . && git commit -m "fix: ..." && git push`
 5. Wait for CI → re-check status
 6. Repeat if still failing (up to 3 attempts, then ask the user)
+
+### Sticky deploy workflows after path-filtered failures
+
+When fixing GitHub Actions deployment workflows that currently rely on `on.push.paths` to avoid expensive deploys, check for the "failed infra deploy is never retried by later app-only commits" failure mode. First identify the exact workflow class that owns the failing IaC; do not apply the fix to a global/bootstrap deploy workflow if the user is asking about service IaC deploys. For Zeus service deploys, the expected target is the reusable service workflows (`service-ecs.yml`, `service-lambda-container.yml`, `service-pulumi.yml`) plus their `deploy-<service>.yml` callers.
+
+A robust pattern is:
+
+1. Remove the workflow-level `paths:` filter from the caller workflow so a cheap gate runs on every relevant branch push.
+2. Add or extend an early `pending`/`changes` job that finds the latest successful run of the same caller deploy workflow on the target branch using the Actions REST API (`/repos/{owner}/{repo}/actions/workflows/<workflow-file>/runs?branch=main&status=success&per_page=1`). Use the current REST API version header (at time of writing, `X-GitHub-Api-Version: 2026-03-10`) rather than stale example values.
+3. Scope `actions: read` to the cheap pending/changes job where possible, and use resilient API calls (`curl --fail-with-body --silent --show-error --retry 3 --retry-delay 2 --retry-all-errors`). In reusable workflows, remember the caller job must also grant `actions: read` as the permissions upper bound. If API lookup, JSON parse, or fetching the last successful SHA fails, fail open to `deploy_required=true` / sticky infra changed.
+4. Compare that successful run's `head_sha` to `GITHUB_SHA` for only the infra-relevant paths. Prefer logging changed paths with `git log --name-only --format='' "$LAST_SUCCESS_SHA..$GITHUB_SHA" -- path1 path2 ... | sed '/^$/d' | sort -u` so CI output explains why the sticky deploy is required; `git diff --quiet` is acceptable for simpler cases.
+5. For service workflows, keep app detection scoped to the current push but make infra detection sticky since latest successful deploy. Gate the expensive deploy with "sticky infra changed OR app changed and build/test succeeded" rather than forcing app builds/tests on every push.
+6. Set deploy concurrency `cancel-in-progress: false`; otherwise an app-only push can cancel the in-flight infra retry that is meant to clear the pending state. The cheap pending/changes job may use `cancel-in-progress: true`.
+
+When discussing design tradeoffs with the user, recommend GitHub Actions history / latest successful Pulumi SHA over a persistent Boolean or cache. GitHub cache is not durable deployment state: it can expire, be evicted, and restore-key matching can create surprising results. A repo/environment variable such as `needs_pulumi_gamma=true` is better than cache but still mutable, race-prone, requires write credentials, and does not encode which IaC version is pending. If explicit external state is needed, store a per-service/per-environment deployed IaC content hash or SHA instead of a Boolean, preferably in Pulumi stack tags/config or AWS SSM/S3; GitHub variables are a fallback, not the first choice.
+
+Avoid adding scheduled retries unless explicitly requested. For this user's Zeus deployment workflows, the expected fix is push-triggered stickiness: the next normal push should re-evaluate and keep Pulumi required until a successful deploy workflow advances the latest-success SHA.
+
+Use `curl` + `python3` inside Actions instead of assuming `gh` is available on runners, unless the repo already standardizes on `gh`. For full details and a known-good outline, see `references/sticky-deploy-workflows.md`. Validation: run `go run github.com/rhysd/actionlint/cmd/actionlint@latest <workflow.yml>` and `git diff --check`; if adding embedded shell/Python snippets in YAML, also extract/run `bash -n` on the generated shell scripts.
 
 ## 6. Merging
 

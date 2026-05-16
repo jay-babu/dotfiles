@@ -104,12 +104,17 @@ curl -s -X POST https://api.linear.app/graphql \
 ```
 
 ### Search issues by text
+
+`issueSearch` may be deprecated on some Linear workspaces. Prefer `issues(filter: ...)` with `containsIgnoreCase` on title/description/customer fields, and always inspect GraphQL `errors` even when HTTP status is 200.
+
 ```bash
 curl -s -X POST https://api.linear.app/graphql \
   -H "Authorization: $LINEAR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"query": "{ issueSearch(query: \"bug login\", first: 10) { nodes { identifier title state { name } assignee { name } url } } }"}' | python3 -m json.tool
+  -d '{"query": "{ issues(filter: { or: [{ title: { containsIgnoreCase: \"bug login\" } }, { description: { containsIgnoreCase: \"bug login\" } }] }, first: 10) { nodes { identifier title state { name type } assignee { name } url } } }"}' | python3 -m json.tool
 ```
+
+If you try `issueSearch(query: ...)` and receive a GraphQL error such as `This endpoint deprecated`, switch to the filtered `issues` query above.
 
 ### Filter issues by state type
 ```bash

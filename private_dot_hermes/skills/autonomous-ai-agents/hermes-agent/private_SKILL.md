@@ -145,12 +145,21 @@ hermes gateway install      Install as background service
 hermes gateway start/stop   Control the service
 hermes gateway restart      Restart the service
 hermes gateway status       Check status
-hermes gateway setup        Configure platforms
 ```
 
 Supported platforms: Telegram, Discord, Slack, WhatsApp, Signal, Email, SMS, Matrix, Mattermost, Home Assistant, DingTalk, Feishu, WeCom, BlueBubbles (iMessage), Weixin (WeChat), API Server, Webhooks. Open WebUI connects via the API Server adapter.
 
+**Long-running turn heartbeat:** gateway adapters send `⏳ Still working...` messages on slow turns. Tune noise with:
+
+```bash
+hermes config set agent.gateway_notify_interval 600   # every 10 minutes
+hermes config set agent.gateway_notify_interval 0     # disable
+```
+
+This writes `agent.gateway_notify_interval` in `~/.hermes/config.yaml`; gateway startup bridges it to `HERMES_AGENT_NOTIFY_INTERVAL`. A running gateway may need `/restart` or `hermes gateway restart` for the new interval to affect future turns. Jay prefers the Slack heartbeat at 10 minutes rather than the 180s default. If the config is tracked by chezmoi, persist the live target change with `chezmoi re-add ~/.hermes/config.yaml` (or `mise exec chezmoi -- chezmoi re-add ~/.hermes/config.yaml` when chezmoi is mise-installed but not on PATH) before committing the dotfiles repo. Prefer selective `re-add` over blanket `re-add` when unrelated skill/dotfile diffs are present.
+
 Platform docs: https://hermes-agent.nousresearch.com/docs/user-guide/messaging/
+
 
 ### Sessions
 

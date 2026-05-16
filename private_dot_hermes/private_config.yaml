@@ -16,7 +16,7 @@ agent:
   service_tier: fast
   tool_use_enforcement: auto
   gateway_timeout_warning: 900
-  gateway_notify_interval: 180
+  gateway_notify_interval: 600
   gateway_auto_continue_freshness: 3600
   image_input_mode: auto
   disabled_toolsets: []

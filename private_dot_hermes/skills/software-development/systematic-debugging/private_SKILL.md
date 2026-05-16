@@ -255,6 +255,8 @@ For production incidents and user-reported bugs, automated tests are necessary b
 
 - API/backend/non-UI bug: repeat the failing API call, CLI command, integration script, or local service request and capture the before/after output.
 - UI/interaction bug: repeat the browser/UI steps with Playwright/browser automation or manual click evidence when available.
+- Observability-noise incident: verify both behavior and instrumentation. If the incident is caused by a synthetic Sentry/PostHog exception during an expected fallback/loading state, add a regression test that preserves caller-visible fallback/error state while asserting the exception/analytics side effect is not emitted. See `references/mobile-sentry-noise-incidents.md` for the React Native/Expo mobile pattern and local Jest pitfalls.
+- Cross-repo business-rule audit: distinguish "field exists/syncs" from "business logic uses it." Trace the chosen value across DB migrations, generated API/types, frontend local/offline paths, service contracts, persistence payloads, and reports. If an API/service model accepts only a generic field (for example `cost`) and lacks the selector/config fields, the caller must preselect the effective value before that boundary. For Transformity POS cost-source/minimum-price/invoice self-managed-cost patterns, see `references/transformity-pos-cost-source-audits.md`.
 - If the issue cannot be reproduced dynamically, do not claim it is fixed; report what is missing and what was statically validated.
 
 ### 4. If Fix Doesn't Work — The Rule of Three
