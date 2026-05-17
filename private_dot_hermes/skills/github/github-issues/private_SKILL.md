@@ -326,7 +326,36 @@ for i in json.load(sys.stdin):
 
 5. **Comment with triage notes** if needed
 
-## 5. Bulk Operations
+## 5. Upstream / Vendor Bug Reports
+
+Use this when reporting a production issue to an upstream project (for example Sentry, React Native, Expo, Android libraries) after local triage.
+
+1. **Search first; prefer adding signal to the exact existing open issue over opening a duplicate.** Search both the wrapper repo and underlying implementation repo. Example: for Sentry React Native replay crashes, check both `getsentry/sentry-react-native` and `getsentry/sentry-java`. If the matching upstream issue is closed, open a new issue in the most user-facing/service repo and reference the closed issue instead of only commenting on the closed thread.
+2. **Sanitize before posting.** Include only non-PII technical metadata: SDK/package versions, platform, crash path/frames, event counts, unique affected device/user counts, date range, app release identifiers if not sensitive, device models/families, and workaround tried. Exclude auth headers, tokens, emails, names, user IDs, IPs, breadcrumbs with customer/order/payment data, and full event payloads unless explicitly scrubbed.
+3. **State impact and decision clearly.** If the issue is too rare for an app-level workaround, say so; upstream maintainers can still correlate it with known fixes without assuming urgency.
+4. **Link internal tracking only if safe.** Private Sentry/PagerDuty URLs are usually not useful to public maintainers; prefer public issue links plus redacted summaries.
+5. **Draft to a temp file and post with `--body-file`.** This avoids shell-escaping mistakes and makes it easier to review for PII.
+
+Example:
+
+```bash
+cat > /tmp/upstream-comment.md <<'EOF'
+We saw the same native crash path in production and wanted to add sanitized metadata for correlation.
+
+- SDK: @vendor/package 1.2.3
+- Platform: Android
+- Impact: 3 occurrences, 2 unique affected devices over ~96 days
+- Crash path: package.Class.method -> android.graphics.Bitmap.recycle -> native frame
+- Affected devices: SM-XXXX, SM-YYYY
+- Workaround evaluated: upgrade to 1.2.9; not shipped due low volume
+
+No PII, auth headers, user identifiers, breadcrumbs, or event payloads included.
+EOF
+
+gh issue comment 1234 --repo upstream/project --body-file /tmp/upstream-comment.md
+```
+
+## 6. Bulk Operations
 
 For batch operations, combine API calls with shell scripting:
 

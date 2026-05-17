@@ -70,11 +70,23 @@ echo "Owner: $OWNER, Repo: $REPO"
 
 Before cloning a repository or creating a new worktree, check whether the repo is already organized as a worktree collection and reuse the existing branch worktree when present. Users may expect this; cloning over/around an existing worktree wastes time and can put changes in the wrong checkout.
 
+For Transformity repos under `/root/code`, use the canonical existing worktree manager/root and create new branch worktrees **inside that manager directory**, sibling to `main/` — do not create parallel clone families or top-level `../Repo-pd-*` directories:
+
+- Zeus: `cd /root/code/zeus && git worktree add pd-<id>-<slug> -b fix/pd-<id>-<slug> origin/main`
+- Frontend: `cd /root/code/TransformityPOSFrontend && git worktree add pd-<id>-<slug> -b fix/pd-<id>-<slug> origin/main`
+- Backend: `cd /root/code/POSBackend && git worktree add pd-<id>-<slug> -b fix/pd-<id>-<slug> origin/main`
+
+Example matching the user's convention: `cd /root/code/TransformityPOSFrontend && git worktree add backup-main` creates `/root/code/TransformityPOSFrontend/backup-main`, next to `/root/code/TransformityPOSFrontend/main`.
+
+If multiple possible roots exist (for example `POSBackend` and `POSBackend-main`), first run `git worktree list` from the canonical repo root above and reuse that family unless the user explicitly points to another checkout.
+
+For cleanup of accidental worktree sprawl, stale `.git/worktrees/...` pointer directories, duplicate `POSBackend-main`-style families, and dirty-worktree backup-before-delete handling, see `references/transformity-worktree-cleanup.md`.
+
 ```bash
 # From likely repo parent locations
 find /root/code -maxdepth 3 \( -name .git -type f -o -name .git -type d \) 2>/dev/null | head
 
-# Inside an existing checkout/worktree
+# Inside the canonical existing checkout/worktree manager, not an arbitrary sibling
 git worktree list
 git branch -a | grep -i '<topic-or-pr-keyword>'
 ```
@@ -233,6 +245,7 @@ To create as a draft, add `"draft": true` to the JSON body.
 Pitfalls:
 - If `gh` is not installed after you have already pushed the branch, do not stop. Use the REST `POST /repos/{owner}/{repo}/pulls` fallback with a token from `git credential fill` or another configured source, and print only PR number/URL/SHA.
 - If PR creation returns HTTP 422, check whether an open PR already exists for the same head branch (`GET /repos/{owner}/{repo}/pulls?head={owner}:{branch}&state=open`) before treating it as a hard failure.
+- If an existing PR was closed and `gh pr reopen`/GraphQL cannot reopen it, do not keep trying to mutate stale PR state. Create a replacement PR from the corrected head branch, update/comment the closed PR as superseded, and report both links plus the reason. Verify the new PR's `head.sha` matches the branch ref because closed PRs can appear stuck on an old head even after the branch moves.
 - Avoid shell-quoting bugs for long PR bodies: write the body to a temp file and have a short Python/JSON script read it and call the REST API, rather than interpolating multiline Markdown into a shell JSON string.
 - If the terminal wrapper blocks or times out while running a long inline/temp-file Python PR creation script, clean up the temp file and retry the minimal REST call with `execute_code`. Keep the same secret-handling rules: read `git credential fill` internally, print only PR number/URL/SHA, and never echo tokens or raw credential-helper output.
 
@@ -243,9 +256,9 @@ Pitfalls:
 Before polling, know what counts as actionable:
 - Query both the combined commit status endpoint and the check-runs endpoint; modern GitHub Actions normally appear as check runs, while integrations may still use commit statuses.
 - GitHub's combined commit status can remain `pending` even when all visible check runs are `completed / success` (for example when no legacy statuses exist or a separate expected status has not reported). Report the per-check-run results explicitly rather than treating combined-status `pending` alone as a failure.
-- A failed integration/agent check can be infrastructure noise rather than a code failure. Inspect logs before changing code. Examples: Stably reporter authentication/config failures (`STABLY_API_KEY`/`STABLY_PROJECT_ID`), autoheal context fetch failures, or Pulumi preview comment failures caused by GitHub/Octokit timeouts after the preview itself completed.
+- A failed integration/agent check can be infrastructure noise rather than a code failure. Inspect logs before changing code. Examples: Stably reporter authentication/config failures (`STABLY_API_KEY`/`STABLY_PROJECT_ID`), autoheal context fetch failures, or Pulumi preview comment failures caused by GitHub/Octokit timeouts after the preview itself completed. If a PR's product/local checks are green but `stably-test-pr / stably-test` fails before product assertions with `[StablyAI reporter] Could not authenticate with the server...` and `fix-tests` fails to fetch autoheal context, treat it as a Stably/GitHub credential/project-config blocker rather than a product-fix failure; document the PR URL, green local/GitHub evidence, exact Stably auth signature, and next action for a Stably/GitHub admin to verify/rotate `STABLY_API_KEY` and confirm/update `STABLY_PROJECT_ID`. See `webhook-subscriptions/references/stably-pr2659-auth-blocker.md` for a concrete TransformityPOSFrontend example.
 - For Stably PR failures, the primary `stably-test` log may hide the actual failing Playwright assertion and only show a Stably results URL plus `exit 1`. If the workflow has a follow-up `fix-tests` / `stably fix` job, inspect that job's logs too; its autoheal report often contains the actionable cause (for example backend/infrastructure replay failures) and whether code changes were intentionally not made.
-- For transient infrastructure failures on a single GitHub Actions job, rerun the failed job via REST (`POST /repos/{owner}/{repo}/actions/jobs/{job_id}/rerun`) or `gh run rerun --failed` when available, then poll again instead of changing code.
+- For transient infrastructure failures on a single GitHub Actions job, inspect failed logs first, then rerun the failed job via REST (`POST /repos/{owner}/{repo}/actions/jobs/{job_id}/rerun`) or `gh run rerun --failed` when available, and poll again instead of changing code. Example: Maestro iOS smoke failures like `iOS driver not ready in time` / `LocalXCTestInstaller$IOSDriverTimeoutException` before app assertions are usually simulator/XCTest driver startup infra, not product code. Rerun the failed workflow/job unless the logs show an app assertion failure.
 - After rerunning a check, the check-runs endpoint may contain multiple runs with the same name. When deciding whether CI is green, group by check name and use the latest `started_at`/run for each name; otherwise an older failed run can mask a successful rerun.
 - A PR can report `mergeable_state`/state such as `blocked` even when every latest check-run is successful; this usually reflects branch protection, missing review, required conversation resolution, or merge queue policy rather than a CI failure. Report it separately as “checks green, PR blocked for merge/review policy” and do not keep rerunning checks or changing code solely because the PR state says `blocked`.
 - A PR can report `mergeable_state: dirty` after visible checks pass because the base branch already merged overlapping work. Fetch the PR's actual `base.sha`/`base.ref` from the GitHub API, then fetch/rebase against `FETCH_HEAD` or the exact base SHA rather than trusting a stale or broken local `origin/main` ref. If the conflict shows the functional change is already present on the base branch, close/comment the PR as a duplicate/no-op instead of resolving conflicts just to recreate the same change.
@@ -412,11 +425,11 @@ A robust pattern is:
 5. For service workflows, keep app detection scoped to the current push but make infra detection sticky since latest successful deploy. Gate the expensive deploy with "sticky infra changed OR app changed and build/test succeeded" rather than forcing app builds/tests on every push.
 6. Set deploy concurrency `cancel-in-progress: false`; otherwise an app-only push can cancel the in-flight infra retry that is meant to clear the pending state. The cheap pending/changes job may use `cancel-in-progress: true`.
 
-When discussing design tradeoffs with the user, recommend GitHub Actions history / latest successful Pulumi SHA over a persistent Boolean or cache. GitHub cache is not durable deployment state: it can expire, be evicted, and restore-key matching can create surprising results. A repo/environment variable such as `needs_pulumi_gamma=true` is better than cache but still mutable, race-prone, requires write credentials, and does not encode which IaC version is pending. If explicit external state is needed, store a per-service/per-environment deployed IaC content hash or SHA instead of a Boolean, preferably in Pulumi stack tags/config or AWS SSM/S3; GitHub variables are a fallback, not the first choice.
+When discussing design tradeoffs with the user, prefer exact applied-state watermarks over persistent booleans or GitHub cache. GitHub cache is not durable deployment correctness state: it can expire, be evicted, and restore-key matching can create surprising results. A repo/environment variable such as `needs_pulumi_gamma=true` is better than cache but still mutable, race-prone, requires write credentials, and does not encode which IaC version is pending. For Pulumi-backed services, store a per-service/per-environment deployed IaC content hash (for example Pulumi stack tag `deployed_iac_hash`, optionally with `deployed_iac_git_sha`) and compare it to a deterministic desired hash from tracked IaC files. Update the tag only after `pulumi up` succeeds; if it fails or is cancelled, the old hash remains and later app-only pushes keep retrying. GitHub Actions latest-success history is a fallback when target-side state is unavailable or when a single successful workflow run reconciles all environments.
 
-Avoid adding scheduled retries unless explicitly requested. For this user's Zeus deployment workflows, the expected fix is push-triggered stickiness: the next normal push should re-evaluate and keep Pulumi required until a successful deploy workflow advances the latest-success SHA.
+Avoid adding scheduled retries unless explicitly requested. For this user's Zeus service deployment workflows, the expected fix is push-triggered stickiness in `service-ecs.yml`, `service-lambda-container.yml`, `service-pulumi.yml`, and the `deploy-<service>.yml` callers: the next normal push should re-evaluate the service/environment watermark and keep Pulumi required until a successful `pulumi up` advances the deployed hash.
 
-Use `curl` + `python3` inside Actions instead of assuming `gh` is available on runners, unless the repo already standardizes on `gh`. For full details and a known-good outline, see `references/sticky-deploy-workflows.md`. Validation: run `go run github.com/rhysd/actionlint/cmd/actionlint@latest <workflow.yml>` and `git diff --check`; if adding embedded shell/Python snippets in YAML, also extract/run `bash -n` on the generated shell scripts.
+Use `curl` + `python3` inside Actions instead of assuming `gh` is available on runners, unless the repo already standardizes on `gh`. For reusable service deploy workflows, also look for duplicated per-environment deploy jobs and collapse them into a matrix job when the bodies are identical; keep environment-specific side effects guarded at the step level. For full details and a known-good outline, see `references/sticky-deploy-workflows.md`. Validation: run `go run github.com/rhysd/actionlint/cmd/actionlint@latest <workflow.yml>` and `git diff --check`; if adding embedded shell/Python snippets in YAML, also extract/run `bash -n` on the generated shell scripts.
 
 ## 6. Merging
 

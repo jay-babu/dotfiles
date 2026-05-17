@@ -1,8 +1,8 @@
 {
-  "last_report_path": null,
-  "last_run_at": "2026-05-03T21:08:33.740426+00:00",
-  "last_run_duration_seconds": null,
-  "last_run_summary": "deferred first run — curator seeded, will run after one interval; use `hermes curator run --dry-run` to preview now",
+  "last_report_path": "/root/.hermes/logs/curator/20260510-220218",
+  "last_run_at": "2026-05-10T22:02:18.742160+00:00",
+  "last_run_duration_seconds": 15.920273,
+  "last_run_summary": "auto: no changes; llm: Processed the full candidate set provided (2 agent-created, unpinned skills):\n\n- `aws-machine-identity`\n- `database-analytics-offloading`\n\nFindings:\n\n- No prefix cluster with 2+ members exists in the provided candidate set.\n- Both skills ar…",
   "paused": false,
-  "run_count": 0
+  "run_count": 1
 }
