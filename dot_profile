@@ -39,6 +39,11 @@ fi
 
 PATH=$(echo "$PATH" | tr ':' '\n' | grep -v -e '/mnt/c/Windows/system32' -e '/mnt/c/Windows/System32/Wbem' | tr '\n' ':')
 
+# Activate mise so configured tool versions are available in shells.
+if command -v mise >/dev/null 2>&1; then
+	eval "$(mise activate bash)"
+fi
+
 alias v="nvim"
 alias lg="lazygit"
 export EDITOR="nvim"
