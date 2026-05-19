@@ -61,7 +61,7 @@ function connect_to_rds
 end
 
 function dev_t
-    aws configure export-credentials --profile Transformity --format fish | source
+    aws configure export-credentials --profile $AWS_PROFILE --format fish | source
     set -l account_number (aws sts get-caller-identity | jq -r ".Account")
     if echo $account_number | string match -q "165569969323"
         set -l database_name "postgres"
