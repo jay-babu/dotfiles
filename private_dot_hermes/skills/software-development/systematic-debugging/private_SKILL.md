@@ -251,6 +251,8 @@ pytest tests/ -q
 
 If an integration test fails before the test body runs because environment infrastructure cannot start (for example, Testcontainers migration/helper container timeout), classify it as a verification environment blocker rather than a product regression. Change strategy: inspect container/logs or use compile/unit tests plus remote CI status, and state precisely that the local test was blocked before execution.
 
+For JVM/Kotlin integration tests that use Testcontainers, debug in layers: Docker client/API compatibility, service image/runtime behavior, migration/submodule setup, fixture/schema drift, and application config/DI. Read the generated `build/test-results/test/TEST-...xml` after each run because Gradle console output often truncates the nested cause. Avoid `latest` images and `withReuse(true)` while debugging, initialize schema submodules before running migrations, and do not advance a schema submodule pointer unless the parent repo's generated clients/types are updated too. See `references/testcontainers-kotlin-integration-debugging.md` for the detailed pattern.
+
 For production incidents and user-reported bugs, automated tests are necessary but may not be sufficient. Also re-run the original dynamic reproduction path after the fix:
 
 - API/backend/non-UI bug: repeat the failing API call, CLI command, integration script, or local service request and capture the before/after output.

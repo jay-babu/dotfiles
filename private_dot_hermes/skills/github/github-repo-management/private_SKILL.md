@@ -55,7 +55,40 @@ REPO=$(echo "$OWNER_REPO" | cut -d/ -f2)
 
 ## 1. Cloning Repositories
 
-Cloning is pure `git` — works identically either way:
+### User-preferred local workflow: `bare -r REPO_URL`
+
+For this user's coding environment, prefer the `bare` CLI when cloning repos for work. It creates a bare-repo + `main/` worktree layout such as `/root/code/repo-name/main`.
+
+```bash
+cd /root/code
+bare -r https://github.com/owner/repo-name
+cd repo-name/main
+git status --short --branch
+```
+
+If `bare` is not on `PATH`, check mise before falling back to other clone commands:
+
+```bash
+command -v mise
+mise which bare
+# Refresh the current shell when needed:
+eval "$(mise activate bash)"
+command -v bare
+```
+
+If mise itself is available but shell sessions do not see mise-managed tools, persist activation in the shell profile (for bash login shells, `~/.profile`):
+
+```bash
+if command -v mise >/dev/null 2>&1; then
+	eval "$(mise activate bash)"
+fi
+```
+
+When editing dotfiles managed by chezmoi, update the source file (for example `~/.local/share/chezmoi/dot_profile`), apply it, then commit/push only the intended hunk; leave unrelated profile changes unstaged.
+
+### Standard git/gh alternatives
+
+Use these only when `bare -r` is unavailable or the user asks for a conventional clone.
 
 ```bash
 # Clone via HTTPS (works with credential helper or token-embedded URL)

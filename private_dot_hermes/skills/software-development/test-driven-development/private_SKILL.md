@@ -331,6 +331,31 @@ Never fix bugs without a test.
 - **Testing implementation details** — test behavior/results, not internal method calls
 - **Happy path only** — always test edge cases, errors, and boundaries
 - **Brittle tests** — tests should verify behavior, not structure; refactoring shouldn't break them
+- **Piecemeal field assertions when a full expected object is clearer** — if the expected struct/object is reasonably small and stable, assert the full object so diffs catch accidental shape changes. Keep lookup/existence assertions separate (for example `found == true`), then compare the retrieved object to an explicit expected value. In Go, prefer `cmp.Diff(got, want, opts...)` or the project test helper rather than many `MustEqual(field, value)` calls.
+
+### Go object-comparison pitfalls
+
+When comparing SDK or generated structs, `go-cmp` may panic on unexported internal fields. Use an explicit ignore option for those types instead of falling back to many field-level assertions:
+
+```go
+want := snstypes.PublishBatchRequestEntry{
+    Id:      new("1"),
+    Message: new(expectedMessage),
+    MessageAttributes: map[string]snstypes.MessageAttributeValue{
+        "action": {DataType: new("String"), StringValue: new("UPDATE")},
+    },
+}
+if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(
+    snstypes.PublishBatchRequestEntry{},
+    snstypes.MessageAttributeValue{},
+)); diff != "" {
+    t.Fatalf("request entry mismatch (-got +want):\n%s", diff)
+}
+```
+
+Prefer literal expected values over calling the same production helper used to produce `got`; otherwise the test may mirror the implementation and miss regressions. If the project lints against AWS SDK pointer helpers, use Go `new(expr)` instead of `aws.String(...)` in expected structs.
+
+For a fuller Go example with AWS SNS batch request entries, unexported smithy fields, and stringified routing attributes, see `references/go-full-object-assertions.md`.
 
 ## Final Rule
 
