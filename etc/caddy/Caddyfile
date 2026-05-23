@@ -1,0 +1,8 @@
+hermes.usemargin.dev {
+	log {
+		output file /var/log/caddy/hermes-access.log
+		format console
+	}
+
+	reverse_proxy 127.0.0.1:8644
+}

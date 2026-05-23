@@ -1,0 +1,16 @@
+[Unit]
+Description=Caddy reverse proxy for Hermes webhook endpoint
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+ExecStart=/root/.local/share/mise/installs/caddy/latest/caddy run --environ --config /etc/caddy/Caddyfile
+ExecReload=/root/.local/share/mise/installs/caddy/latest/caddy reload --config /etc/caddy/Caddyfile --force
+TimeoutStopSec=5s
+LimitNOFILE=1048576
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
