@@ -165,7 +165,7 @@ auxiliary:
     model: ''
     base_url: ''
     api_key: ''
-    timeout: 120
+    timeout: 180
     extra_body: {}
   session_search:
     provider: auto
