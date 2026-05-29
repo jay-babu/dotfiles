@@ -1,0 +1,15 @@
+[Unit]
+Description=signal-cli HTTP daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root
+ExecStart=/root/.local/bin/mise exec java@temurin-25 -- /usr/local/bin/signal-cli --account +14016444251 daemon --http 127.0.0.1:31337
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
