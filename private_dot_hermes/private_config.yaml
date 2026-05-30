@@ -454,6 +454,23 @@ platform_toolsets:
   - tts
   - vision
   - web
+  webhook:
+  - browser
+  - clarify
+  - code_execution
+  - cronjob
+  - delegation
+  - file
+  - image_gen
+  - memory
+  - messaging
+  - session_search
+  - skills
+  - terminal
+  - todo
+  - tts
+  - vision
+  - web
   signal:
   - hermes-signal
   homeassistant:
