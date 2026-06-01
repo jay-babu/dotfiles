@@ -42,7 +42,7 @@ caddy = "latest"
 yq = "latest"
 jq = "latest"
 "pipx:nano-pdf" = "latest"
-"cargo:himalaya" = "latest"
+"cargo:himalaya" = { version = "latest", features = "oauth2" }
 "npm:@googleworkspace/cli" = "latest"
 "go:github.com/air-verse/air" = "latest"
 "go:github.com/charmbracelet/glow/v2" = "latest"
