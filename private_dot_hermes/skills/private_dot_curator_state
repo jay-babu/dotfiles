@@ -1,8 +1,9 @@
 {
-  "last_report_path": "/root/.hermes/logs/curator/20260517-221211",
-  "last_run_at": "2026-05-17T22:12:11.532382+00:00",
-  "last_run_duration_seconds": 154.22819,
-  "last_run_summary": "auto: no changes; llm: Created one new class-level umbrella skill:\n\n- `aws-cloud-operations` — covers AWS-backed operational investigations and administration:\n  - machine identity / IAM Roles Anywhere\n  - AWS cost investigations\n  - RDS/Aurora analytics pressure…",
+  "last_report_path": "/root/.hermes/logs/curator/20260531-233807",
+  "last_run_at": "2026-05-31T23:38:07.451210+00:00",
+  "last_run_duration_seconds": 163.325137,
+  "last_run_summary": "auto: no changes; llm: Processed the 8 agent-created, unpinned candidates and performed umbrella-building consolidation.\n\nCreated two new class-level umbrella skills:\n\n1. **`retail-pos-data-operations`**\n   - Absorbed:\n     - `database-data-repair-sql`\n     - `du…\narchived 6 skill(s):\n  • database-data-repair-sql — pruned (stale)\n  • duckdb-parquet-analytics — pruned (stale)\n  • hermes-gateway-development — pruned (stale)\n  • retail-product-substitution-research — pruned (stale)\n  • slack-messaging — pruned (stale)\n  • time-series-date-range-apis — pruned (stale)\nfull report: hermes curator status",
+  "last_run_summary_shown_at": "2026-05-24T22:56:44.448084+00:00",
   "paused": false,
-  "run_count": 2
+  "run_count": 4
 }

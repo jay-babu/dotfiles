@@ -327,11 +327,70 @@ Never fix bugs without a test.
 
 ## Testing Anti-Patterns
 
+### Feature loop closure
+
+For every new feature, close the full loop without waiting for the user to spell out obvious downstream uses. Ask: "What makes this useful in production, and where is it consumed or observed?" Then inspect and test that path.
+
+Examples:
+- Metadata/correlation IDs must be emitted, received, propagated, and visible in logs/traces/audit data operators actually use.
+- New config/options must be wired into the code path that consumes them, not merely added to a schema or UI.
+- New UI controls must affect requests, server parsing, persisted/query behavior, rendered state, and pagination/navigation URLs where applicable.
+- New API fields must be produced and consumed by callers or documented as intentionally write-only/read-only.
+
+If the implementation creates data that no one reads, logs, renders, stores, or acts on, the feature is incomplete. Prefer exact affected route/path tests over generic dummy-handler tests, and mention any intentionally unverified loop in the PR summary.
+
 - **Testing mock behavior instead of real behavior** — mocks should verify interactions, not replace the system under test
 - **Testing implementation details** — test behavior/results, not internal method calls
 - **Happy path only** — always test edge cases, errors, and boundaries
 - **Brittle tests** — tests should verify behavior, not structure; refactoring shouldn't break them
 - **Piecemeal field assertions when a full expected object is clearer** — if the expected struct/object is reasonably small and stable, assert the full object so diffs catch accidental shape changes. Keep lookup/existence assertions separate (for example `found == true`), then compare the retrieved object to an explicit expected value. In Go, prefer `cmp.Diff(got, want, opts...)` or the project test helper rather than many `MustEqual(field, value)` calls.
+
+### Frontend navigation links and route params
+
+For UI work that adds a navigation link/button, write a focused component test before implementation that proves the user-facing contract:
+
+- Query by accessible role/name, not CSS class or component internals: `getByRole('link', { name: /messages/i })`.
+- Assert the exact `href`, including route params derived from the same context/provider the real page uses.
+- Add a negative test for the gating condition so the link is absent when the required data/permission is missing.
+- If the target is another route on the same app/host, prefer an environment-relative URL (for example `/v2/${entity.id}/messages/`) unless the requirement explicitly needs a cross-origin absolute URL. This keeps local/dev/gamma/prod on their current host.
+- Gate on the most direct available DTO/API field that represents the requirement, and document when a more ideal source does not exist.
+
+When inserting a link into a tabbed/sidebar navigation component, add regression tests for tab-state isolation, not just the link href:
+
+- Link-only entries should be asserted as `role="link"` and explicitly not as `role="tab"`.
+- Clicking the link-only entry must not call the tab change path or mutate persisted tab query params such as `?tab=messages`.
+- A URL containing the link-only id as a tab param should fall back to the first real tab and render non-empty content.
+- The component type/API should make illegal states hard to express: prefer a discriminated union where tab items require `content` and link items require `href` and cannot provide `content: null`.
+
+### Date/time and UI preset behavior
+
+For frontend behavior that computes date ranges, preset options, interval defaults, labels, or query boundaries, prefer extracting the calculation into a pure helper and testing that helper directly with an injected fixed `today`/`now` value. Do not make the only regression coverage a component-render test that depends on the real clock. Write the failing test against the desired public helper/API first, verify it fails because the helper/export or behavior is missing, then wire the UI to the helper. Assert both preset labels and exact local-date ranges where the UX depends on calendar boundaries (for example month intervals should start at `startOfMonth(subMonths(today, 1))`, not just “some date in the prior month”). Keep a separate query-boundary test for start-of-day/end-of-day serialization so interval presets do not accidentally change API range semantics.
+
+### Server-rendered filters, search, and pagination
+
+For server-rendered list pages with filters/search, write tests at the boundary where request query parameters become model/query arguments and rendered links. Cover the whole feature, not just the visible control:
+
+- URL/query parsing: default behavior, explicit mode values, and invalid/missing params.
+- Search semantics: exact expected wildcard/pattern construction for contains / starts-with / ends-with / exact, including the default mode.
+- Ordering semantics: if the requirement says “latest matching hit,” test that filtering happens before grouping/picking the latest row, not after returning each parent’s overall latest row.
+- URL preservation: active filters must survive the page URL, HTMX/content URL, and pagination/infinite-scroll URL.
+- Rendered state: assert the selected pill/input values are present so the UI reflects the server state after navigation.
+
+Keep these as targeted tests around existing handlers/templates/model calls before broad integration suites; broader suites may be slow or require external services, but targeted coverage should still prove the user-facing contract.
+
+### Request/correlation ID headers
+
+When adding a client-generated request/correlation ID header, test the full contract across both edges:
+
+- Client emission: prove every request gets a fresh value with the required prefix/format. Use an injectable ID factory (for example `requestIdFactory`) so tests are deterministic instead of mocking the ID library globally.
+- Server receipt: inspect the actual route registration/middleware chain for the affected endpoint. Do not assume a global logging middleware runs just because it exists; server-rendered or manually registered routes may bypass shared middleware slices.
+- Logging/context propagation: add or verify a receive-side test that sets the header and asserts the request ID is placed in context and/or included in the request log fields expected by operators. Prefer testing the exact user-cited route/path, not only a generic dummy handler, so route-registration gaps are caught.
+- Consistent behavior without edge-case coupling: when a web/HTMX route should behave like regular API requests, first inspect whether the shared middleware naturally applies to that route. If it does not, do not exploit unrelated router edge cases (for example changing `routes == 0` behavior or wrapping the full composed router just to reuse a helper). Prefer an explicit, local wrapper at the affected route group, or extract a small shared helper with a clear name and direct call site.
+- Simplicity over clever reuse: avoid broad middleware moves that require static/file-server carve-outs or nil/zero-value fallbacks just to preserve old behavior. Carve-outs are a signal that the abstraction boundary is wrong. Add tests proving the exact affected route logs/propagates the ID and unaffected static routes remain untouched.
+- Dependency-injection expectations: do not add nil fallbacks for dependencies supplied by Fx/Uber DI just to make router construction optional; DI should fail startup when required dependencies are missing. Tests should construct the required dependencies explicitly.
+- Fallback behavior: if the server generates an ID when the header is missing, cover that path separately from the client-supplied header path.
+
+A PR that only proves the browser sends `X-Request-ID` may still fail the user-facing observability requirement if the receiving route does not pass through the logger that reads that header.
 
 ### Go object-comparison pitfalls
 

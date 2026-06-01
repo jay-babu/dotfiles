@@ -209,6 +209,8 @@ curl -s -X POST https://api.linear.app/graphql \
   -d '{"query": "mutation { commentCreate(input: { issueId: \"ISSUE_UUID\", body: \"Investigated. Root cause is X.\" }) { success comment { id body } } }"}' | python3 -m json.tool
 ```
 
+When the user asks to tag/mention someone, first resolve the Linear user via `users(filter: ...)` and then mention their `displayName` in the comment body (for example `@yogi`). Verify the returned comment body and issue URL after posting.
+
 ### Set due date
 ```bash
 curl -s -X POST https://api.linear.app/graphql \
@@ -284,6 +286,16 @@ Combine filters with `or: [...]` for OR logic (default is AND within a filter ob
 4. **Create issues** with team ID, title, description, priority
 5. **Update status** by setting `stateId` to the target workflow state
 6. **Add comments** to track progress
+   - For iterative analytical findings, avoid leaving a trail of multiple correction/addendum comments that makes the issue hard to read. When conclusions change or the user says the thread is too hard to read, consolidate into one final comment and update/delete superseded agent comments if the API allows it.
+   - If the user says to rerun an analysis from scratch because criteria changed, do not immediately rerun or replace findings. First update the ticket with the reconstructed criteria, filters, caveats, and required output format, explicitly say approval is required, verify that no findings table/results remain, and stop until the user approves the rerun.
+   - If you rewrite an analysis comment into its final form, make it read like a clean first-pass finding unless the user explicitly wants a correction record. Avoid meta language such as "correction", "mistake", "supersedes", or "ignore earlier" in the final comment body when the goal is legibility.
+   - Prefer one concise, self-contained Markdown table for analytical findings. Include the evidence needed to act (item/entity, identifiers, target(s), quantitative proof, price/margin/value fields, and source/availability), plus short methodology/caveats outside the table.
+   - When a table column is evidence/proof, make the cell match the requested semantics exactly rather than showing only a representative/best example. For thresholded proof (e.g. stores selling `>50` units/month each), list each qualifying entity and its qualifying value; do not aggregate across entities, do not include below-threshold entities, and preserve the exact comparator (`>` vs `>=`) in methodology and validation language.
+   - For analytical opportunity lists with time-window criteria, distinguish “any period” from “every complete period” explicitly. If the user changes the rule to require `>N` in every month/period, filter to entities meeting the threshold in each requested complete period, exclude incomplete periods when requested, and make each proof cell show the per-period values that demonstrate compliance.
+   - When ranking by an entity-level metric such as store profit, rank by a single qualifying entity’s metric (or that entity’s requested-period total) only; do not sum across multiple proof entities in the same row unless the user explicitly asks for cross-entity aggregation. Put the ranking entity/metric first in the proof cell and state the sort basis in methodology.
+   - Verify the posted/updated comment body after mutation, including table count, row count, key corrected facts, absence of superseded threshold language, sort order, and that no proof cells violate the stated threshold.
+   - When the user asks for additional metrics inside an existing evidence/proof column (for example adding revenue and profit to each store in a sell-rate proof), update the existing consolidated comment rather than adding a follow-up. Regenerate the proof cells from the underlying data/artifacts when possible, preserve the same ranking/filter criteria, add a concise methodology note defining the new metrics, and verify every proof entry contains the added fields.
+   - If you post a correction, prefer editing the latest agent comment into a single readable final answer over adding yet another comment. Keep methodology, caveats, final tables, and validation counts together.
 7. **Mark complete** by setting `stateId` to the team's "completed" type state
 
 ## Rate Limits

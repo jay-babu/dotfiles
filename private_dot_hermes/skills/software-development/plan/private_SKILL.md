@@ -4,6 +4,7 @@ description: "Plan mode: write markdown plan to .hermes/plans/, no exec."
 version: 1.0.0
 author: Hermes Agent
 license: MIT
+platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [planning, plan-mode, implementation, workflow]
@@ -22,6 +23,7 @@ For this turn, you are planning only.
 - Do not edit project files except the plan markdown file.
 - Do not run mutating terminal commands, commit, push, or perform external actions.
 - You may inspect the repo or other context with read-only commands/tools when needed.
+- If the repo already has a branch/worktree or partial implementation for the task, inspect its current diff/status before planning. The plan should explicitly account for existing work, generated/out-of-sync files, and unrelated dirty files that must not be touched or staged.
 - Your deliverable is a markdown plan saved inside the active workspace under `.hermes/plans/`.
 
 ## Output requirements
@@ -52,6 +54,8 @@ If not, create a sensible timestamped filename yourself under `.hermes/plans/`.
 ## Interaction style
 
 - If the request is clear enough, write the plan directly.
+- If the user says "let me know the plan first" or similar, treat it as plan mode even without `/plan`: do read-only repo/context inspection as needed, do not implement, and return a concise plan plus the saved path.
+- Call out concrete defaults and assumptions that affect implementation (for example same-tab vs new-tab, relative vs absolute URLs, which field gates conditional UI) so the user can approve or adjust before mutation.
 - If no explicit instruction accompanies `/plan`, infer the task from the current conversation context.
 - If it is genuinely underspecified, ask a brief clarifying question instead of guessing.
 - After saving the plan, reply briefly with what you planned and the saved path.

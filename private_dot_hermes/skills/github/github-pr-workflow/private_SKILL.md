@@ -115,7 +115,7 @@ Branch naming conventions:
 
 ### Worktree/branch hygiene for incident or hotfix PRs
 
-Before committing, especially in repos with multiple worktrees, submodules, or generated files, verify the branch and staged scope:
+Before committing, especially in repos with multiple worktrees, submodules, generated files, frontend build artifacts, or service workers, verify the branch and staged scope:
 
 ```bash
 git branch --show-current
@@ -124,7 +124,11 @@ git status --short
 git diff --cached --name-only
 ```
 
+If running local frontend tests/builds modifies generated or dev-server artifacts (for example `public/mockServiceWorker.js` from MSW/service-worker tooling) and that file is not part of the requested change, revert it before staging. Do not let test/build side effects leak into otherwise focused feature PRs; stage explicit intended paths and re-run `git status --short`/`git diff --check` before commit.
+
 If a fix was accidentally committed on the wrong branch or alongside unrelated dirty files, do not open a PR from that branch. Create or switch to a clean branch/worktree from the intended base, cherry-pick only the intended commit or re-apply only the intended files, then verify `git diff --name-only <base>...HEAD` contains only the PR's files. This prevents unrelated generated/model/submodule changes from leaking into urgent PRs.
+
+When a PR introduces a new config-driven pattern, migrate the existing/default case into that same pattern instead of leaving the old value hardcoded with a separate “additional” escape hatch. Reviewers should see one source of truth for current and future cases; if avoiding a diff is important, make the config contain the current value and verify preview shows no behavioral change.
 
 ## 2. Making Commits
 
@@ -137,6 +141,10 @@ For Zeus `libs/model/pos-db` database migration work, the PR usually belongs dir
 When adding or maintaining cross-repo CI that runs Zeus tests from a `pos-db` PR, see `references/pos-db-zeus-ci.md` for the proven checkout/overlay pattern, generation command, test scoping, and CI-failure interpretation pitfalls.
 
 For Transformity POSBackend PRs, see `references/posbackend-pr-workflow.md` for fresh-clone/submodule setup, Gradle verification commands, Testcontainers Docker-subnet cleanup, REST PR creation when `gh` is absent, and POSBackend-specific CI interpretation notes.
+
+For Transformity POS frontend PRs, see `references/transformity-frontend-pr-workflow.md` for canonical worktree placement, Node 22/mise validation, frontend artifact hygiene, focused table sort-column-id fixes, and the workflow for superseding backend workaround PRs with frontend fixes.
+
+For Zeus/Kurama PRs that touch HTMX templates, web assets, or model SQL, see `references/zeus-kurama-generated-prs.md` for required `go generate` commands, targeted validation, generated-file staging expectations, and how to report broad Atlas/Testcontainers integration failures.
 
 For upstream third-party JavaScript GitHub Action PRs, see `references/upstream-js-action-prs.md` for fork setup, committed `dist/` output, mise/Corepack/Yarn validation, Husky commit pitfalls, and fork-PR CI `action_required` interpretation.
 
@@ -178,6 +186,8 @@ Types: `feat`, `fix`, `refactor`, `docs`, `test`, `ci`, `chore`, `perf`
 
 ### Push the Branch (same either way)
 
+For this user, code changes are not complete when they are only committed locally. After making code changes, run local validation, commit, and push the branch unless the user explicitly says not to push. Do not stop at “left as local uncommitted changes” or “committed locally” for normal code-fix work; if pushing is blocked, report the blocker and the exact local commit SHA.
+
 ```bash
 git push -u origin HEAD
 ```
@@ -211,6 +221,10 @@ For more complex or file-specific changes, use the GitHub REST Git API as a safe
 ### Create the PR
 
 For cross-repo changes, keep branch names aligned where practical (for example the same `fix/<topic>` in each repo), create one PR per repository, and report them back as a compact list grouped by repo. Before the final user note, run `git status --short` in each changed worktree and include honest validation notes: codegen/formatting that passed, tests that failed or were blocked, and the known cause when available. Do not imply the batch is fully green if any repo's local tests failed or were environment-blocked.
+
+Verification wording must distinguish test/build/CI evidence from manual product verification. Do not say or imply “browser tested”, “UI verified”, “done”, or “end-to-end verified” unless you actually exercised the authenticated user flow in a browser (or an equivalent E2E test) and saw the expected behavior. If the original user request explicitly asked to debug/test “using the UI,” make a real post-fix browser attempt before the final PR report; if auth/entity access blocks the target screen, report it prominently as “not manually UI-verified due <specific blocker>,” not as a completed UI test. If you could only start the app and reach a login screen, report that precisely as “app loaded to login; authenticated flow not manually verified here.”
+
+For frontend UI PRs, especially when adding navigation, buttons, tabs, or links to an existing page, include an explicit visual placement check before reporting done or pushing for review. Inspect the actual page/component in a browser when authenticated access is available; if auth blocks the full app, build a temporary local probe/story-style harness using the real component/layout and remove it before committing. Verify the element is in the intended UI region (for example existing tab/sidebar group rather than page content) and that the final report states exactly what was visually checked and any limits.
 
 **With gh:**
 
@@ -252,12 +266,24 @@ To create as a draft, add `"draft": true` to the JSON body.
 
 Pitfalls:
 - If `gh` is not installed after you have already pushed the branch, do not stop. Use the REST `POST /repos/{owner}/{repo}/pulls` fallback with a token from `git credential fill` or another configured source, and print only PR number/URL/SHA.
+- If `gh pr create` says you must first push the current branch even after `git push -u origin HEAD` succeeded, verify the remote ref with `git ls-remote --heads origin "$BRANCH"` and retry with explicit `--head "$BRANCH" --base main`; do not repush or recreate the worktree just to satisfy gh's local upstream detection.
 - If PR creation returns HTTP 422, check whether an open PR already exists for the same head branch (`GET /repos/{owner}/{repo}/pulls?head={owner}:{branch}&state=open`) before treating it as a hard failure.
 - If an existing PR was closed and `gh pr reopen`/GraphQL cannot reopen it, do not keep trying to mutate stale PR state. Create a replacement PR from the corrected head branch, update/comment the closed PR as superseded, and report both links plus the reason. Verify the new PR's `head.sha` matches the branch ref because closed PRs can appear stuck on an old head even after the branch moves.
 - Avoid shell-quoting bugs for long PR bodies: write the body to a temp file and have a short Python/JSON script read it and call the REST API, rather than interpolating multiline Markdown into a shell JSON string.
 - If the terminal wrapper blocks or times out while running a long inline/temp-file Python PR creation script, clean up the temp file and retry the minimal REST call with `execute_code`. Keep the same secret-handling rules: read `git credential fill` internally, print only PR number/URL/SHA, and never echo tokens or raw credential-helper output.
 
 ## 4. Monitoring CI Status
+
+### Addressing PR review comments and conversation threads
+
+When the user asks to “review/address/resolve comments,” treat GitHub review conversations as part of the work, not just code suggestions:
+
+1. Fetch review comments and conversation threads before editing, and identify which comments require code changes versus explanation/no-op.
+2. If a reviewer/user objects to the shape of the implementation, reassess the design before defending or minimally patching it. Prefer simpler explicit call sites over clever reuse that changes edge-case semantics, relies on zero-value branches, or needs carve-outs to preserve behavior. A review comment like “we are taking advantage of an edge case” is usually a design correction, not just a request for an explanatory reply.
+3. When review feedback asks for an existing pattern or “minimal diff,” remove agent-added scaffolding that was only introduced for testability or abstraction unless it is explicitly needed. For example, in frontend table-sort fixes, prefer adding the required TanStack column `id` inline on the existing accessor over extracting the whole column list into a helper and adding a broad test just to observe the column config. Verify the final PR file list/diff shows the minimal intended change before pushing.
+4. After committing and pushing fixes, resolve the specific review threads you addressed. Use the thread IDs from the PR review-thread API/GraphQL rather than assuming a comment is resolved because a commit exists.
+4. Verify the result by querying unresolved review threads again and report the count (for example “GitHub reports 0 unresolved threads”).
+5. Keep the final note compact: PR URL, commits pushed, comments resolved, local validation, and any still-running or unrelated CI blockers. Do not present unrelated CI failures as caused by the review-comment fix when the diff/test evidence shows otherwise.
 
 ### Check CI Status
 
@@ -266,6 +292,8 @@ Before polling, know what counts as actionable:
 - GitHub's combined commit status can remain `pending` even when all visible check runs are `completed / success` (for example when no legacy statuses exist or a separate expected status has not reported). Report the per-check-run results explicitly rather than treating combined-status `pending` alone as a failure.
 - A failed integration/agent check can be infrastructure noise rather than a code failure. Inspect logs before changing code. Examples: Stably reporter authentication/config failures (`STABLY_API_KEY`/`STABLY_PROJECT_ID`), autoheal context fetch failures, or Pulumi preview comment failures caused by GitHub/Octokit timeouts after the preview itself completed. If a PR's product/local checks are green but `stably-test-pr / stably-test` fails before product assertions with `[StablyAI reporter] Could not authenticate with the server...` and `fix-tests` fails to fetch autoheal context, treat it as a Stably/GitHub credential/project-config blocker rather than a product-fix failure; document the PR URL, green local/GitHub evidence, exact Stably auth signature, and next action for a Stably/GitHub admin to verify/rotate `STABLY_API_KEY` and confirm/update `STABLY_PROJECT_ID`. See `webhook-subscriptions/references/stably-pr2659-auth-blocker.md` for a concrete TransformityPOSFrontend example.
 - In Zeus monorepo PRs, path/change detection can still fan out many service coverage checks. If an unrelated service coverage check fails on an unchanged service (for example `hades-price / coverage` failing because existing coverage is below threshold), inspect the log to confirm the failure signature and report it as unrelated instead of raising coverage or editing that service. Include changed-file scope and local targeted test evidence in the final PR note.
+- For Zeus/Kurama incident PRs, a `kurama / coverage` failure after CI code generation can be a mainline/generated-code blocker rather than a product-fix failure, especially when unchanged packages fail to compile with generated model parameter type mismatches (for example passing `pgtype.Int8` where generated params now expect `int64`). Verify the PR diff is scoped to the intended files, cite the failing unchanged packages/signature, and report it as an unrelated CI blocker instead of broadening the incident PR.
+- For `pull_request` GitHub Actions jobs, remember CI may build the synthetic merge ref (`refs/pull/<PR>/merge`), not just the branch head. If local branch tests pass but CI compile errors show old/generated types or code that does not match `HEAD`, fetch and inspect the merge ref before changing code or repeatedly rerunning jobs: `git fetch origin pull/<PR>/merge:refs/tmp/pr<PR>merge --force`, then `git show refs/tmp/pr<PR>merge:<path>`. Compare it with the branch head and the generated files the workflow uses. If the merge ref is stale or differs because of base-branch/generated-code interaction, report that precisely and refresh/rebase/regenerate against the actual merge base rather than treating a rerun alone as verification.
 - For Stably PR failures, the primary `stably-test` log may hide the actual failing Playwright assertion and only show a Stably results URL plus `exit 1`. If the workflow has a follow-up `fix-tests` / `stably fix` job, inspect that job's logs too; its autoheal report often contains the actionable cause (for example backend/infrastructure replay failures) and whether code changes were intentionally not made.
 - For transient infrastructure failures on a single GitHub Actions job, inspect failed logs first, then rerun the failed job via REST (`POST /repos/{owner}/{repo}/actions/jobs/{job_id}/rerun`) or `gh run rerun --failed` when available, and poll again instead of changing code. Example: Maestro iOS smoke failures like `iOS driver not ready in time` / `LocalXCTestInstaller$IOSDriverTimeoutException` before app assertions are usually simulator/XCTest driver startup infra, not product code. Rerun the failed workflow/job unless the logs show an app assertion failure.
 - After rerunning a check, the check-runs endpoint may contain multiple runs with the same name. When deciding whether CI is green, group by check name and use the latest `started_at`/run for each name; otherwise an older failed run can mask a successful rerun.
@@ -274,8 +302,10 @@ Before polling, know what counts as actionable:
 - A PR can report `mergeable_state: dirty` after visible checks pass because the base branch already merged overlapping work. Fetch the PR's actual `base.sha`/`base.ref` from the GitHub API, then fetch/rebase against `FETCH_HEAD` or the exact base SHA rather than trusting a stale or broken local `origin/main` ref. If the conflict shows the functional change is already present on the base branch, close/comment the PR as a duplicate/no-op instead of resolving conflicts just to recreate the same change.
 - For Go repositories using `golangci/golangci-lint-action@v8` with `version: v2.1`, a fast-failing lint job may be a config/toolchain problem rather than code lint. v2 needs `version: "2"` in `.golangci.yml` plus the v2 output/exclusion schema (for example `output.formats.text.path: stdout`, `linters.exclusions.rules`, `linters.exclusions.paths`). Verify locally with `go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6 config verify`. If the action uses `go-version: stable` and analyzer errors appear from a newer Go version than the module expects, pin `actions/setup-go` to the module's Go version before changing production code.
 - For GitHub Actions deployments that are path-filtered and expensive (for example Pulumi `up` only when `iac/**` changes), do not rely only on `on.push.paths` if a failed/cancelled deployment must be retried by later app-only pushes. That pattern is edge-triggered and loses “undeployed infra debt.” Prefer running a cheap detection job on every main push (and optionally schedule/workflow_dispatch), compare `HEAD` to the latest successful workflow-run SHA for infra-relevant paths via `gh api .../actions/workflows/<file>/runs?branch=main&status=success&per_page=1`, and gate the expensive deploy job on whether infra changed since that SHA. Set deploy `concurrency.cancel-in-progress: false` so app-only pushes do not cancel the sticky retry. This workflow-level approach is simple and safe; for per-environment precision, store a deployed content hash per stack/environment (Pulumi stack tags, SSM, or S3) and compare against that instead.
-- If a required check remains `in_progress`, continue polling when possible; if tool/time limits stop you, report the last observed state precisely instead of saying checks passed. Long-running build checks can remain pending after quick checks like `spotless`, `preview`, and `submit-gradle` pass; do not add a final incident/PR-success note until the required build check has actually completed successfully. Job logs for in-progress runs may 302 and then return storage-provider 404/`blob does not exist`; treat that as “logs not yet available” and poll check status again rather than diagnosing from an empty log.
-For GitHub Actions deployments that use protected environments and `concurrency.cancel-in-progress: false`, do not assume new commits will cancel old approval prompts. Jobs waiting for environment review can appear as `waiting` with pending deployments, while newer runs can remain `pending`; native concurrency will not reliably clear the older approval request without also enabling cancellation of already-running deploys. If the desired behavior is “cancel superseded approval waits but never cancel active deploys,” add an early caller-workflow job with `actions: write` that lists older runs of the same workflow/branch, filters only `waiting`/`pending`/`queued`, confirms `GET /actions/runs/{run_id}/pending_deployments` is non-empty, then calls `POST /actions/runs/{run_id}/cancel`. Do not cancel `in_progress` runs. Guard this cancellation on evidence that the new run will actually queue a replacement deploy (for example current push touched deploy-relevant service/app/IaC paths, or a deployment watermark says reconciliation is required); otherwise workflow-only or non-service pushes can cancel an older environment approval without a replacement deployment. If cancel does not clear a waiting environment approval, fallback is `POST /actions/runs/{run_id}/pending_deployments` with `state: rejected` and the pending environment IDs, but that requires a token/user allowed to review that environment. Prefer putting this in the `deploy-<service>.yml` caller workflow so the workflow ID corresponds to the single service deploy, not in a shared reusable workflow.
+- If required check remains `in_progress`, continue polling when possible; if tool/time limits stop you, report the last observed state precisely instead of saying checks passed. Long-running build checks can remain pending after quick checks like `spotless`, `preview`, and `submit-gradle` pass; do not add a final incident/PR-success note until the required build check has actually completed successfully. Job logs for in-progress runs may 302 and then return storage-provider 404/`blob does not exist`; treat that as “logs not yet available” and poll check status again rather than diagnosing from an empty log.
+- If a Go GitHub Actions step like `Setup Go and cache` takes minutes, inspect the cache logs before blaming Go setup. Large `actions/cache` restores can download quickly but spend minutes extracting 1–2GB archives, especially on hosted ARM runners. Watch for service-specific jobs restoring another service's build cache via a broad restore key, commit-SHA cache keys that churn every push, and post-job cache saves adding hidden time. See `references/github-actions-go-cache-performance.md` for diagnosis and optimization patterns.
+- If a `go test ./...` GitHub Actions step appears to show very fast `ok <pkg> 0.0xxs` lines but the step wall time is much longer, explain that Go's package elapsed number is test-binary runtime only; it excludes compile/link/package-loading time and output is buffered until each package completes. Pull the job log via `gh api repos/<owner>/<repo>/actions/jobs/<job_id>/logs`, compare the timestamp at `Run go test ...` with the first package result, list slow package result lines, and inspect cache hit/miss lines. A cold Go build/module cache miss can create many minutes of silence before the first `ok`, while integration packages may then report 40–90s package elapsed times. For visibility, suggest `go test -v` or `gotestsum --format pkgname`; for speed, focus on stable Go cache restore keys and avoiding commit-SHA-only/churning caches.
+For GitHub Actions deployments that use protected environments and `concurrency.cancel-in-progress: false`, do not assume new commits will cancel old approval prompts.
 - For autonomous incident PRs where the incident workflow requires a final PagerDuty/Slack note after CI, and a single required check is still pending near the tool time limit, start a guarded background follow-up poller rather than posting a premature final note. The poller should re-fetch PR checks and incident notes before posting; post the final note only when latest required checks pass, or a concise CI-blocker note if checks fail/time out. Print only PR/check metadata and never tokens or raw credential-helper output.
 
 **With gh:**
@@ -284,7 +314,14 @@ For GitHub Actions deployments that use protected environments and `concurrency.
 # One-shot check
 gh pr checks
 
-# Watch until all checks finish (polls every 10s)
+# Compact machine-readable failures/pending checks. `gh pr checks --json` does not
+# expose a `conclusion` field; use `state`/`bucket`, or use
+# `gh pr view --json statusCheckRollup` when you need conclusions.
+gh pr checks <PR> --json name,state,bucket,description,link \
+  --jq '.[] | select(.bucket != "pass" and .bucket != "skipping") | [.name, .state, .bucket, (.description // ""), .link] | @tsv'
+
+# Watch until all checks finish (polls every 10s). In large monorepos this can
+# produce huge repeated output; prefer the compact JSON form above for agent logs.
 gh pr checks --watch
 ```
 
@@ -441,6 +478,10 @@ When discussing design tradeoffs with the user, prefer exact applied-state water
 Avoid adding scheduled retries unless explicitly requested. For this user's Zeus service deployment workflows, the expected fix is push-triggered stickiness in `service-ecs.yml`, `service-lambda-container.yml`, `service-pulumi.yml`, and the `deploy-<service>.yml` callers: the next normal push should re-evaluate the service/environment watermark and keep Pulumi required until a successful `pulumi up` advances the deployed hash.
 
 Use `curl` + `python3` inside Actions instead of assuming `gh` is available on runners, unless the repo already standardizes on `gh`. For reusable service deploy workflows, also look for duplicated per-environment deploy jobs and collapse them into a matrix job when the bodies are identical; keep environment-specific side effects guarded at the step level. For full details and a known-good outline, see `references/sticky-deploy-workflows.md`. Validation: run `go run github.com/rhysd/actionlint/cmd/actionlint@latest <workflow.yml>` and `git diff --check`; if adding embedded shell/Python snippets in YAML, also extract/run `bash -n` on the generated shell scripts.
+
+## PR branch transport fallback
+
+If local `git push` / `git fetch` / `git reset` repeatedly times out or is blocked during PR branch repair, do not keep retrying the identical git command. When `gh api` auth works and the intended diff is small, use the GitHub Git Data API fallback in `references/git-data-api-branch-update-fallback.md` to create blobs/tree/commit and patch the PR branch ref, then verify `headRefOid` and checks.
 
 ## 6. Merging
 

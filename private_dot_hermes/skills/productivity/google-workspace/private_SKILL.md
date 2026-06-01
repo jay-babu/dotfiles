@@ -1,9 +1,15 @@
 ---
 name: google-workspace
 description: "Gmail, Calendar, Drive, Docs, Sheets via gws CLI or Python."
-version: 1.0.0
+version: 1.1.0
 author: Nous Research
 license: MIT
+platforms: [linux, macos, windows]
+required_credential_files:
+  - path: google_token.json
+    description: Google OAuth2 token (created by setup script)
+  - path: google_client_secret.json
+    description: Google OAuth2 client credentials (downloaded from Google Cloud Console)
 metadata:
   hermes:
     tags: [Google, Gmail, Calendar, Drive, Sheets, Docs, Contacts, Email, OAuth]
@@ -18,6 +24,12 @@ Gmail, Calendar, Drive, Contacts, Sheets, and Docs — through Hermes-managed OA
 ## References
 
 - `references/gmail-search-syntax.md` — Gmail search operators (is:unread, from:, newer_than:, etc.)
+- `references/gmail-bulk-trash.md` — safety pattern for bulk Gmail trash/delete requests using Gmail API `users.messages.trash`.
+- `references/github-pr-bot-trash-filters.md` — pattern for replacing Gmail filters and trashing GitHub PR bot notifications from Copilot, Greptile, and Amplify with safety checks.
+- `references/gmail-vendor-outreach.md` — workflow for user-preauthorized outbound vendor sourcing/procurement outreach: research contacts, draft safe business emails, send via Gmail, and verify sent/bounce status.
+- `references/sheets-pos-parquet-enrichment.md` — pattern for updating Sheets from POS product hyperlinks plus local Postgres Parquet exports; covers hyperlink extraction, verifying whether `/item/<id>` is a cohort item vs entity item, DuckDB queries, approval prompts, and read-back verification.
+- `references/sheets-in-cell-images.md` — pattern for adding actual in-cell images to Sheets with `IMAGE()` formulas, column insertion/formatting, visual QA of product images, and formula read-back verification.
+- `references/private-label-outreach-sheets.md` — pattern for turning private-label/vendor sourcing research into a per-product Google Sheet tab with product rationale, approved outreach copy, and detailed outreach tracker.
 
 ## Scripts
 
@@ -75,7 +87,7 @@ security keys required to sign in)? If you're not sure, you probably don't
 
 ### Step 2: Create OAuth credentials (one-time, ~5 minutes)
 
-Tell the user:
+Tell the user. When the user needs to copy/paste links, print each URL on its own line or in its own `text` code block rather than embedding it only in prose:
 
 > You need a Google Cloud OAuth client. This is a one-time setup:
 >
@@ -110,19 +122,16 @@ explicit (for example `~/Downloads/hermes-google-client-secret.json`), then run
 
 ### Step 3: Get authorization URL
 
-Use the service set chosen in Step 1. Examples:
+Current `setup.py` authorizes the full Workspace scope set and does not accept `--services` or `--format` flags. Run:
 
 ```bash
-$GSETUP --auth-url --services email,calendar --format json
-$GSETUP --auth-url --services calendar,drive,sheets,docs --format json
-$GSETUP --auth-url --services all --format json
+$GSETUP --auth-url
 ```
 
-This returns JSON with an `auth_url` field and also saves the exact URL to
-`~/.hermes/google_oauth_last_url.txt`.
+This prints the authorization URL directly.
 
 Agent rules for this step:
-- Extract the `auth_url` field and send that exact URL to the user as a single line.
+- Send the printed URL to the user as a single line.
 - Tell the user that the browser will likely fail on `http://localhost:1` after approval, and that this is expected.
 - Tell them to copy the ENTIRE redirected URL from the browser address bar.
 - If the user gets `Error 403: access_denied`, send them directly to `https://console.cloud.google.com/auth/audience` to add themselves as a test user.
@@ -135,8 +144,10 @@ pending OAuth session locally so `--auth-code` can complete the PKCE exchange
 later, even on headless systems:
 
 ```bash
-$GSETUP --auth-code "THE_URL_OR_CODE_THE_USER_PASTED" --format json
+$GSETUP --auth-code "THE_URL_OR_CODE_THE_USER_PASTED"
 ```
+
+Current `setup.py` does not accept `--format`; it prints a plain success/error message.
 
 If `--auth-code` fails because the code expired, was already used, or came from
 an older browser tab, it now returns a fresh `fresh_auth_url`. In that case,
@@ -192,6 +203,19 @@ $GAPI gmail modify MESSAGE_ID --add-labels LABEL_ID
 $GAPI gmail modify MESSAGE_ID --remove-labels UNREAD
 ```
 
+**Gmail native filters:** Creating/managing Gmail Settings filters via
+`users.settings.filters.*` requires the extra scope
+`https://www.googleapis.com/auth/gmail.settings.basic`. If filter creation fails
+with `403 insufficient authentication scopes`, either re-authorize after adding
+that scope to the OAuth setup or use a Hermes cron watchdog that searches with
+`gmail.modify` and moves matching messages to Trash. Gmail subject search is
+tokenized and ignores some punctuation, so always re-fetch metadata and enforce
+header allowlist checks before trashing messages. Gmail filters cannot be
+patched in place through the API: to "update" one, create the replacement,
+then delete the obsolete narrower filter and verify only the intended filter
+remains. For GitHub PR bot notification cleanup (Copilot/Greptile/Amplify), see
+`references/github-pr-bot-trash-filters.md`.
+
 ### Calendar
 
 ```bash
@@ -211,8 +235,36 @@ $GAPI calendar delete EVENT_ID
 ### Drive
 
 ```bash
+# Search existing files
 $GAPI drive search "quarterly report" --max 10
 $GAPI drive search "mimeType='application/pdf'" --raw-query --max 5
+
+# Get metadata for a single file
+$GAPI drive get FILE_ID
+
+# Upload a local file (auto-detects MIME type)
+$GAPI drive upload /path/to/report.pdf
+$GAPI drive upload /path/to/image.png --name "Logo.png" --parent FOLDER_ID
+
+# Download (binary files download as-is; Google-native files export to a
+# sensible default — Docs→pdf, Sheets→csv, Slides→pdf, Drawings→png)
+$GAPI drive download FILE_ID
+$GAPI drive download DOC_ID --output ~/doc.pdf
+$GAPI drive download DOC_ID --export-mime text/plain --output ~/doc.txt
+
+# Create a folder
+$GAPI drive create-folder "Reports"
+$GAPI drive create-folder "Q4" --parent FOLDER_ID
+
+# Share
+$GAPI drive share FILE_ID --email alice@example.com --role reader
+$GAPI drive share FILE_ID --email alice@example.com --role writer --notify
+$GAPI drive share FILE_ID --type anyone --role reader        # anyone with link
+$GAPI drive share FILE_ID --type domain --domain example.com --role reader
+
+# Delete — defaults to trash (reversible). Use --permanent to skip the trash.
+$GAPI drive delete FILE_ID
+$GAPI drive delete FILE_ID --permanent
 ```
 
 ### Contacts
@@ -224,6 +276,10 @@ $GAPI contacts list --max 20
 ### Sheets
 
 ```bash
+# Create a new spreadsheet
+$GAPI sheets create --title "Q4 Budget"
+$GAPI sheets create --title "Inventory" --sheet-name "Stock"
+
 # Read
 $GAPI sheets get SHEET_ID "Sheet1!A1:D10"
 
@@ -234,10 +290,33 @@ $GAPI sheets update SHEET_ID "Sheet1!A1:B2" --values '[["Name","Score"],["Alice"
 $GAPI sheets append SHEET_ID "Sheet1!A:C" --values '[["new","row","data"]]'
 ```
 
+### Sheets enrichment patterns
+
+When enriching an existing Sheet from external data or local analysis:
+
+- Resolve the actual tab title from spreadsheet metadata before writing ranges, especially when the user provides a `gid` or a copied sheet URL. The visible/tab title can differ from the name inferred from prior context; using the wrong title yields `Unable to parse range` even when the `gid` is valid.
+- Prefer batched writes (`spreadsheets.values.batchUpdate`) for many cell updates. Use `valueInputOption: USER_ENTERED` when inserting formulas.
+- To make an existing display cell clickable while preserving its visible text, write `=HYPERLINK("URL","Display Text")` to that cell, escaping embedded double quotes in both strings. Verify with `valueRenderOption=FORMULA`, not only formatted values, so you can confirm the formula exists.
+- To show actual images in cells rather than plain image links, insert/reuse an image column and write `=IMAGE("URL",4,height,width)` formulas with `valueInputOption=USER_ENTERED`; format row heights/column width and verify formulas with `valueRenderOption=FORMULA`. When image quality matters (e.g. bottle front, not case or label), visually QA candidates before writing. See `references/sheets-in-cell-images.md`.
+- When using existing hyperlinks as foreign-key hints, read full grid data (`includeGridData=true`) and extract URLs from `hyperlink`, `textFormatRuns[].format.link.uri`, or `userEnteredValue.formulaValue`. Verify what the embedded ID actually represents before joining external data; for POS product URLs, `/item/<id>` may be a shared/cohort item ID rather than an entity-specific item row. See `references/sheets-pos-parquet-enrichment.md`.
+- For adding columns/formatting or working around grid limits, inspect `gridProperties(rowCount,columnCount)` first. If a range exceeds current grid limits, expand the grid or create/update the intended tab explicitly before writing beyond existing columns.
+- For multi-tab Sheets created from external exports, use the Python Google API client directly (`from google_api import build_service`) when you need tab creation, chunked writes, filters, frozen rows, wrapping, and auto-resize in one workflow; the CLI is fine for simple single-range writes.
+- When exporting analysis derived from raw external assets (for example S3 audio plus `analysis/findings.json` artifacts), include a `Coverage` tab showing raw asset counts and whether derived artifacts exist so missing analysis is explicit rather than silently omitted. See `references/aws-s3-analysis-to-sheets.md`.
+- After updates, read back the target ranges and check for missing required fields (e.g. count rows where any enriched columns are blank) before reporting completion.
+- For Sheets that track package shipments, see `references/package-tracking-for-sheets.md` for carrier lookup patterns (FedEx/UPS/USPS), grouping repeated tracking numbers, approval-before-write workflow, and verification steps.
+
 ### Docs
 
 ```bash
+# Read
 $GAPI docs get DOC_ID
+```
+# Create a new Doc (optionally seeded with body text)
+$GAPI docs create --title "Meeting Notes"
+$GAPI docs create --title "Draft" --body "First paragraph..."
+
+# Append text to the end of an existing Doc
+$GAPI docs append DOC_ID --text "Additional content to append"
 ```
 
 ## Output Format
@@ -250,12 +329,21 @@ All commands return JSON. Parse with `jq` or read directly. Key fields:
 - **Calendar list**: `[{id, summary, start, end, location, description, htmlLink}]`
 - **Calendar create**: `{status: "created", id, summary, htmlLink}`
 - **Drive search**: `[{id, name, mimeType, modifiedTime, webViewLink}]`
+- **Drive get**: `{id, name, mimeType, modifiedTime, size, webViewLink, parents, owners}`
+- **Drive upload**: `{status: "uploaded", id, name, mimeType, webViewLink}`
+- **Drive download**: `{status: "downloaded", id, name, path, mimeType}`
+- **Drive create-folder**: `{status: "created", id, name, webViewLink}`
+- **Drive share**: `{status: "shared", permissionId, fileId, role, type}`
+- **Drive delete**: `{status: "trashed" | "deleted", fileId, permanent}`
 - **Contacts list**: `[{name, emails: [...], phones: [...]}]`
 - **Sheets get**: `[[cell, cell, ...], ...]`
+- **Sheets create**: `{status: "created", spreadsheetId, title, spreadsheetUrl}`
+- **Docs create**: `{status: "created", documentId, title, url}`
+- **Docs append**: `{status: "appended", documentId, inserted_at, characters}`
 
 ## Rules
 
-1. **Never send email or create/delete events without confirming with the user first.** Show the draft content and ask for approval.
+1. **Never send email, create/delete calendar events, delete Drive files, share files, or modify Docs/Sheets without confirming with the user first.** Show what will be done (recipients, file IDs, content, share role) and ask for approval. If the user explicitly pre-authorizes a bounded class of outbound emails/forms in the task itself (for example: “you do not need to ask for permission to send emails / fill out forms”), treat that as the approval for those in-scope sends, but still keep the messages truthful, professional, and limited to the stated objective. For `drive delete`, prefer the default trash (reversible) over `--permanent`.
 2. **Check auth before first use** — run `setup.py --check`. If it fails, guide the user through setup.
 3. **Use the Gmail search syntax reference** for complex queries — load it with `skill_view("google-workspace", file_path="references/gmail-search-syntax.md")`.
 4. **Calendar times must include timezone** — always use ISO 8601 with offset (e.g., `2026-03-01T10:00:00-06:00`) or UTC (`Z`).
@@ -268,6 +356,7 @@ All commands return JSON. Parse with `jq` or read directly. Key fields:
 | `NOT_AUTHENTICATED` | Run setup Steps 2-5 above |
 | `REFRESH_FAILED` | Token revoked or expired — redo Steps 3-5 |
 | `HttpError 403: Insufficient Permission` | Missing API scope — `$GSETUP --revoke` then redo Steps 3-5 |
+| `AUTHENTICATED (partial)` or "Token missing scopes" | New write capabilities (Drive write/delete, Docs create/edit) require re-authorization. `$GSETUP --revoke` then redo Steps 3-5 to grant the upgraded scopes. |
 | `HttpError 403: Access Not Configured` | API not enabled — user needs to enable it in Google Cloud Console |
 | `ModuleNotFoundError` | Run `$GSETUP --install-deps` |
 | Advanced Protection blocks auth | Workspace admin must allowlist the OAuth client ID |

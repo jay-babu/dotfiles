@@ -4,6 +4,7 @@ description: "Review PRs: diffs, inline comments via gh or REST."
 version: 1.1.0
 author: Hermes Agent
 license: MIT
+platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [GitHub, Code-Review, Pull-Requests, Git, Quality]
@@ -284,6 +285,8 @@ When performing a code review (local or PR), systematically check:
 - Does the code do what it claims?
 - Edge cases handled (empty inputs, nulls, large data, concurrent access)?
 - Error paths handled gracefully?
+- When addressing review comments that challenge a parameter/type change, inspect the PR diff and commit history before justifying it. Separate changes you made from pre-existing branch commits; if the challenged change has no clear business/typing reason, revert it and say so plainly.
+- For sqlc query reviews, distinguish optional filters (`sqlc.narg` paired with `IS NULL OR ...`) from required scope parameters (`@param`, especially tenant/cohort/entity scoping). Do not convert required scoping predicates like `cohort_id = @cohort_id` to nullable args unless the query intentionally supports no-scope behavior and tests cover it.
 
 ### Security
 - No hardcoded secrets, credentials, or API keys

@@ -2,6 +2,7 @@
 name: dogfood
 description: "Exploratory QA of web apps: find bugs, evidence, reports."
 version: 1.0.0
+platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [qa, testing, browser, web, dogfood]
@@ -148,6 +149,20 @@ Save the report to `{output_dir}/report.md`.
 | `browser_press` | Press a keyboard key |
 | `browser_vision` | Screenshot + AI analysis; use `annotate=true` for element labels |
 | `browser_console` | Get JS console output and errors |
+
+## Authenticated/network verification
+
+For authenticated app QA where the answer depends on the exact API request emitted by the UI, use the companion playbook in `references/authenticated-frontend-network-qa.md`.
+
+Key rules:
+- Source approved credentials from local env files without printing values; report only presence/absence.
+- If the user names credentials or an environment, try them before calling manual QA blocked.
+- Capture and parse the actual browser network request for the endpoint under test; compare query params/headers to the visible UI state.
+- If the supplied object is unauthorized in that environment, find a reachable equivalent fixture through the app and state the substitution clearly.
+- When a user explicitly asks for UI debugging/verification, do not let server tests or static DOM/template assertions substitute for the requested browser exercise. After any code fix, re-open the real UI and try the exact interaction; if auth/entity access blocks the screen, state the blocker as the verification result (for example “not manually UI-verified: authenticated request returned 403 for entity N”).
+- For branch/PR UI fixes, verify against a target that contains the branch code. Production/staging URLs only verify deployed behavior unless that exact branch is deployed there. Use `references/local-branch-ui-verification.md` for local/preview/fixture verification discipline and reporting labels.
+- For HTMX/chat/message panes where scroll position matters, exercise the runtime in a browser, not just templates/tests. Use `references/htmx-scroll-verification.md` to check away-from-bottom polling suppression, near-bottom refresh behavior, and unrelated HTMX events that could trigger global auto-scroll listeners.
+- Redact credentials, auth headers, and secret-bearing URLs in scripts, logs, screenshots, and final replies.
 
 ## Tips
 

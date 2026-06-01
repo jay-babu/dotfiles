@@ -4,6 +4,7 @@ description: "Write implementation plans: bite-sized tasks, paths, code."
 version: 1.1.0
 author: Hermes Agent (adapted from obra/superpowers)
 license: MIT
+platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [planning, design, implementation, workflow, documentation]
@@ -140,7 +141,7 @@ Read and understand:
 
 ### Step 2: Explore the Codebase
 
-Use Hermes tools to understand the project:
+Use Hermes tools to understand the project. If the task already has an active branch/worktree or partial implementation, inspect `git status`, the existing diff, generated-file state, and unrelated dirty files before writing the plan. The plan should say what existing work to keep, what to modify, and what not to touch.
 
 ```python
 # Understand project structure

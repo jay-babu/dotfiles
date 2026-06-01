@@ -5,6 +5,7 @@ version: 1.0.0
 author: Hermes Agent + Teknium (design systems sourced from VoltAgent/awesome-design-md)
 license: MIT
 tags: [design, css, html, ui, web-development, design-systems, templates]
+platforms: [linux, macos, windows]
 triggers:
   - build a page that looks like
   - make it look like stripe
@@ -197,6 +198,23 @@ those carry more visual identity than the specific font face.
 | `spacex.md` | SpaceX | Stark black and white, full-bleed imagery, futuristic |
 | `spotify.md` | Spotify | Vibrant green on dark, bold type, album-art-driven |
 | `uber.md` | Uber | Bold black and white, tight type, urban energy |
+
+## Implementation Notes for In-App Filter Controls
+
+When a user asks for Stripe-like filters inside an existing app, prefer subtle generic pills over recreating Stripe marketing gradients. A durable pattern:
+
+- Small rounded pills/buttons with light borders, muted backgrounds, compact type, and clear active/selected contrast.
+- Use consistent action glyphs inside pills: inactive/addable filters get a small circular `+`; active/applied filters get a small circular `×` clear affordance. Draw these icons with CSS pseudo-elements or SVG, not font glyph line-height tricks, so they remain centered across browsers.
+- Keep filters composable: status/direction pills plus a search pill/input can share one horizontal control row.
+- For Stripe-style filter bars, avoid free-standing shortcut inputs/links unless explicitly requested. The default interaction is: click a filter pill, open a popover, then select/type/apply changes from inside that popover.
+- Model each filter as a generic reusable pill: label + current value in the summary (e.g. `Message direction · Incoming`, `Message body · contains "refund"`), with the controls hidden until opened.
+- Preserve composition between pills: each popover form should carry hidden inputs for other active filters so applying one filter does not silently clear another.
+- Reflect server state in the controls after navigation; do not make the UI look selected only client-side.
+- Preserve active filter params through form submits, HTMX/content requests, and pagination/infinite-scroll links.
+- Add tests for the interaction contract, not just rendering: assert active pill state, checked/select values, URL param preservation, and absence of shortcut links/free-standing filter inputs when the requirement is “user must click the filter first.”
+- If the visual reference is an image, use it for component feel and spacing, but adapt to the host app’s existing tokens instead of importing a whole foreign design system.
+
+See `references/stripe-like-filter-pills.md` for a concrete pattern from an in-app message filtering implementation.
 
 ## Choosing a Design
 

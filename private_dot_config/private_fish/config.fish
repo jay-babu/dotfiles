@@ -60,6 +60,50 @@ function connect_to_rds
     set -x -g DBUI_URL_ENCODED "postgres://$username:$encoded_password@$rds_endpoint:5432/$database_name"
 end
 
+function connect_to_rds_iam
+    set rds_endpoint $argv[1]
+    set database_name $argv[2]
+    set db_user $argv[3]
+    set aws_region $argv[4]
+    set sslrootcert $argv[5]
+
+    if test -z "$db_user"
+        set db_user jay_hermes
+    end
+
+    if test -z "$aws_region"
+        set aws_region us-east-1
+    end
+
+    if test -z "$sslrootcert"
+        set sslrootcert /root/.aws/global-bundle.pem
+    end
+
+    set -l port 5432
+    set -l token (aws rds generate-db-auth-token \
+        --hostname $rds_endpoint \
+        --port $port \
+        --region $aws_region \
+        --username $db_user)
+    set -l encoded_token (printf "%s" "$token" | jq -sRr '@uri')
+
+    set -x -g DB_HOST "$rds_endpoint"
+    set -x -g DB_USER "$db_user"
+    set -x -g AWS_REGION "$aws_region"
+    set -x -g AWS_DEFAULT_REGION "$aws_region"
+
+    set -x -g PGHOST "$rds_endpoint"
+    set -x -g PGPORT "$port"
+    set -x -g PGDATABASE "$database_name"
+    set -x -g PGUSER "$db_user"
+    set -x -g PGPASSWORD "$token"
+    set -x -g PGSSLMODE verify-full
+    set -x -g PGSSLROOTCERT "$sslrootcert"
+
+    set -x -g DBUI_URL "postgres://$db_user@$rds_endpoint:$port/$database_name?sslmode=verify-full&sslrootcert=$sslrootcert"
+    set -x -g DBUI_URL_ENCODED "postgres://$db_user:$encoded_token@$rds_endpoint:$port/$database_name?sslmode=verify-full&sslrootcert=$sslrootcert"
+end
+
 function dev_t
     aws configure export-credentials --profile $AWS_PROFILE --format fish | source
     set -l account_number (aws sts get-caller-identity | jq -r ".Account")
@@ -69,7 +113,7 @@ function dev_t
         set -x -g DATASOURCE_URL jdbc-secretsmanager:postgresql://transformity-gamma-cluster-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com:5432/postgres?sslmode=verify-full&sslrootcert=src/main/resources/global-bundle.pem
         set -x -g DATASOURCE_USERNAME rds!cluster-99629e8b-3f13-4fc2-99c6-82d224376d93
         set -e -g USER_REQUEST_LOCK_TABLE_NAME
-        connect_to_rds $DATASOURCE_USERNAME "transformity-gamma-cluster-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" $database_name
+        connect_to_rds_iam "transformity-gamma-cluster-cluster.cluster-cu3q2lrqndpl.us-east-1.rds.amazonaws.com" $database_name
         pulumi login s3://transformity-pulumi-gamma
     else if echo $account_number | string match -q "928004597368"
 		echo "Prod"
@@ -77,7 +121,7 @@ function dev_t
         set -x -g DATASOURCE_USERNAME rds!cluster-ed2fdf32-bf0a-420b-af63-0aafc8364dd7
         set -x -g USER_REQUEST_LOCK_TABLE_NAME drinks-pos-api-lock-table-c3dc622
         echo $DATASOURCE_USERNAME
-        connect_to_rds $DATASOURCE_USERNAME "transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com" "postgres"
+        connect_to_rds_iam "transformity-production.cluster-c7q0uw4ubo4n.us-east-1.rds.amazonaws.com" "postgres"
         pulumi login s3://transformity-pulumi-prod
     else if echo $account_number | string match -q "741448959376"
         echo "DNS"
