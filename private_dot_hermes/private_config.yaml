@@ -5,7 +5,6 @@ model:
 providers: {}
 fallback_providers: []
 credential_pool_strategies: {}
-worktree: true
 toolsets:
 - hermes-cli
 agent:
@@ -394,7 +393,8 @@ honcho: {}
 timezone: ''
 slack:
   require_mention: true
-  free_response_channels: ''
+  strict_mention: true
+  free_response_channels: C09V8QSAACT
   allowed_channels: ''
   channel_prompts: {}
 discord:
