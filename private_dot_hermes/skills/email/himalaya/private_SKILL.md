@@ -26,10 +26,14 @@ requires the external `himalaya` CLI.
 
 - `references/configuration.md` (config file setup + IMAP/SMTP authentication)
 - `references/message-composition.md` (MML syntax for composing emails)
+- `references/gmail-gws-oauth.md` (reuse Hermes Google Workspace OAuth client for Gmail IMAP/SMTP, including scope and feature pitfalls)
+- `references/mise-cargo-features.md` (mise Cargo backend config and clean reinstall verification for `+oauth2 +keyring` builds)
 
 ## Prerequisites
 
 1. Himalaya CLI installed (`himalaya --version` to verify)
+   - For OAuth2 Gmail/Workspace auth, verify the binary includes `+oauth2 +keyring` in `himalaya --version`. The default Cargo feature set may omit these; reinstall with `cargo install himalaya --features oauth2 --locked --force` (or the equivalent mise Cargo backend config) if missing.
+   - If managed by mise, configure the Cargo tool as `"cargo:himalaya" = { version = "latest", features = "oauth2" }` and validate with a clean `mise uninstall -y cargo:himalaya && mise install cargo:himalaya`; see `references/mise-cargo-features.md`.
 2. A configuration file at `~/.config/himalaya/config.toml`
 3. IMAP/SMTP credentials configured (password stored securely)
 
@@ -98,6 +102,10 @@ folder.aliases.trash = "Trash"
 > will re-run the entire send — including SMTP — producing duplicate
 > emails to recipients. Always use `folder.aliases.X` (plural, dotted
 > keys, directly under `[accounts.NAME]`).
+
+## Gmail with Hermes Google Workspace OAuth
+
+When a Hermes `google-workspace`/`gws` setup already exists, Himalaya can reuse the same Google OAuth **client** for Gmail IMAP/SMTP, but not necessarily the existing token. Gmail IMAP/SMTP XOAUTH2 requires the full mail scope `https://mail.google.com/`; typical Gmail API scopes such as `gmail.readonly`, `gmail.modify`, and `gmail.send` are insufficient. See `references/gmail-gws-oauth.md` for a config template and verification sequence.
 
 ## Hermes Integration Notes
 
@@ -253,10 +261,11 @@ List accounts:
 himalaya account list
 ```
 
-Use a specific account:
+Use a specific account (in Himalaya v1.2.0, `--account` is a subcommand option, not a top-level option):
 
 ```bash
-himalaya --account work envelope list
+himalaya envelope list --account work
+himalaya folder list --account work
 ```
 
 ## Attachments

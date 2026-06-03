@@ -637,6 +637,7 @@ Common gateway problems:
 ### Platform-specific issues
 - **Discord bot silent**: Must enable **Message Content Intent** in Bot → Privileged Gateway Intents.
 - **Slack bot only works in DMs**: Must subscribe to `message.channels` event. Without it, the bot ignores public channels.
+- **Signal `UnsupportedClassVersionError` / class file version 69**: signal-cli 0.14+ requires Java 25. Upgrade the Java runtime or pin signal-cli to an older compatible release (0.13.x worked with Java 17).
 - **Windows HTTP 400 "No models provided"**: Config file encoding issue (BOM). Ensure `config.yaml` is saved as UTF-8 without BOM.
 
 ### Auxiliary models not working

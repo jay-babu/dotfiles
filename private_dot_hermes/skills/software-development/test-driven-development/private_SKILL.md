@@ -345,6 +345,10 @@ If the implementation creates data that no one reads, logs, renders, stores, or 
 - **Brittle tests** — tests should verify behavior, not structure; refactoring shouldn't break them
 - **Piecemeal field assertions when a full expected object is clearer** — if the expected struct/object is reasonably small and stable, assert the full object so diffs catch accidental shape changes. Keep lookup/existence assertions separate (for example `found == true`), then compare the retrieved object to an explicit expected value. In Go, prefer `cmp.Diff(got, want, opts...)` or the project test helper rather than many `MustEqual(field, value)` calls.
 
+### React context-provider crashes
+
+For React production crashes like `useXContext must be used within a XProvider`, write a focused component regression before changing code: mock the strict hook to throw the exact production error, render the smallest shared component without the provider, and assert the intended outside-provider behavior. If the correct fix uses an optional hook, keep strict hooks for components that truly require the provider and update existing context-module mocks to export the optional hook too. See `references/react-context-provider-regression-tests.md`.
+
 ### Frontend navigation links and route params
 
 For UI work that adds a navigation link/button, write a focused component test before implementation that proves the user-facing contract:
@@ -365,6 +369,18 @@ When inserting a link into a tabbed/sidebar navigation component, add regression
 ### Date/time and UI preset behavior
 
 For frontend behavior that computes date ranges, preset options, interval defaults, labels, or query boundaries, prefer extracting the calculation into a pure helper and testing that helper directly with an injected fixed `today`/`now` value. Do not make the only regression coverage a component-render test that depends on the real clock. Write the failing test against the desired public helper/API first, verify it fails because the helper/export or behavior is missing, then wire the UI to the helper. Assert both preset labels and exact local-date ranges where the UX depends on calendar boundaries (for example month intervals should start at `startOfMonth(subMonths(today, 1))`, not just “some date in the prior month”). Keep a separate query-boundary test for start-of-day/end-of-day serialization so interval presets do not accidentally change API range semantics.
+
+### CSV/export shape changes with heavyweight integration setup
+
+When a feature changes CSV/export headers or row shape, test the exact exported contract rather than only checking that the route returns a file:
+
+- Assert the full header order and row value order, including newly-added metadata columns and dynamic trailing columns.
+- If the controller builds CSV rows inline, prefer extracting a pure formatter/helper so formatting can be tested quickly and deterministically.
+- Preserve or update the route/controller integration expectation for CI, but do not let local-only Testcontainers/sidecar setup failures erase focused formatter coverage.
+- For projection-backed exports, compile the projection/query path and ensure native SQL aliases exactly match interface getter names.
+- If local full-route validation is blocked by setup, record the blocker in the PR test plan and rely on CI for the integration path.
+
+See `references/csv-export-formatting-tests.md` for the POSBackend transaction-export pattern.
 
 ### Server-rendered filters, search, and pagination
 
