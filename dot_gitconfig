@@ -1,0 +1,27 @@
+[user]
+	name = Jay Patel
+	email = 36803168+jay-babu@users.noreply.github.com
+[fetch]
+	prune = true
+	writeCommitGraph = true
+[push]
+	autoSetupRemote = true
+	useForceIfIncludes = true
+[credential "https://github.com"]
+	helper = 
+	helper = !/root/.local/share/mise/installs/github-cli/2.93.0/gh_2.93.0_linux_amd64/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/root/.local/share/mise/installs/github-cli/2.93.0/gh_2.93.0_linux_amd64/bin/gh auth git-credential
+[init]
+	defaultBranch = main
+[diff]
+	algorithm = histogram
+[rerere]
+	enabled = true
+[core]
+	commitGraph = true
+	fsmonitor = true
+	untrackedCache = true
+[gc]
+	writeCommitGraph = true
