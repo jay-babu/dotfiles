@@ -49,7 +49,7 @@ alias lg="lazygit"
 export EDITOR="nvim"
 export BROWSER="wslview"
 export spring_profiles_active="local"
-export AWS_PROFILE="Transformity"
+export AWS_PROFILE="gamma"
 export AWS_REGION="us-east-1"
 
 if command -v gh >/dev/null 2>&1 && [ -z "${GITHUB_TOKEN:-}" ]; then

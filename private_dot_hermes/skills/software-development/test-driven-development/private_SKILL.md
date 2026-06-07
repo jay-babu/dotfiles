@@ -370,11 +370,24 @@ When inserting a link into a tabbed/sidebar navigation component, add regression
 
 For frontend behavior that computes date ranges, preset options, interval defaults, labels, or query boundaries, prefer extracting the calculation into a pure helper and testing that helper directly with an injected fixed `today`/`now` value. Do not make the only regression coverage a component-render test that depends on the real clock. Write the failing test against the desired public helper/API first, verify it fails because the helper/export or behavior is missing, then wire the UI to the helper. Assert both preset labels and exact local-date ranges where the UX depends on calendar boundaries (for example month intervals should start at `startOfMonth(subMonths(today, 1))`, not just “some date in the prior month”). Keep a separate query-boundary test for start-of-day/end-of-day serialization so interval presets do not accidentally change API range semantics.
 
+### Database schema contract tests
+
+For catalog-driven database schema contract tests, write the assertion to match the intended contract boundary before generating migrations:
+
+- Prefer dynamic catalog queries over hardcoded current-table lists when the requirement is “all tables in this schema.”
+- If the user says legacy/current tables may omit a column, encode that directly in the test shape: filter to tables that already have the column and validate its type/nullability/default, rather than adding the column everywhere or maintaining a generated allowlist.
+- Validate against a fresh database migrated from baseline, not a dev database that may have been polluted by scratch migrations. Use the fresh baseline to distinguish “missing column allowed” from “existing malformed column must be fixed.”
+- Keep corrective migrations minimal: for optional legacy columns, alter only existing malformed columns; do not add the column to tables where absence is allowed.
+- Re-run the targeted schema contract test after migration application and state clearly whether remaining failures belong to unrelated contract assertions.
+
+See `references/pos-db-schema-contract-tests.md` for a pgTAP/Atlas pattern from POS DB public-schema contracts.
+
 ### CSV/export shape changes with heavyweight integration setup
 
-When a feature changes CSV/export headers or row shape, test the exact exported contract rather than only checking that the route returns a file:
+When a feature changes CSV/export headers, row shape, or which records are included, test the exact exported contract rather than only checking that the route returns a file:
 
 - Assert the full header order and row value order, including newly-added metadata columns and dynamic trailing columns.
+- For filtered report pages with an export action, treat filter parity as part of the contract: compare the page data query request against the export request and backend export endpoint. Entity/store filters, sales channel filters, vendor filters/mode, tags, departments, date range, and search terms should usually be forwarded the same way. Page number and sort are normally not filters for “export all filtered results,” so document if they are intentionally omitted.
 - If the controller builds CSV rows inline, prefer extracting a pure formatter/helper so formatting can be tested quickly and deterministically.
 - Preserve or update the route/controller integration expectation for CI, but do not let local-only Testcontainers/sidecar setup failures erase focused formatter coverage.
 - For projection-backed exports, compile the projection/query path and ensure native SQL aliases exactly match interface getter names.

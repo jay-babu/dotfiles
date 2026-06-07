@@ -1,7 +1,7 @@
 approvals_reviewer = "guardian_subagent"
 plan_mode_reasoning_effort = "xhigh"
 model = "gpt-5.5"
-model_reasoning_effort = "high"
+model_reasoning_effort = "medium"
 service_tier = "fast"
 approval_policy = "on-request"
 sandbox_mode = "workspace-write"
@@ -120,6 +120,9 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/root"]
+trust_level = "trusted"
+
+[projects."/root/code/TransformityPOSFrontend"]
 trust_level = "trusted"
 
 [mcp_servers.linear]
