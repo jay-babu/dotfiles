@@ -194,6 +194,10 @@ search_files("similar_pattern", path="src/", file_glob="*.py")
 - What settings, config, environment?
 - What assumptions does it make?
 
+### 5. Correlate Resource-Exhaustion Logs
+
+For incidents like DB pool starvation, connection timeouts, queue backlogs, or cascading 5xxs, do not assume the endpoint that emitted the final error is the root cause. Correlate error timestamps with nearby request-start/request-id logs and aggregate by path and query shape. A burst of one pathological request shape can make many unrelated endpoints fail secondarily; target the dominant upstream trigger, not the noisy downstream victims.
+
 ---
 
 ## Phase 3: Hypothesis and Testing
@@ -258,6 +262,12 @@ pytest tests/ -q
 If an integration test fails before the test body runs because environment infrastructure cannot start (for example, Testcontainers migration/helper container timeout), classify it as a verification environment blocker rather than a product regression. Change strategy: inspect container/logs or use compile/unit tests plus remote CI status, and state precisely that the local test was blocked before execution.
 
 For JVM/Kotlin integration tests that use Testcontainers, debug in layers: Docker client/API compatibility, service image/runtime behavior, migration/submodule setup, fixture/schema drift, and application config/DI. Read the generated `build/test-results/test/TEST-...xml` after each run because Gradle console output often truncates the nested cause. Avoid `latest` images and `withReuse(true)` while debugging, initialize schema submodules before running migrations, and do not advance a schema submodule pointer unless the parent repo's generated clients/types are updated too. See `references/testcontainers-kotlin-integration-debugging.md` for the detailed pattern.
+
+For Go/Bob eager-loaded relationship mapping, keep responsibilities separated: the query/parent boundary decides what to preload based on API expands or sort needs, while nested response mappers should reflect loaded data. If a mapper receives a Bob model with `model.R.<Relation> != nil`, prefer mapping that relation directly instead of redundantly re-checking the original expand flag; otherwise sorted/preloaded relations can be silently dropped from the response.
+
+For Go/Bob codegen/template debugging, inspect the consuming repo's Bob config before concluding a generated compile failure is a usage bug. Generated loader code must account for `relationship_codegen` filtering and `model_package_split` component packages: a target table can exist as a model but have no generated recursive `SelectThenLoad.<Target>` field, and a target with a loader may live in another component package. Terminal relationships should emit plain relation loads plus nested-child validation instead of blindly recursing. See `references/bob-codegen-expand-loader-debugging.md`.
+
+For TypeSpec/OpenAPI read-model debugging, audit schema optionality against the concrete source model before adding pointer helpers in mappers. `@visibility(Lifecycle.Read)` does not make a field optional; if Bob/DB returns `int64` or `time.Time`, the TypeSpec read field should be `field: T`, not `field?: T`, so generated Go read models use concrete values. Regenerate and inspect the generated read structs, then map concrete fields directly and use `.Ptr()` only for nullable wrappers. See `references/typespec-read-model-nullability.md`.
 
 For production incidents and user-reported bugs, automated tests are necessary but may not be sufficient. Also re-run the original dynamic reproduction path after the fix:
 

@@ -1,9 +1,9 @@
 {
-  "last_report_path": "/root/.hermes/logs/curator/20260531-233807",
-  "last_run_at": "2026-05-31T23:38:07.451210+00:00",
-  "last_run_duration_seconds": 163.325137,
-  "last_run_summary": "auto: no changes; llm: Processed the 8 agent-created, unpinned candidates and performed umbrella-building consolidation.\n\nCreated two new class-level umbrella skills:\n\n1. **`retail-pos-data-operations`**\n   - Absorbed:\n     - `database-data-repair-sql`\n     - `du…\narchived 6 skill(s):\n  • database-data-repair-sql — pruned (stale)\n  • duckdb-parquet-analytics — pruned (stale)\n  • hermes-gateway-development — pruned (stale)\n  • retail-product-substitution-research — pruned (stale)\n  • slack-messaging — pruned (stale)\n  • time-series-date-range-apis — pruned (stale)\nfull report: hermes curator status",
+  "last_report_path": "/root/.hermes/logs/curator/20260607-235217",
+  "last_run_at": "2026-06-07T23:52:17.824311+00:00",
+  "last_run_duration_seconds": 168.379893,
+  "last_run_summary": "auto: no changes; llm: Created one new umbrella and consolidated the obvious incident-remediation cluster.\n\nProcessed clusters / decisions:\n- Built new umbrella skill: `transformity-incident-remediation`.\n  - Covers Transformity PagerDuty/Sentry/CloudWatch incide…\narchived 5 skill(s):\n  • frontend-dynamic-import-recovery — pruned (stale)\n  • posbackend-incident-remediation — pruned (stale)\n  • react-native-sentry-incidents — pruned (stale)\n  • temporal-workflow-incidents — pruned (stale)\n  • transformity-pos-incident-remediation — pruned (stale)\nfull report: hermes curator status",
   "last_run_summary_shown_at": "2026-05-24T22:56:44.448084+00:00",
   "paused": false,
-  "run_count": 4
+  "run_count": 5
 }

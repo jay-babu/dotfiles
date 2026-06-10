@@ -24,6 +24,11 @@ For this turn, you are planning only.
 - Do not run mutating terminal commands, commit, push, or perform external actions.
 - You may inspect the repo or other context with read-only commands/tools when needed.
 - If the repo already has a branch/worktree or partial implementation for the task, inspect its current diff/status before planning. The plan should explicitly account for existing work, generated/out-of-sync files, and unrelated dirty files that must not be touched or staged.
+- When the user corrects the approach while iterating on a saved plan, update the markdown plan immediately and then run a targeted search/readback pass for stale terminology from the rejected approach (for example old API paths, old implementation mechanisms, or endpoint-specific helpers). Do not just summarize the correction; make the saved plan internally consistent before responding.
+- When the user rejects a proposed abstraction as harder to read, preserve or restore the simpler explicit shape unless the abstraction is technically necessary. For generated-code plans, prefer readable generated switch/case control flow over descriptor/table-driven indirection when both are viable.
+- For code plans, encode reusable/generalized abstractions when the user asks for them instead of preserving a narrow endpoint-specific shape. Spell out the generic call shape, recursion/depth limits, validation gates, and representative examples from more than one root/context so future implementation does not regress to a one-off solution.
+- When planning generated/codegen-backed API expand loaders, prefer type-safe generated dispatch over runtime reflection if the project owns the generator/ORM. See `references/type-safe-expand-loader-plans.md` for the Bob SelectThenLoad pattern and pitfalls.
+- Your deliverable is a markdown plan saved inside the active workspace under `.hermes/plans/`.
 - Your deliverable is a markdown plan saved inside the active workspace under `.hermes/plans/`.
 
 ## Output requirements
@@ -40,6 +45,8 @@ Include, when relevant:
 - Risks, tradeoffs, and open questions
 
 If the task is code-related, include exact file paths, likely test targets, and verification steps.
+
+When planning API contract changes that involve `expand`, `include`, joins, or nested response models, explicitly trace the underlying relationship path before naming public expand/sort keys. Prefer recursive expand paths and nested response fields that mirror the data relationship (for example `participant -> loyalty_customer -> customer` should produce `expand=loyalty_customer.customer` and `participant.loyaltyCustomer.customer`, not a flat top-level `expand=customer` / `participant.customer`). If sorting depends on an optional expanded relationship, document whether the sort key requires the corresponding expand and reject surprise joins by default unless the user asks otherwise.
 
 ## Save location
 

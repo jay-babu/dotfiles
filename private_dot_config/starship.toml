@@ -1,4 +1,5 @@
 "$schema" = 'https://starship.rs/config-schema.json'
+format = "$custom$all"
 
 [aws]
 symbol = " "
@@ -226,3 +227,10 @@ symbol = " "
 
 [zig]
 symbol = " "
+
+[custom.git_worktree_repo]
+command = "common_dir=$(git rev-parse --git-common-dir); base=$(basename \"$common_dir\"); if [ \"$base\" = .git ]; then basename \"$(dirname \"$common_dir\")\"; else printf %s \"${base%.git}\"; fi"
+when = "git_dir=$(git rev-parse --git-dir 2>/dev/null) || exit 1; common_dir=$(git rev-parse --git-common-dir 2>/dev/null) || exit 1; [ \"$git_dir\" != \"$common_dir\" ]"
+shell = ["bash", "--noprofile", "--norc"]
+format = "[$output]($style) "
+style = "bold cyan"

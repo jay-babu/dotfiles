@@ -138,10 +138,16 @@ Read and understand:
 - Design documents or user description
 - Acceptance criteria
 - Constraints
+- For port/migration plans based on an external PR: source PR title/body, changed file list, and patch/diff, plus the target repo's equivalent patterns before proposing files or tests
 
 ### Step 2: Explore the Codebase
 
 Use Hermes tools to understand the project. If the task already has an active branch/worktree or partial implementation, inspect `git status`, the existing diff, generated-file state, and unrelated dirty files before writing the plan. The plan should say what existing work to keep, what to modify, and what not to touch.
+
+When planning a port from one repository/framework to another (for example, a PR in a legacy service that should move into a monorepo service), inspect both sides before designing:
+- Source side: PR metadata/body, file list, and diff so you capture the actual behavior, validation, and edge cases.
+- Target side: analogous APIs/services/query builders/models/tests so the plan follows local conventions instead of copying source-framework structure.
+- Workspace state: target branch/worktree status and unrelated dirty files/submodules, called out explicitly so implementers do not stage or overwrite them.
 
 ```python
 # Understand project structure

@@ -305,6 +305,11 @@ When performing a code review (local or PR), systematically check:
 - Happy path and error cases covered?
 - Tests readable and maintainable?
 
+### Generated code / regeneration commits
+- For large generated diffs, do not rely on line-by-line review alone. First inspect the generator-shaped changes, then run a compile/test target that imports the regenerated packages.
+- Check whether generated helper methods assume symbols exist across all generated components. Common failure mode: recursive relationship loaders emit calls like `SelectThenLoad.<Target>.forExpandTree(...)` even for terminal relationships or tables that did not get a `ThenLoader` entry. Terminal relationships should emit a plain loader append, while recursive calls should only be generated when the child target actually supports expand recursion.
+- Treat submodule pointer and `go.work.sum` churn as separate review items: confirm they are intentional and explain what upstream schema/module movement caused the generated file churn.
+
 ### Performance
 - No N+1 queries or unnecessary loops
 - Appropriate caching where beneficial
@@ -387,6 +392,8 @@ git diff main...HEAD -- path/to/file.py
 ```
 
 For each changed file, use `read_file` to see full context around the changes — diffs alone can miss issues visible only with surrounding code.
+
+When a user links a backend PR/API and asks which frontend page uses it, do not stop at generated client files. First identify the exact route and params from the backend PR diff/body, then search the frontend for non-generated hook/operation usages, trace those components up to router paths/tabs/drawers, and report the user-visible page flow plus file/line evidence. If the PR body mentions a special hot-path request shape, explicitly say whether that exact param shape appears in the frontend. See `references/cross-repo-api-consumer-tracing.md`.
 
 ### Step 5: Run automated checks locally (if applicable)
 

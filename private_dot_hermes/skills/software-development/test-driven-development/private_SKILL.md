@@ -421,6 +421,22 @@ When adding a client-generated request/correlation ID header, test the full cont
 
 A PR that only proves the browser sends `X-Request-ID` may still fail the user-facing observability requirement if the receiving route does not pass through the logger that reads that header.
 
+### Generated code template changes
+
+When changing generators or templates, the failing test should exercise the generated source contract under the same configuration class that exposed the issue. Do not stop at a default happy-path fixture if the consumer uses split packages, filtered relationships, optional child loaders, or generated code that crosses package boundaries.
+
+For relationship/expand/load codegen specifically:
+
+- Add a template/generator fixture that includes both recursive and terminal relationships. A relationship can be directly loadable from its parent while its target has no generated recursive loader.
+- Assert terminal relationships generate plain load calls and reject nested child paths with a clear error, rather than attempting to recurse into a missing child loader.
+- If generated output can be split into component packages, first determine whether component packages are intended to remain isolated. Do not introduce sibling component imports just to make recursion convenient unless that architecture is explicitly acceptable.
+- When split components must stay isolated, assert cross-component relationships generate direct/terminal load calls and reject nested child paths with a clear error in component-local output. If product functionality needs nested cross-component expansion, move that recursion to a top-level facade/root package that already imports all components; the facade can wrap component then-loaders and recurse through facade-local `SelectThenLoad` methods without sibling component imports. Add negative assertions that component output does not contain sibling component import paths or qualified references, and positive assertions that facade output recurses across components.
+- Only assert cross-component recursion through a target package's exported API/qualified reference when the package architecture permits component interdependence and import cycles are impossible by construction.
+- Include compile coverage for generated relationship code where mapped database columns have different Go/language types (for example `int32` target id vs nullable `int64` foreign key). Generated attach assignments and preload comparisons must cast through central type-aware helpers before optional/null wrapping or equality.
+- Run the smallest template test first, then the generator package tests, then generated-artifact compile tests when credentials/fixtures permit. If broad fixture suites fail on unrelated pre-existing runtime data issues, report the exact failing fixture separately from the template regression result.
+
+See `references/generated-code-template-tests.md` for the Bob-style split-loader pattern, component-boundary pitfalls, and relationship column type-mismatch checks.
+
 ### Go object-comparison pitfalls
 
 When comparing SDK or generated structs, `go-cmp` may panic on unexported internal fields. Use an explicit ignore option for those types instead of falling back to many field-level assertions:
