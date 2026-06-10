@@ -1,0 +1,232 @@
+{
+  "jobs": [
+    {
+      "id": "88d55da69130",
+      "name": "Weekly Tito's vs Steel 43 tracker",
+      "prompt": "Script-only weekly POS tracker for Tito's vs Steel 43 1.75L. The attached script queries the production read-replica read-only, generates Cohasset and Weymouth weekly tracker charts, and writes the exact Slack message with MEDIA attachments to stdout.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "titos_steel_weekly_tracker.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 9 * * 1",
+        "display": "0 9 * * 1"
+      },
+      "schedule_display": "0 9 * * 1",
+      "repeat": {
+        "times": null,
+        "completed": 3
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-28T14:04:19.883907-04:00",
+      "next_run_at": "2026-06-15T09:00:00-04:00",
+      "last_run_at": "2026-06-08T09:01:15.913074-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "slack:C059SQ4H88H",
+      "origin": {
+        "platform": "slack",
+        "chat_id": "C09V8QSAACT",
+        "chat_name": "C09V8QSAACT",
+        "thread_id": "1779986049.994249"
+      },
+      "enabled_toolsets": [
+        "terminal"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "c1e2a3ca5e4a",
+      "name": "Weekly Decoy vs Aviary tracker - Cohasset",
+      "prompt": "Script-only weekly POS tracker for Cohasset comparing Decoy Cabernet Sauvignon 750ML (https://pos.usemargin.com/item/2618447) vs Aviary Napa Valley Cabernet Sauvignon 750ML (https://pos.usemargin.com/item/2640428). The attached script queries production POS read-only data for entity 86 / Cohasset using SUCCESS transactions only, builds 8 rolling 7-day weekly buckets ending at runtime, generates the approved actuals-first chart with Aviary unit share, weekly unit mix, weekly gross profit comparison, and Aviary minus Decoy gross profit, then prints Slack-ready summary text and a MEDIA line for the chart image. Run every Monday at 9am ET and deliver to Slack channel C059SQ4H88H.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "decoy_aviary_cohasset_weekly_tracker.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "5 9 * * 1",
+        "display": "5 9 * * 1"
+      },
+      "schedule_display": "5 9 * * 1",
+      "repeat": {
+        "times": null,
+        "completed": 2
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-28T14:13:56.866960-04:00",
+      "next_run_at": "2026-06-15T09:05:00-04:00",
+      "last_run_at": "2026-06-08T09:05:26.054247-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "slack:C059SQ4H88H",
+      "origin": {
+        "platform": "slack",
+        "chat_id": "C09V8QSAACT",
+        "chat_name": "C09V8QSAACT",
+        "thread_id": "1779986049.994249"
+      },
+      "enabled_toolsets": [
+        "terminal"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "e20b62fb21db",
+      "name": "Weekly Kim Crawford vs Kuranui tracker - Cohasset",
+      "prompt": "Script-only weekly POS tracker for Cohasset comparing Kim Crawford Sauvignon Blanc 750ML (https://pos.usemargin.com/item/2618467) vs Kuranui Sauvignon Blanc 750ML (https://pos.usemargin.com/item/2635331). The attached script queries production POS read-only data for entity 86 / Cohasset using SUCCESS transactions only, builds 8 rolling 7-day weekly buckets ending at runtime, generates the approved actuals-first chart with Kuranui unit share, weekly unit mix, weekly gross profit comparison, and Kuranui minus Kim Crawford gross profit, then prints Slack-ready summary text and a MEDIA line for the chart image. Run every Monday at 9am ET and deliver to Slack channel C059SQ4H88H.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "kim_kuranui_cohasset_weekly_tracker.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "10 9 * * 1",
+        "display": "10 9 * * 1"
+      },
+      "schedule_display": "10 9 * * 1",
+      "repeat": {
+        "times": null,
+        "completed": 3
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-28T14:18:07.212763-04:00",
+      "next_run_at": "2026-06-15T09:10:00-04:00",
+      "last_run_at": "2026-06-08T09:10:38.709274-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "slack:C059SQ4H88H",
+      "origin": {
+        "platform": "slack",
+        "chat_id": "C09V8QSAACT",
+        "chat_name": "C09V8QSAACT",
+        "thread_id": "1779986049.994249"
+      },
+      "enabled_toolsets": [
+        "terminal"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "464232144a9d",
+      "name": "pd-11061-pr-check-followup",
+      "prompt": "Autonomous PagerDuty follow-up for incident Q21PP0PZUQK97Z / PD #11061. Do not schedule more cron jobs. Check GitHub PR https://github.com/Transformity/TransformityPOSFrontend/pull/2734 and Actions run 27150868905. If all PR checks relevant to PR #2734 are terminal and passing enough for merge (Amplify preview pass, unit-test pass, and Stably fix-tests/stably verification either pass or a clear Stably tool blocker is present), fetch PagerDuty notes for Q21PP0PZUQK97Z and add at most one final PagerDuty note if no note already mentions PR #2734 with final check/verification evidence. Use PAGERDUTY_API_TOKEN/PAGERDUTY_FROM_EMAIL from the terminal environment; never print secrets. Final note should summarize root cause, before evidence from Stably run 27148308709 and PR run 27150868905, PR URL, local verification (`bun install --frozen-lockfile`, `oxfmt`, `git diff --check`, `bun run build`), and current PR check status. If checks are still pending, output a concise status only and do not post another PagerDuty note. If fix-tests fails or hangs over 60 minutes from 16:25Z, post at most one concise PagerDuty blocker note only if no similar blocker note exists, naming the stuck/failed job URL and safest next human action. Do not acknowledge, resolve, merge, deploy, or mutate production resources.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-06-08T13:00:16.743049-04:00",
+        "display": "once in 10m"
+      },
+      "schedule_display": "once in 10m",
+      "repeat": {
+        "times": 6,
+        "completed": 1
+      },
+      "enabled": false,
+      "state": "completed",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-08T12:50:16.743184-04:00",
+      "next_run_at": null,
+      "last_run_at": "2026-06-08T13:00:57.846926-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "webhook",
+        "chat_id": "webhook:pagerduty-incidents:1780933647740",
+        "chat_name": "webhook/pagerduty-incidents",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "file"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "d5a54d140eb2",
+      "name": "pd-11196-pr2750-fix-tests-followup",
+      "prompt": "Autonomous follow-up for PagerDuty incident PD #11196 / Q36P3R4ZSSOKLB and GitHub PR https://github.com/Transformity/TransformityPOSFrontend/pull/2750. Do not merge/deploy/resolve PagerDuty. You may read GitHub/PagerDuty and add at most one PagerDuty note if needed. First check PR #2750 and Actions run 27280954902 from /root/code/TransformityPOSFrontend/pd-11196-request-aborted-sentry using gh. If fix-tests succeeded and all non-Stably-failed checks are successful, re-fetch PagerDuty notes immediately before posting; if no existing final evidence note already mentions PR #2750 plus PD #11196/Q36P3R4ZSSOKLB and verification/check evidence, post one final PagerDuty note: root cause was global Sentry beforeSend did not apply TransformitySentry cancellation ignore rules, fix is PR #2750 filtering aborted Axios/XHR/DOM AbortError before Sentry enrichment, local targeted Vitest 6/6 passed, TypeScript noEmit passed, unit-test and Amplify succeeded, Stably original job failed but fix-tests succeeded (include run URL). If fix-tests failed, re-fetch PagerDuty notes and post one concise blocker note naming failed fix-tests job URL and safest human next action; include original Stably result URL and state local/unit/Amplify status. If fix-tests is still in progress more than ~1 hour after startedAt 2026-06-10T14:04:05Z, re-fetch PagerDuty notes and post one concise blocker/interim note unless an overlapping note already exists. Never print secrets; if using PagerDuty API, load token from env or ~/.hermes/.env internally and print only note creation metadata, not token values. Use From header jay@transformity.tech unless PAGERDUTY_FROM_EMAIL is set. After posting or skipping due duplicate, final response should summarize actual PR/check/PD-note status with URLs.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-06-10T15:08:00+00:00",
+        "display": "once at 2026-06-10 15:08"
+      },
+      "schedule_display": "once at 2026-06-10 15:08",
+      "repeat": {
+        "times": 1,
+        "completed": 0
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-10T10:18:42.739928-04:00",
+      "next_run_at": "2026-06-10T15:08:00+00:00",
+      "last_run_at": null,
+      "last_status": null,
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "webhook",
+        "chat_id": "webhook:pagerduty-incidents:1781098466409",
+        "chat_name": "webhook/pagerduty-incidents",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "file"
+      ],
+      "workdir": null,
+      "profile": null
+    }
+  ],
+  "updated_at": "2026-06-10T10:18:48.430768-04:00"
+}

@@ -13,11 +13,11 @@ WorkingDirectory=/usr/local/lib/hermes-agent
 Environment="HOME=/root"
 Environment="USER=root"
 Environment="LOGNAME=root"
-Environment="PATH=/usr/local/lib/hermes-agent/venv/bin:/usr/local/lib/hermes-agent/node_modules/.bin:/root/.local/bin:/root/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PATH=/usr/local/lib/hermes-agent/venv/bin:/usr/local/lib/hermes-agent/node_modules/.bin:/root/.local/share/mise/installs/node/24.15.0/bin:/root/.local/bin:/root/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 Environment="VIRTUAL_ENV=/usr/local/lib/hermes-agent/venv"
 Environment="HERMES_HOME=/root/.hermes"
 Restart=always
-RestartSec=60
+RestartSec=5
 RestartMaxDelaySec=300
 RestartSteps=5
 RestartForceExitStatus=75
