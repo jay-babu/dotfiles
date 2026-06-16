@@ -1,7 +1,7 @@
 ---
 name: webhook-subscriptions
 description: "Webhook subscriptions: event-driven agent runs."
-version: 1.1.0
+version: 1.2.0
 metadata:
   hermes:
     tags: [webhook, events, automation, integrations, notifications, push]
@@ -155,6 +155,12 @@ hermes webhook subscribe alerts \
 ```
 
 ### PagerDuty incident remediation
+
+**Before triaging any incident class below, load `references/remediation-rules.md` and run the
+fix-class dedup pre-flight (see "Duplicate sibling-PR prevention" under Approval prompts). These
+gates apply to every playbook in this registry — do not open a PR that fails one; post a
+diagnostic PagerDuty note instead. Branch names are keyed on the fix-class, not the incident
+number, so sibling alerts for one root cause collapse to one branch/PR.**
 
 - references/transformity-pos-invoice-upload-notreadableerror-incidents.md — TransformityPOSFrontend invoice upload `NotReadableError: The requested file could not be read...` incidents involving `UploadInvoiceModal.tsx` / `handleUpload`, `/invoices/`, and generic `TransformitySentry.captureException`; includes duplicate-guard and UI/component reproduction hints.
 - references/scraper-execution-dlq-incidents.md
@@ -402,7 +408,7 @@ Key defaults from that pattern:
 - If the agent is running on a public VM/droplet, prefer a real HTTPS reverse proxy to `localhost:8644` over tunnel services.
 - If the user says PagerDuty webhooks are reliable, do not add a polling fallback.
 - The agent may comment on PagerDuty only if authorized; do not acknowledge or resolve incidents unless explicitly authorized.
-- A fix is only a fix after dynamic reproduction and dynamic verification. API calls count for non-UI bugs; UI bugs should be reproduced with browser/UI automation where possible.
+- A fix is only a fix after dynamic reproduction and dynamic verification. API calls count for non-UI bugs; UI bugs should be reproduced with browser/UI automation where possible. Before committing, `git show` the base commit of the edited code and confirm that path is the one that emitted the symptom — a change to a handler that does not produce the error is a no-op, not a fix (see the verify-the-path gate in `references/remediation-rules.md`).
 - Prefer PagerDuty V3's documented `X-PagerDuty-Signature: v1=<hmac>` verification over repurposing compatibility headers such as `X-Gitlab-Token`.
 - For PagerDuty scope type, use Account for all services/incidents, Team only when coverage should be limited to a team, and Service only for one service.
 
@@ -466,6 +472,45 @@ If webhooks aren't working:
 ### Approval prompts from webhook runs
 
 Before branch/file edits or more than a blocker/duplicate note, run the exact-ID/worktree duplicate guard for the PagerDuty incident. Re-run it immediately before code changes and after context compaction/resume. Exact `pd-<number>` / `PD #<number>` branch/worktree hits are stop signals even if PagerDuty notes are empty. If a matching worktree/branch exists, re-fetch notes, add at most one concise duplicate-work note naming it, and do not modify that worktree. If you already created a second duplicate worktree/branch, stop using it; do not delete/force-remove it without explicit user cleanup approval.
+
+#### Duplicate sibling-PR prevention (fix-class keying)
+
+The incident-number guard above does not catch *sibling* PRs: one outage often fans out into
+several PagerDuty alerts with different numbers, and the guard is local-only, so it never sees
+open or merged PRs on GitHub. Add a fix-class pre-flight that keys on the *fix*, not the alert:
+
+1. **Resolve a fix-class slug** from the matched reference playbook (each
+   `references/<slug>-incidents.md` *is* a root-cause identity). Name the branch
+   `fix/<slug>` (e.g. `fix/item-search-name-bound`), never `fix/pd-<number>`. Deterministic
+   slug branches make the worktree guard above collide for siblings automatically — three alerts
+   for one root cause resolve to one branch.
+2. **Search the bot's PRs in the target repo before the first edit**, open *and* closed/merged:
+   by head branch `fix/<slug>`, by the `fix-class:` trailer (below), and by the primary changed
+   file / endpoint / symbol the playbook names. Use the GitHub API / `gh pr list --state all`,
+   not only local worktrees.
+   - **Open PR, same fix-class** → do not open a new one. Push a follow-up commit if it is yours
+     and rebased, else add one coordination note. Stop.
+   - **Merged PR, fix already in `main`** → the bug is fixed. Add a note linking it. No PR.
+   - **Closed-unmerged PR, same fix** → do not silently regenerate. Load its thread; respect any
+     human close reason. If none was recorded, you may open one PR whose body begins
+     `Supersedes #<n> (closed unreviewed): <why now>`.
+3. **Cluster sibling incidents.** Before creating, query PagerDuty for other triggered incidents
+   in the same service within ~30 min; if they resolve to the same slug, handle them once — one
+   branch, one PR, body `Fixes PD #a, #b, #c`.
+4. **Stamp every remediation PR** with a machine-readable trailer so future runs can dedup:
+
+   ```html
+   <!-- hermes-remediation
+   fix-class: <slug>
+   pd-incidents: <comma-separated numbers>
+   repo: <repo>
+   target: <primary file or endpoint>
+   supersedes: <pr number or empty>
+   -->
+   ```
+5. **Serialize.** Acquire a per-repo lock (`~/.hermes/locks/<repo>.lock`) around the create path
+   so concurrent webhook runs for one outage queue instead of racing (parallel runs have
+   exhausted shared-host resources).
 
 ```bash
 hermes webhook list
