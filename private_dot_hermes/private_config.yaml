@@ -533,7 +533,7 @@ telegram:
   channel_prompts: {}
   reactions: false
 terminal:
-  auto_source_bashrc: true
+  auto_source_bashrc: false
   backend: local
   container_cpu: 1
   container_disk: 51200
@@ -555,6 +555,7 @@ terminal:
   persistent_shell: true
   shell_init_files: []
   singularity_image: docker://nikolaik/python-nodejs:python3.11-nodejs20
+  shell: fish
   timeout: 180
   vercel_runtime: node24
 timezone: ''
