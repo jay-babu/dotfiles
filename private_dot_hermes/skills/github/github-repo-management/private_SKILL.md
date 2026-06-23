@@ -500,12 +500,36 @@ curl -s -X POST \
 
 ## 10. Gists
 
+Use this for quick file handoffs via GitHub Gist, including private/secret gists and raw links.
+
 **With gh:**
 
 ```bash
+# Private/secret gist (default when --public is omitted)
+gh gist create script.py --desc "Useful script"
+
+# Public gist
 gh gist create script.py --public --desc "Useful script"
+
 gh gist list
+
+# Add another file to an existing gist and update its description
+gh gist edit <gist-id> --add report.md --desc "Updated description"
+
+# Replace an existing gist file with local contents
+gh gist edit <gist-id> --filename report.md report.md
+
+# Get raw URLs for all files in a gist
+gh api gists/<gist-id> --jq '.files | to_entries[] | [.key, .value.raw_url] | @tsv'
+
+# Get the raw URL for one file
+gh api gists/<gist-id> --jq '.files["report.md"].raw_url'
 ```
+
+Notes:
+- GitHub calls private gists "secret" in `gh` output; they are unlisted but accessible to anyone with the URL.
+- Prefer `gh api gists/<id> --jq ...raw_url...` for raw links instead of hand-constructing `gist.githubusercontent.com` URLs, because raw URLs include the current revision hash.
+- When a user asks to update an existing gist with related artifacts, add a new file with `gh gist edit <id> --add <file>` rather than overwriting earlier reference files unless they explicitly ask to replace it.
 
 **With curl:**
 
@@ -532,6 +556,85 @@ for g in json.load(sys.stdin):
     files = ', '.join(g['files'].keys())
     print(f\"  {g['id']}  {g['description'] or '(no desc)':40}  {files}\")"
 ```
+
+### Public gist cleanup workflow
+
+Use this when the user asks to clean up public gists. Treat deletion as a GitHub mutation: audit first, then delete only after the user approves a specific class or exact gist.
+
+1. Confirm GitHub auth has the `gist` scope:
+
+```bash
+gh auth status
+```
+
+2. Audit the authenticated user's public gists read-only before proposing deletion. Fetch full gist details so file contents can be scanned, but never print secret-looking values; report only gist IDs, filenames, descriptions, dates, and redacted finding categories.
+
+Useful classification:
+
+- **P0**: public gist with possible sensitive material (tokens, keys, private keys, JWTs, non-placeholder `api_key`/`token`/`password` assignments). Recommend delete immediately or recreate sanitized content elsewhere.
+- **P1**: stale public gist (for example >3 years old), 0 comments, 0 forks, no sensitive-content findings. These are deletion/archive candidates, not urgent.
+- **P2**: public gist with blank description but no sensitive-content finding. These are add-description-or-delete candidates.
+
+3. Remember GitHub's gist visibility limitation: a public gist cannot be converted to secret after creation. Sensitive public gists should be deleted; if the content is still needed, recreate sanitized content in a private repo or a new secret gist.
+
+4. Before deleting any gist, re-fetch and verify the target's current filenames/description match the user-approved item. This prevents deleting the wrong gist when several are named `patch.patch` or `gistfile1.txt`.
+
+```bash
+id=<gist_id>
+gh api "/gists/$id" --jq '.files | keys | join(",")'
+gh api -X DELETE "/gists/$id" --silent
+```
+
+5. Verify deletion by checking that the gist returns 404, and report only the exact deleted IDs/files.
+
+```bash
+if gh api "/gists/$id" --silent >/tmp/gist_verify.out 2>/tmp/gist_verify.err; then
+  echo "still accessible"
+else
+  grep -q 'HTTP 404' /tmp/gist_verify.err && echo "gone (404)"
+fi
+```
+
+Pitfalls:
+
+- `gh api --paginate --jq '.[] | @json'` can emit large/escaped content that is awkward to parse line-by-line. For robust audits, use `gh auth token` with the REST API from a short Python script or `gh api --paginate --slurp` only when you are not pulling huge file contents.
+- Do not bulk-delete stale or blank-description gists from a broad category unless the user approves that category. If the user names a single file, delete only that one.
+- Avoid printing gist contents during audits; public gists may contain secrets.
+```
+
+## 10. Local Worktree Cleanup
+
+Use this when the user asks to clean old local git worktrees. Treat deletion as a filesystem mutation: produce a dry run first unless the user already approved a specific list.
+
+A reusable dry-run script is available at `scripts/worktree_cleanup_dry_run.py`. It searches `/root/code` and `/usr/local/lib`, treats `old` as no relevant file mtime or last commit activity within 14 days, skips bare repos and primary `main/master/develop/trunk` worktrees, and proposes only clean non-primary worktrees.
+
+```bash
+python3 /root/.hermes/skills/github/github-repo-management/scripts/worktree_cleanup_dry_run.py
+```
+
+Cleanup workflow:
+
+1. Get the current date/time with `date` before applying an age cutoff.
+2. Discover worktrees with `git worktree list --porcelain` from each repo/bare repo rather than relying only on directory names.
+3. Define activity as the newer of last commit time and relevant file mtimes; ignore heavy/generated/cache dirs such as `node_modules`, `.git`, `.next`, `build`, `dist`, `target`, `.venv`, `.pytest-cache`.
+4. Dry-run output should separate:
+   - proposed clean removals,
+   - old dirty/unknown worktrees that are not proposed unless explicitly forced,
+   - primary/bare repos kept.
+5. After approval, remove true worktrees with the owning repo or bare repo:
+
+```bash
+git -C /path/to/repo-or-bare worktree remove /path/to/worktree
+```
+
+6. If a proposed entry turns out to be a standalone clone rather than a registered worktree, do not force `git worktree remove`; remove the directory with `rm -rf -- <path>` only when the user's approval clearly covered that path.
+7. Verify every approved path is gone with `[ ! -e <path> ]` and report the exact verified result.
+
+Pitfalls:
+
+- Running `git -C <parent-dir> worktree remove ...` fails when the parent is not itself a Git repo. Use the actual owning worktree/bare repo from `git worktree list --porcelain`.
+- Bare repos can appear as `/repo/.bare` or as a bare root directory. Do not delete them as stale worktrees.
+- Local generated files/logs can make an old branch look active; include the activity definition in the dry run so the user can judge the cutoff.
 
 ## Quick Reference Table
 

@@ -56,3 +56,5 @@ perl = "latest"
 ghcup = "latest"
 "go:filippo.io/age/cmd/..." = "latest"
 "github:fwcd/kotlin-language-server" = { version = "latest", asset_pattern = "server.zip" }
+"npm:@earendil-works/pi-coding-agent" = "latest"
+fd = "latest"

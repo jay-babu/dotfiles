@@ -176,6 +176,41 @@ curl -s -X POST https://api.linear.app/graphql \
   }' | python3 -m json.tool
 ```
 
+### Create child/sub-issues under a parent
+
+Use `parentId` in `IssueCreateInput`. First query the parent issue to get its internal `id`, `team.id`, project/labels if they should be inherited, and existing children to avoid duplicates:
+
+```bash
+curl -s -X POST https://api.linear.app/graphql \
+  -H "Authorization: $LINEAR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ issue(id: \"ENG-123\") { id identifier title team { id key } project { id name } labels { nodes { id name } } children(first: 100) { nodes { identifier title url } } } }"}' \
+  | jq .
+```
+
+Then create each child with the same `teamId` and `parentId`:
+
+```bash
+curl -s -X POST https://api.linear.app/graphql \
+  -H "Authorization: $LINEAR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "mutation($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { identifier title url parent { identifier } } } }",
+    "variables": {
+      "input": {
+        "teamId": "TEAM_UUID_FROM_PARENT",
+        "parentId": "PARENT_ISSUE_UUID",
+        "title": "Move service X to IAM auth",
+        "description": "Evidence and acceptance criteria...",
+        "priority": 3,
+        "labelIds": ["LABEL_UUID_TO_INHERIT"]
+      }
+    }
+  }' | jq .
+```
+
+After batch creation, read the parent back and verify all children are attached. For broad audit-to-subticket workflows, add a concise summary comment to the parent listing created children, audited-but-excluded items, and caveats; this makes the parent issue actionable without forcing readers to reconstruct the scan.
+
 ### Update issue status
 First get the target state UUID from the workflow states query above, then:
 ```bash
@@ -280,6 +315,8 @@ Combine filters with `or: [...]` for OR logic (default is AND within a filter ob
 
 ## Typical Workflow
 
+For audit-to-subticket workflows (for example, scan repositories and create one child issue per affected service), see `references/audit-to-child-issues.md`.
+
 1. **Query teams** to get team IDs and keys
 2. **Query workflow states** for target team to get state UUIDs
 3. **List or search issues** to find what needs work
@@ -294,6 +331,7 @@ Combine filters with `or: [...]` for OR logic (default is AND within a filter ob
    - For analytical opportunity lists with time-window criteria, distinguish “any period” from “every complete period” explicitly. If the user changes the rule to require `>N` in every month/period, filter to entities meeting the threshold in each requested complete period, exclude incomplete periods when requested, and make each proof cell show the per-period values that demonstrate compliance.
    - When ranking by an entity-level metric such as store profit, rank by a single qualifying entity’s metric (or that entity’s requested-period total) only; do not sum across multiple proof entities in the same row unless the user explicitly asks for cross-entity aggregation. Put the ranking entity/metric first in the proof cell and state the sort basis in methodology.
    - Verify the posted/updated comment body after mutation, including table count, row count, key corrected facts, absence of superseded threshold language, sort order, and that no proof cells violate the stated threshold.
+   - Linear rejects very large comment bodies with `Argument Validation Error` / `INVALID_INPUT` even when HTTP status/GraphQL transport otherwise works. When posting a long Markdown table or generated inventory, split it into numbered comments such as `part 1/N`, repeat the table header in each chunk, keep chunks conservatively under ~40–42k characters, then read back all matching comments and verify aggregate row counts and ordering.
    - When the user asks for additional metrics inside an existing evidence/proof column (for example adding revenue and profit to each store in a sell-rate proof), update the existing consolidated comment rather than adding a follow-up. Regenerate the proof cells from the underlying data/artifacts when possible, preserve the same ranking/filter criteria, add a concise methodology note defining the new metrics, and verify every proof entry contains the added fields.
    - If you post a correction, prefer editing the latest agent comment into a single readable final answer over adding yet another comment. Keep methodology, caveats, final tables, and validation counts together.
 7. **Mark complete** by setting `stateId` to the team's "completed" type state

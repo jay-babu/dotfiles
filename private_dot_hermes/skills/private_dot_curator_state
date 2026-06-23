@@ -1,9 +1,9 @@
 {
-  "last_report_path": "/root/.hermes/logs/curator/20260607-235217",
-  "last_run_at": "2026-06-07T23:52:17.824311+00:00",
-  "last_run_duration_seconds": 168.379893,
-  "last_run_summary": "auto: no changes; llm: Created one new umbrella and consolidated the obvious incident-remediation cluster.\n\nProcessed clusters / decisions:\n- Built new umbrella skill: `transformity-incident-remediation`.\n  - Covers Transformity PagerDuty/Sentry/CloudWatch incide…\narchived 5 skill(s):\n  • frontend-dynamic-import-recovery — pruned (stale)\n  • posbackend-incident-remediation — pruned (stale)\n  • react-native-sentry-incidents — pruned (stale)\n  • temporal-workflow-incidents — pruned (stale)\n  • transformity-pos-incident-remediation — pruned (stale)\nfull report: hermes curator status",
-  "last_run_summary_shown_at": "2026-05-24T22:56:44.448084+00:00",
+  "last_report_path": "/root/.hermes/logs/curator/20260622-004628",
+  "last_run_at": "2026-06-22T00:46:28.796658+00:00",
+  "last_run_duration_seconds": 1.84002,
+  "last_run_summary": "auto: no changes; llm: skipped (consolidation off)",
+  "last_run_summary_shown_at": "2026-06-15T00:24:46.527217+00:00",
   "paused": false,
-  "run_count": 5
+  "run_count": 7
 }

@@ -395,6 +395,8 @@ For each changed file, use `read_file` to see full context around the changes â€
 
 When a user links a backend PR/API and asks which frontend page uses it, do not stop at generated client files. First identify the exact route and params from the backend PR diff/body, then search the frontend for non-generated hook/operation usages, trace those components up to router paths/tabs/drawers, and report the user-visible page flow plus file/line evidence. If the PR body mentions a special hot-path request shape, explicitly say whether that exact param shape appears in the frontend. See `references/cross-repo-api-consumer-tracing.md`.
 
+When reviewing Transformity permission migrations from legacy Casbin names to `Resource:Action`, compare every enforcement change against the frontend dual-write map and `pos-db` backfill map, then scan for generated-map/generator fallout and dynamic legacy permission construction. Mechanical camel-casing of old actions is often wrong. See `references/transformity-permission-migration-audit.md`.
+
 ### Step 5: Run automated checks locally (if applicable)
 
 ```bash

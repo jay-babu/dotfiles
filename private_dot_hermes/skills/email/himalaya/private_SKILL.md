@@ -311,3 +311,4 @@ RUST_LOG=trace RUST_BACKTRACE=1 himalaya envelope list
 - Message IDs are relative to the current folder; re-list after folder changes.
 - For composing rich emails with attachments, use MML syntax (see `references/message-composition.md`).
 - Store passwords securely using `pass`, system keyring, or a command that outputs the password.
+- For outbound sends, do not blindly retry after a timeout or non-zero exit: SMTP delivery can succeed before saving a copy to Sent or before the CLI returns. First verify by checking Sent/searching for the recipient+subject or using another configured mail backend (for example the Google Workspace Gmail API) before retrying, to avoid duplicate emails.

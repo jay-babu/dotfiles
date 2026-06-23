@@ -190,6 +190,17 @@ Types: `feat`, `fix`, `refactor`, `docs`, `test`, `ci`, `chore`, `perf`
 
 For this user, code changes are not complete when they are only committed locally. After making code changes, run local validation, commit, and push the branch unless the user explicitly says not to push. Do not stop at “left as local uncommitted changes” or “committed locally” for normal code-fix work; if pushing is blocked, report the blocker and the exact local commit SHA.
 
+Before telling the user “pushed” or “nothing to push,” verify the transport state, not just the working tree:
+
+```bash
+git status --short
+git log --oneline -3
+git rev-parse HEAD
+git rev-parse @{u} 2>/dev/null || true
+```
+
+If `HEAD` differs from the upstream ref, there is still something to push even when `git status --short` shows no modified files. After a push, confirm the remote branch advanced with `git ls-remote origin "refs/heads/$BRANCH"` (preferred immediately after push) or `gh pr view --json headRefOid` after GitHub has caught up, then poll the new check run. `gh pr view` can briefly return the previous `headRefOid` right after a successful push; when that happens, trust `git ls-remote` for transport confirmation and re-query the PR after a short delay before reporting CI for the new head. Do not report a local-only fix as complete because the code was “prepared.”
+
 ```bash
 git push -u origin HEAD
 ```
@@ -486,6 +497,8 @@ Use `curl` + `python3` inside Actions instead of assuming `gh` is available on r
 ## PR branch transport fallback
 
 If local `git push` / `git fetch` / `git reset` repeatedly times out or is blocked during PR branch repair, do not keep retrying the identical git command. When `gh api` auth works and the intended diff is small, use the GitHub Git Data API fallback in `references/git-data-api-branch-update-fallback.md` to create blobs/tree/commit and patch the PR branch ref, then verify `headRefOid` and checks.
+
+For GitHub Actions failures involving reusable `testcontainers-go` containers, see `references/github-actions-testcontainers-reuse.md` before assuming `WithAlwaysPull()` fixes cold-runner `No such image` errors.
 
 ## 6. Merging
 

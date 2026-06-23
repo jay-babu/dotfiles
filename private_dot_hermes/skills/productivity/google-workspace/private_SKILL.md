@@ -31,6 +31,8 @@ Gmail, Calendar, Drive, Contacts, Sheets, and Docs — through Hermes-managed OA
 - `references/sheets-in-cell-images.md` — pattern for adding actual in-cell images to Sheets with `IMAGE()` formulas, column insertion/formatting, visual QA of product images, and formula read-back verification.
 - `references/private-label-outreach-sheets.md` — pattern for turning private-label/vendor sourcing research into a per-product Google Sheet tab with product rationale, approved outreach copy, and detailed outreach tracker.
 - `references/public-ecommerce-scrape-to-sheets.md` — pattern for scraping public ecommerce product listings into a ranked Google Sheet, including anti-bot browser-cookie replay, shared-drive folder creation, grid expansion, methodology tabs, and verification.
+- `references/google-meet-auto-artifacts.md` — pattern for enabling Google Meet recording, transcription, and Gemini smart notes from hosted Calendar events, including OAuth scope/API enablement, Meet space patching, captions limitation, and cron/webhook automation.
+- `references/calendar-meet-auto-artifacts.md` — enabling Google Meet auto-recording, transcripts, and Gemini notes for Calendar-created Meet spaces via the Meet API.
 
 ## Scripts
 
@@ -97,7 +99,7 @@ Tell the user. When the user needs to copy/paste links, print each URL on its ow
 > 2. Enable the required APIs from the API Library:
 >    https://console.cloud.google.com/apis/library
 >    Enable: Gmail API, Google Calendar API, Google Drive API,
->    Google Sheets API, Google Docs API, People API
+>    Google Sheets API, Google Docs API, People API, Google Meet API
 > 3. Create the OAuth client here:
 >    https://console.cloud.google.com/apis/credentials
 >    Credentials → Create Credentials → OAuth 2.0 Client ID
@@ -194,6 +196,17 @@ $GAPI gmail send --to user@example.com --subject "Hello" --body "Message text"
 $GAPI gmail send --to user@example.com --subject "Report" --body "<h1>Q4</h1><p>Details...</p>" --html
 $GAPI gmail send --to user@example.com --subject "Hello" --from '"Research Agent" <user@example.com>' --body "Message text"
 
+# The CLI currently expects the body as a --body value, not --body-file. For a
+# longer saved draft, read the file in a small Python/shell wrapper and pass the
+# string as --body rather than inventing unsupported flags.
+```
+
+After sending, verify with the returned Gmail message `id`/`threadId` using
+`$GAPI gmail get MESSAGE_ID` when possible. Searching Sent by recipient/subject is
+also useful, but search result metadata may be sparse for some sent messages;
+the returned id is the strongest handle.
+
+```bash
 # Reply (automatically threads and sets In-Reply-To)
 $GAPI gmail reply MESSAGE_ID --body "Thanks, that works for me."
 $GAPI gmail reply MESSAGE_ID --from '"Support Bot" <user@example.com>' --body "Thanks"
@@ -232,6 +245,14 @@ $GAPI calendar create --summary "Review" --start 2026-03-01T14:00:00Z --end 2026
 # Delete event
 $GAPI calendar delete EVENT_ID
 ```
+
+### Google Meet auto-artifacts from Calendar events
+
+When asked to auto-enable recording/transcription/Gemini notes for Calendar events, use the Meet API `spaces` resource rather than trying to patch the Calendar event itself. Calendar provides the Meet code/link; artifact toggles live in `Space.config.artifactConfig`. Required scope: `https://www.googleapis.com/auth/meetings.space.settings`, and the OAuth project must have the Google Meet API enabled. See `references/google-meet-auto-artifacts.md` for the verified patch body, update mask, caption limitation, and cron/webhook automation pattern.
+
+#### Google Meet recording/transcript/Gemini notes for Calendar events
+
+Calendar event fields can identify the Meet link/code and organizer, but the UI toggles for **Record the meeting**, **Transcribe the meeting**, and **Take notes with Gemini** are configured through the Google Meet API `spaces` resource. This requires the extra scope `https://www.googleapis.com/auth/meetings.space.settings`; a 403 `ACCESS_TOKEN_SCOPE_INSUFFICIENT` from `meet.googleapis.com/v2/spaces/...` means re-authorize with that scope rather than trying to patch Calendar event fields. See `references/calendar-meet-auto-artifacts.md` for the full one-event verification and patch workflow.
 
 ### Drive
 
@@ -360,7 +381,8 @@ All commands return JSON. Parse with `jq` or read directly. Key fields:
 | `NOT_AUTHENTICATED` | Run setup Steps 2-5 above |
 | `REFRESH_FAILED` | Token revoked or expired — redo Steps 3-5 |
 | `HttpError 403: Insufficient Permission` | Missing API scope — `$GSETUP --revoke` then redo Steps 3-5 |
-| `AUTHENTICATED (partial)` or "Token missing scopes" | New write capabilities (Drive write/delete, Docs create/edit) require re-authorization. `$GSETUP --revoke` then redo Steps 3-5 to grant the upgraded scopes. |
+| `AUTHENTICATED (partial)` or "Token missing scopes" | New write capabilities (Gmail send/modify, Drive write/delete, Docs create/edit) require re-authorization. Run `$GSETUP --auth-url`, have the user approve the newest URL, then exchange with `$GSETUP --auth-code "PASTED_REDIRECT_URL"`; use `$GSETUP --revoke` first only if the normal consent refresh does not add the missing scopes. |
+| `error[auth]: ... google_token.json: missing field type` while `$GSETUP --check` says authenticated | The `gws` backend may be reading Hermes' token file directly without the Python wrapper's token normalization. For a one-off command, force the Python client fallback by running `google_api.py` with a PATH that excludes the `gws` binary (but keeps Python), e.g. `PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin /abs/path/to/python google_api.py ...`. Alternatively normalize the token file only if you understand the credential format. |
 | `HttpError 403: Access Not Configured` | API not enabled — user needs to enable it in Google Cloud Console |
 | `ModuleNotFoundError` | Run `$GSETUP --install-deps` |
 | Advanced Protection blocks auth | Workspace admin must allowlist the OAuth client ID |

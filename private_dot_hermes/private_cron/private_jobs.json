@@ -20,15 +20,15 @@
       "schedule_display": "0 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 3
+        "completed": 5
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:04:19.883907-04:00",
-      "next_run_at": "2026-06-15T09:00:00-04:00",
-      "last_run_at": "2026-06-08T09:01:15.913074-04:00",
+      "next_run_at": "2026-06-29T09:00:00-04:00",
+      "last_run_at": "2026-06-22T09:00:40.889358-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -43,7 +43,8 @@
         "terminal"
       ],
       "workdir": null,
-      "profile": null
+      "profile": null,
+      "fire_claim": null
     },
     {
       "id": "c1e2a3ca5e4a",
@@ -65,15 +66,15 @@
       "schedule_display": "5 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 2
+        "completed": 4
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:13:56.866960-04:00",
-      "next_run_at": "2026-06-15T09:05:00-04:00",
-      "last_run_at": "2026-06-08T09:05:26.054247-04:00",
+      "next_run_at": "2026-06-29T09:05:00-04:00",
+      "last_run_at": "2026-06-22T09:05:26.873596-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -88,7 +89,8 @@
         "terminal"
       ],
       "workdir": null,
-      "profile": null
+      "profile": null,
+      "fire_claim": null
     },
     {
       "id": "e20b62fb21db",
@@ -110,17 +112,17 @@
       "schedule_display": "10 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 3
+        "completed": 5
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:18:07.212763-04:00",
-      "next_run_at": "2026-06-15T09:10:00-04:00",
-      "last_run_at": "2026-06-08T09:10:38.709274-04:00",
-      "last_status": "ok",
-      "last_error": null,
+      "next_run_at": "2026-06-29T09:10:00-04:00",
+      "last_run_at": "2026-06-22T09:10:32.394003-04:00",
+      "last_status": "error",
+      "last_error": "Script exited with code 1\nstderr:\nInstalled 12 packages in 55ms\nTraceback (most recent call last):\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 277, in <module>\n    main()\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 268, in main\n    upload_to_slack(path, summary_text)\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 239, in upload_to_slack\n    raise RuntimeError('SLACK_BOT_TOKEN not found for Slack image upload')\nRuntimeError: SLACK_BOT_TOKEN not found for Slack image upload",
       "last_delivery_error": null,
       "deliver": "slack:C059SQ4H88H",
       "origin": {
@@ -133,7 +135,8 @@
         "terminal"
       ],
       "workdir": null,
-      "profile": null
+      "profile": null,
+      "fire_claim": null
     },
     {
       "id": "464232144a9d",
@@ -182,11 +185,13 @@
       "profile": null
     },
     {
-      "id": "d5a54d140eb2",
-      "name": "pd-11196-pr2750-fix-tests-followup",
-      "prompt": "Autonomous follow-up for PagerDuty incident PD #11196 / Q36P3R4ZSSOKLB and GitHub PR https://github.com/Transformity/TransformityPOSFrontend/pull/2750. Do not merge/deploy/resolve PagerDuty. You may read GitHub/PagerDuty and add at most one PagerDuty note if needed. First check PR #2750 and Actions run 27280954902 from /root/code/TransformityPOSFrontend/pd-11196-request-aborted-sentry using gh. If fix-tests succeeded and all non-Stably-failed checks are successful, re-fetch PagerDuty notes immediately before posting; if no existing final evidence note already mentions PR #2750 plus PD #11196/Q36P3R4ZSSOKLB and verification/check evidence, post one final PagerDuty note: root cause was global Sentry beforeSend did not apply TransformitySentry cancellation ignore rules, fix is PR #2750 filtering aborted Axios/XHR/DOM AbortError before Sentry enrichment, local targeted Vitest 6/6 passed, TypeScript noEmit passed, unit-test and Amplify succeeded, Stably original job failed but fix-tests succeeded (include run URL). If fix-tests failed, re-fetch PagerDuty notes and post one concise blocker note naming failed fix-tests job URL and safest human next action; include original Stably result URL and state local/unit/Amplify status. If fix-tests is still in progress more than ~1 hour after startedAt 2026-06-10T14:04:05Z, re-fetch PagerDuty notes and post one concise blocker/interim note unless an overlapping note already exists. Never print secrets; if using PagerDuty API, load token from env or ~/.hermes/.env internally and print only note creation metadata, not token values. Use From header jay@transformity.tech unless PAGERDUTY_FROM_EMAIL is set. After posting or skipping due duplicate, final response should summarize actual PR/check/PD-note status with URLs.",
-      "skills": [],
-      "skill": null,
+      "id": "60e6916cc366",
+      "name": "PD11211 Stably fix-tests follow-up",
+      "prompt": "Autonomous PagerDuty follow-up for incident Q00FXII7PW90OL / PD #11211. Do not recursively schedule cron jobs. Load and follow skill devops/webhook-subscriptions plus references/stably-github-actions-incident-remediation.md and references/stably-backend-gamma-dispatch-hidden-failure.md. Incident title: \"Stably tests failed for Transformity/POSBackend - committed by jay-babu\". Current evidence already posted in PagerDuty note marker pd-11211-stably-fix-tests-interim: no pd-11211 duplicate worktree/branch existed; PagerDuty had no alerts; source POSBackend deploy commit 8e2bde3 / PR https://github.com/Transformity/POSBackend/pull/1824; downstream frontend Stably run https://github.com/Transformity/TransformityPOSFrontend/actions/runs/27287092075 failed at stably-test-main / stably-test job 80597192371 with no concrete spec/assertion in GitHub log; companion fix-tests job 80599781331 was in_progress; gamma frontend smoke reached normal sign-in page with no console errors. Task: re-fetch PagerDuty notes first and stop silently if a final/blocker note marker pd-11211-stably-fix-tests-final or pd-11211-stably-fix-tests-blocker already exists. Re-fetch GitHub run/jobs/logs using gh auth hosts token if needed (do not print secrets). If fix-tests is still in_progress, report only a concise status and do not post PagerDuty. If fix-tests completed and reveals concrete failing spec/assertion, continue incident remediation per policy: run duplicate guard again, reproduce dynamically before code changes, fix/test/PR only if concrete and reproducible. If fix-tests completed but logs remain unavailable or only show no actionable spec/assertion, re-fetch PagerDuty notes immediately before posting and add one concise PagerDuty blocker note with marker pd-11211-stably-fix-tests-blocker summarizing run URL, log status, and no code/production mutations. If a PR/fix is created and checks pass plus dynamic verification succeeds, add final note marker pd-11211-stably-fix-tests-final with PR and evidence. Never ack/resolve/merge/deploy/rerun workflows or mutate production resources.",
+      "skills": [
+        "devops/webhook-subscriptions"
+      ],
+      "skill": "devops/webhook-subscriptions",
       "model": null,
       "provider": null,
       "base_url": null,
@@ -195,38 +200,264 @@
       "context_from": null,
       "schedule": {
         "kind": "once",
-        "run_at": "2026-06-10T15:08:00+00:00",
-        "display": "once at 2026-06-10 15:08"
+        "run_at": "2026-06-10T11:56:48.289101-04:00",
+        "display": "once in 10m"
       },
-      "schedule_display": "once at 2026-06-10 15:08",
+      "schedule_display": "once in 10m",
       "repeat": {
-        "times": 1,
-        "completed": 0
+        "times": 6,
+        "completed": 1
       },
-      "enabled": true,
-      "state": "scheduled",
+      "enabled": false,
+      "state": "completed",
       "paused_at": null,
       "paused_reason": null,
-      "created_at": "2026-06-10T10:18:42.739928-04:00",
-      "next_run_at": "2026-06-10T15:08:00+00:00",
-      "last_run_at": null,
-      "last_status": null,
+      "created_at": "2026-06-10T11:46:48.289186-04:00",
+      "next_run_at": null,
+      "last_run_at": "2026-06-10T11:58:22.373498-04:00",
+      "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
       "deliver": "origin",
       "origin": {
         "platform": "webhook",
-        "chat_id": "webhook:pagerduty-incidents:1781098466409",
+        "chat_id": "webhook:pagerduty-incidents:1781106154701",
         "chat_name": "webhook/pagerduty-incidents",
         "thread_id": null
       },
       "enabled_toolsets": [
         "terminal",
-        "file"
+        "file",
+        "browser",
+        "web"
       ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "72be28b02e54",
+      "name": "Google Meet auto recording/transcription/notes for hosted events",
+      "prompt": "Run the Google Meet auto-artifacts script to enable recording, transcription, and Gemini smart notes for same-day and next-day Google Calendar events where Jay is the organizer/host. Script is authoritative and prints only changes/errors.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "google_meet_auto_artifacts.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 6 * * *",
+        "display": "0 6 * * *"
+      },
+      "schedule_display": "0 6 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 12
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-11T11:30:43.346515-04:00",
+      "next_run_at": "2026-06-24T06:00:00-04:00",
+      "last_run_at": "2026-06-23T06:00:40.337325-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "slack",
+        "chat_id": "C09V8QSAACT",
+        "chat_name": "C09V8QSAACT",
+        "thread_id": "1781190766.281129"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null,
+      "fire_claim": null
+    },
+    {
+      "id": "5fa14660b391",
+      "name": "Shipping delivery watchdog for Jay Slack thread",
+      "prompt": "Ignored because no_agent=true. Runs a silent shipping-delivery watchdog script every 4 hours and posts to the origin Slack thread only when a newly delivered package is detected.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "shipping_delivery_watchdog.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "interval",
+        "minutes": 240,
+        "display": "every 240m"
+      },
+      "schedule_display": "every 240m",
+      "repeat": {
+        "times": null,
+        "completed": 74
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-11T13:54:12.968057-04:00",
+      "next_run_at": "2026-06-23T16:35:34.024668-04:00",
+      "last_run_at": "2026-06-23T12:35:34.024668-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "slack",
+        "chat_id": "C09V8QSAACT",
+        "chat_name": "C09V8QSAACT",
+        "thread_id": "1781200045.216329"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null,
+      "fire_claim": null
+    },
+    {
+      "id": "df3aa650cbbd",
+      "name": "pd11248-stably-fix-tests-followup",
+      "prompt": "Autonomous PagerDuty follow-up for PD #11248 / incident Q0P8X52NAFEZ5Y. Do not schedule any further cron jobs. Context: PagerDuty incident title: \"Stably tests failed for Transformity/TransformityPOSFrontend - committed by rishi517\". Triggering main Actions run: https://github.com/Transformity/TransformityPOSFrontend/actions/runs/27377857186, main stably job 80906712699 failed after Stably suite upload with 1/11 failed-tests gate; result URL https://app.stably.ai/project/cmkh7ptwn00aul504i6cxisgi/playwright/history/github-Transformity_TransformityPOSFrontend-27377857186-1; companion main fix-tests job 80909363806 was in_progress at 2026-06-11T21:34Z. Source PR: https://github.com/Transformity/TransformityPOSFrontend/pull/2757, source PR Stably run https://github.com/Transformity/TransformityPOSFrontend/actions/runs/27375372811, source PR fix-tests job 80905948466 was also in_progress. Interim PagerDuty note marker already posted: pd-11248-stably-fix-tests-interim. Follow the loaded webhook-subscriptions Stably main hidden failure guidance: first re-fetch PagerDuty notes; suppress duplicate notes if a note already contains equivalent final/blocker evidence. Fetch the main and PR fix-tests job statuses via gh/API from /root/code/TransformityPOSFrontend/main. If fix-tests is still in_progress and less than ~60 minutes old, do not post another PagerDuty note; final response may just say still pending. If main fix-tests completed, fetch its logs (and PR fix-tests logs if useful) and inspect for concrete failing spec/assertion and any autoheal edits/report. Only create a branch/code changes if logs reveal a concrete product/test failure that can be dynamically reproduced. If logs are unavailable, non-actionable, or only say all failing tests skipped/unfixed/no concrete spec, re-fetch PagerDuty notes immediately before posting one concise blocker note with marker pd-11248-stably-fix-tests-blocker, run/job URLs, status, why code changes are unsafe, and next human action. If you do make a fix, follow full incident workflow: duplicate guard, local dynamic reproduction before fix, implement tests/fix in a proper TransformityPOSFrontend worktree/branch, verify, push PR, poll checks when possible, and post final PagerDuty note marker pd-11248-stably-fix-tests-final with PR/check/repro/verification evidence. Never acknowledge, resolve, merge, deploy, rerun Actions, or mutate production resources.",
+      "skills": [
+        "devops/webhook-subscriptions",
+        "github-pr-workflow"
+      ],
+      "skill": "devops/webhook-subscriptions",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-06-11T17:45:04.971599-04:00",
+        "display": "once in 10m"
+      },
+      "schedule_display": "once in 10m",
+      "repeat": {
+        "times": 6,
+        "completed": 1
+      },
+      "enabled": false,
+      "state": "completed",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-11T17:35:04.971742-04:00",
+      "next_run_at": null,
+      "last_run_at": "2026-06-11T17:47:44.543264-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "local",
+      "origin": {
+        "platform": "webhook",
+        "chat_id": "webhook:pagerduty-incidents:1781213387265",
+        "chat_name": "webhook/pagerduty-incidents",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "file",
+        "cronjob"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "bb7182a58b5b",
+      "name": "PD11282 PR2774 CI follow-up",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "pd11282_pr2774_watch.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-06-15T14:46:29.323743-04:00",
+        "display": "once in 10m"
+      },
+      "schedule_display": "once in 10m",
+      "repeat": {
+        "times": 8,
+        "completed": 1
+      },
+      "enabled": false,
+      "state": "completed",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-15T14:36:29.323833-04:00",
+      "next_run_at": null,
+      "last_run_at": "2026-06-15T14:46:53.412638-04:00",
+      "last_status": "error",
+      "last_error": "Script exited with code 1\nstderr:\nTraceback (most recent call last):\n  File \"/root/.hermes/scripts/pd11282_pr2774_watch.py\", line 20, in <module>\n    raw = gh('pr', 'view', '2774', '-R', 'Transformity/TransformityPOSFrontend', '--json', 'url,statusCheckRollup')\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.hermes/scripts/pd11282_pr2774_watch.py\", line 13, in gh\n    p = subprocess.run(['gh', *args], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/subprocess.py\", line 548, in run\n    with Popen(*popenargs, **kwargs) as process:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/subprocess.py\", line 1026, in __init__\n    self._execute_child(args, executable, preexec_fn, close_fds,\n  File \"/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/subprocess.py\", line 1955, in _execute_child\n    raise child_exception_type(errno_num, err_msg, err_filename)\nFileNotFoundError: [Errno 2] No such file or directory: 'gh'",
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "webhook",
+        "chat_id": "webhook:pagerduty-incidents:1781545149635",
+        "chat_name": "webhook/pagerduty-incidents",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "37f7a1b79ced",
+      "name": "Plivo retry bridge caller to +17073642112",
+      "prompt": "Ignored because no_agent=true. Every 30 minutes for one week, run the Plivo retry bridge caller script. The script places one outbound voice call from +14013951018 to +17073642112, and if the target answers Plivo fetches XML that dials/bridges +14016444251. The script stays silent on no-answer, posts once when an answered/live call is detected, and stops once answered or after a week.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "plivo_retry_bridge_call.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "interval",
+        "minutes": 30,
+        "display": "every 30m"
+      },
+      "schedule_display": "every 30m",
+      "repeat": {
+        "times": 336,
+        "completed": 31
+      },
+      "enabled": false,
+      "state": "paused",
+      "paused_at": "2026-06-20T10:54:54.443048-04:00",
+      "paused_reason": null,
+      "created_at": "2026-06-19T18:51:33.334083-04:00",
+      "next_run_at": "2026-06-20T10:55:29.234491-04:00",
+      "last_run_at": "2026-06-20T10:25:29.234491-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "slack",
+        "chat_id": "C09V8QSAACT",
+        "chat_name": "C09V8QSAACT",
+        "thread_id": "1781905724.128789"
+      },
+      "enabled_toolsets": null,
       "workdir": null,
       "profile": null
     }
   ],
-  "updated_at": "2026-06-10T10:18:48.430768-04:00"
+  "updated_at": "2026-06-23T12:35:34.024994-04:00"
 }
