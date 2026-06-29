@@ -148,13 +148,13 @@ tool_loop_guardrails:
     idempotent_no_progress: 5
 compression:
   enabled: true
-  threshold: 0.5
+  threshold: 0.85
   target_ratio: 0.2
   protect_last_n: 20
   hygiene_hard_message_limit: 400
   protect_first_n: 3
   abort_on_summary_failure: false
-  codex_gpt55_autoraise: true
+  codex_gpt55_autoraise: false
   in_place: false
 kanban:
   dispatch_in_gateway: true
