@@ -1,6 +1,6 @@
 model:
   base_url: https://chatgpt.com/backend-api/codex
-  default: gpt-5.5
+  default: gpt-5.6-sol
   provider: openai-codex
 providers: {}
 fallback_providers: []
