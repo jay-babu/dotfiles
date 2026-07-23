@@ -1,15 +1,21 @@
-User: RO OK; ask before mutations/reruns; plan=no changes; criteria+format; close loops; UI verify; full tests; PR CI logs→fix→repro→push→monitor; code validate+commit+push unless told not; Slack no fence langs; tables in code blocks.
+Jay prefers concise Slack bullets, uninterrupted execution, exact API tests, and candid PR readiness reports with failures disclosed.
 §
-User prefers mise installs, uv Python deps/scripts, and reusing existing auth/creds when practical.
+Prefers mise, uv, and existing auth/creds.
 §
-User prefers architecture first; Kanban input minimal; workflow-contract steps; readable explicit generated code; low-maintenance APIs, inline simple one-off values.
+Architecture-first; prefers one high-impact, low-maint change. Admin UI: visible controls, readable labels, minimal headers; warn before discarding edits.
 §
-User expects POS/DB contracts parser-friendly/nullability-accurate; cohort routes in `cohortscoped`; query arrays: explode=true, parser-only.
+POS/Kurama: accurate parser/nullability, cohort-scoped auth, exploded arrays, nested expands, total_pages, CRUD perms, generated Bob joins; user-access writes use row-level operations.
 §
-Jay Patel prefers to be @mentioned as <@U068K4E4DFC> in final review messages for tasks he initiates by messaging the agent directly; do not tag him for webhook-originated or cron-originated tasks.
+Jay direct: @mention <@U068K4E4DFC> in final review; no tags for webhook/cron. PRs: rebase main and verify GitHub mergeability/conflicts, not just CI.
 §
-User prefers routine chezmoi persistence: re-add appropriate target changes, commit, and push directly to the dotfiles repo without opening PRs; leave unrelated AWS_PROFILE changes unstaged unless explicitly requested.
+Prefers direct DB migrations; don't add role-existence guards unless asked.
 §
-Jay triages rare external/native/library crashes as no-fix when impact is very low; fix low-volume app-logic bugs, and fix external issues when impact is high.
+Jay prefers narrow, purpose-revealing package paths—not core/common/helper/utils or generic tools dumping grounds; favors internal/cmd/<command>. Prefers gomock and inferred mockgen package names.
 §
-Retail outreach: owner-first; name benchmarks; hide econ/channels; approve drafts. Beer PL: launch only 12oz 30-pack; prefer bulk beer.
+Jay expects approved plan items tracked until completed or explicitly deferred; new wins don't replace agreed workstreams.
+§
+Transaction-report verification runs only in gamma, never production.
+§
+Jay expects public config names and allowed string values to match his requested contract exactly.
+§
+For authorized repo work, Jay prefers logical commits pushed incrementally and a PR maintained as work progresses.

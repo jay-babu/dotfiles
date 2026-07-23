@@ -2,14 +2,14 @@
   "jobs": [
     {
       "id": "88d55da69130",
-      "name": "Weekly Tito's vs Steel 43 tracker",
-      "prompt": "Script-only weekly POS tracker for Tito's vs Steel 43 1.75L. The attached script queries the production read-replica read-only, generates Cohasset and Weymouth weekly tracker charts, and writes the exact Slack message with MEDIA attachments to stdout.",
+      "name": "Weekly Tito's vs Temper tracker",
+      "prompt": "Script-only weekly POS tracker for Tito's vs Temper Vodka 1.75L. The attached script queries the production read-replica read-only, generates Cohasset and Weymouth weekly tracker charts, and writes the exact Slack message with MEDIA attachments to stdout.",
       "skills": [],
       "skill": null,
       "model": null,
       "provider": null,
       "base_url": null,
-      "script": "titos_steel_weekly_tracker.sh",
+      "script": "titos_temper_weekly_tracker.sh",
       "no_agent": true,
       "context_from": null,
       "schedule": {
@@ -20,15 +20,15 @@
       "schedule_display": "0 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 5
+        "completed": 10
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:04:19.883907-04:00",
-      "next_run_at": "2026-06-29T09:00:00-04:00",
-      "last_run_at": "2026-06-22T09:00:40.889358-04:00",
+      "next_run_at": "2026-07-27T09:00:00-04:00",
+      "last_run_at": "2026-07-20T09:00:38.995525-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -66,15 +66,15 @@
       "schedule_display": "5 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 4
+        "completed": 8
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:13:56.866960-04:00",
-      "next_run_at": "2026-06-29T09:05:00-04:00",
-      "last_run_at": "2026-06-22T09:05:26.873596-04:00",
+      "next_run_at": "2026-07-27T09:05:00-04:00",
+      "last_run_at": "2026-07-20T09:05:23.902889-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -112,17 +112,17 @@
       "schedule_display": "10 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 5
+        "completed": 9
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:18:07.212763-04:00",
-      "next_run_at": "2026-06-29T09:10:00-04:00",
-      "last_run_at": "2026-06-22T09:10:32.394003-04:00",
+      "next_run_at": "2026-07-27T09:10:00-04:00",
+      "last_run_at": "2026-07-20T09:10:28.943056-04:00",
       "last_status": "error",
-      "last_error": "Script exited with code 1\nstderr:\nInstalled 12 packages in 55ms\nTraceback (most recent call last):\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 277, in <module>\n    main()\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 268, in main\n    upload_to_slack(path, summary_text)\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 239, in upload_to_slack\n    raise RuntimeError('SLACK_BOT_TOKEN not found for Slack image upload')\nRuntimeError: SLACK_BOT_TOKEN not found for Slack image upload",
+      "last_error": "Script exited with code 1\nstderr:\nInstalled 12 packages in 105ms\nTraceback (most recent call last):\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 277, in <module>\n    main()\n    ~~~~^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 268, in main\n    upload_to_slack(path, summary_text)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 239, in upload_to_slack\n    raise RuntimeError('SLACK_BOT_TOKEN not found for Slack image upload')\nRuntimeError: SLACK_BOT_TOKEN not found for Slack image upload",
       "last_delivery_error": null,
       "deliver": "slack:C059SQ4H88H",
       "origin": {
@@ -254,15 +254,15 @@
       "schedule_display": "0 6 * * *",
       "repeat": {
         "times": null,
-        "completed": 12
+        "completed": 42
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-06-11T11:30:43.346515-04:00",
-      "next_run_at": "2026-06-24T06:00:00-04:00",
-      "last_run_at": "2026-06-23T06:00:40.337325-04:00",
+      "next_run_at": "2026-07-24T06:00:00-04:00",
+      "last_run_at": "2026-07-23T06:00:08.905244-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -272,50 +272,6 @@
         "chat_id": "C09V8QSAACT",
         "chat_name": "C09V8QSAACT",
         "thread_id": "1781190766.281129"
-      },
-      "enabled_toolsets": null,
-      "workdir": null,
-      "profile": null,
-      "fire_claim": null
-    },
-    {
-      "id": "5fa14660b391",
-      "name": "Shipping delivery watchdog for Jay Slack thread",
-      "prompt": "Ignored because no_agent=true. Runs a silent shipping-delivery watchdog script every 4 hours and posts to the origin Slack thread only when a newly delivered package is detected.",
-      "skills": [],
-      "skill": null,
-      "model": null,
-      "provider": null,
-      "base_url": null,
-      "script": "shipping_delivery_watchdog.py",
-      "no_agent": true,
-      "context_from": null,
-      "schedule": {
-        "kind": "interval",
-        "minutes": 240,
-        "display": "every 240m"
-      },
-      "schedule_display": "every 240m",
-      "repeat": {
-        "times": null,
-        "completed": 74
-      },
-      "enabled": true,
-      "state": "scheduled",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-06-11T13:54:12.968057-04:00",
-      "next_run_at": "2026-06-23T16:35:34.024668-04:00",
-      "last_run_at": "2026-06-23T12:35:34.024668-04:00",
-      "last_status": "ok",
-      "last_error": null,
-      "last_delivery_error": null,
-      "deliver": "origin",
-      "origin": {
-        "platform": "slack",
-        "chat_id": "C09V8QSAACT",
-        "chat_name": "C09V8QSAACT",
-        "thread_id": "1781200045.216329"
       },
       "enabled_toolsets": null,
       "workdir": null,
@@ -457,7 +413,195 @@
       "enabled_toolsets": null,
       "workdir": null,
       "profile": null
+    },
+    {
+      "id": "dcd2cff76d99",
+      "name": "PD 11478 PR 2799 CI follow-up",
+      "prompt": "Autonomous PagerDuty follow-up for incident Q3B0MTCTG2K1OI / PD #11478 and PR https://github.com/Transformity/TransformityPOSFrontend/pull/2799. Use terminal tools only. From workdir /root/code/TransformityPOSFrontend/pd-11478-loyalty-points-program if present, run `gh pr checks 2799` to inspect CI. Then fetch PagerDuty notes for incident Q3B0MTCTG2K1OI using PAGERDUTY_API_TOKEN (or fallback env names) and PAGERDUTY_FROM_EMAIL/jay@transformity.tech; never print tokens. If a note already contains the PR URL and final check result evidence, do not post another note; final response should say duplicate final note exists. If all required code checks have completed successfully (unit-test and stably-test-pr/stably-test; ignore/label AWS Amplify preview if it remains an external preview pending), post one PagerDuty final note summarizing: PR URL, root cause (profile used selected entity loyalty program id 1 for points/transactions instead of viewed program 991), before-fix dynamic repro (focused CustomerLoyaltyProfile test failed because child tables received no loyaltyProgramId), fix (pass viewed customer/profile loyaltyProgramId to points/transactions tables with fallback for non-profile callers), verification (`npm test -- --run src/pages/loyalty/CustomerLoyaltyProfile.test.tsx` passed 4 tests; `npm run build` passed), and final CI statuses. If a code check fails, inspect failing run logs with `gh run view --log` and post one concise PagerDuty blocker note only if no equivalent blocker note exists. If checks are still pending and an interim pending note with PR URL already exists, do not post another note; final response should simply state still pending.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-06-24T16:57:26.611774-04:00",
+        "display": "once in 10m"
+      },
+      "schedule_display": "once in 10m",
+      "repeat": {
+        "times": 12,
+        "completed": 1
+      },
+      "enabled": false,
+      "state": "completed",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-24T16:47:26.611895-04:00",
+      "next_run_at": null,
+      "last_run_at": "2026-06-24T16:58:57.011307-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "webhook",
+        "chat_id": "webhook:pagerduty-incidents:1782332949574",
+        "chat_name": "webhook/pagerduty-incidents",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal"
+      ],
+      "workdir": "/root/code/TransformityPOSFrontend/pd-11478-loyalty-points-program",
+      "fire_claim": null
+    },
+    {
+      "id": "8d74cbc04f67",
+      "name": "PD11693 PR checks follow-up",
+      "prompt": "Autonomous guarded follow-up for PagerDuty incident Q05I86RKU5MX2W / PD #11693. Do not ask questions and do not schedule more cron jobs. Check GitHub PR https://github.com/Transformity/TransformityPOSFrontend/pull/2833 status checks using gh from /root/code/TransformityPOSFrontend/pd-11693-department-list-shape. Re-fetch PagerDuty notes for incident Q05I86RKU5MX2W before posting. If all PR checks are successful/passing, post one final PagerDuty note (using PagerDuty token from env or /root/.hermes/.env and From jay@transformity.tech; never print secrets) unless an equivalent final note already exists. Final note should include PR URL, root cause (DepartmentContext called .reduce on wrapped/non-array /departments/list response), dynamic verification (local DepartmentContext regression test for wrapped departments shape), tests (vitest, tsc, git diff --check), and final CI status. If any check fails, inspect the failing check logs with gh, post one concise blocker note unless already present, and summarize. If checks are still pending/in_progress, stay silent unless this is the last repeat and then report pending status without posting duplicate PagerDuty noise. Do not acknowledge/resolve/merge/deploy.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "provider_snapshot": "openai-codex",
+      "model_snapshot": "gpt-5.5",
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-07-03T16:14:30.255748-04:00",
+        "display": "once in 10m"
+      },
+      "schedule_display": "once in 10m",
+      "repeat": {
+        "times": 6,
+        "completed": 1
+      },
+      "enabled": false,
+      "state": "completed",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-03T16:04:30.255840-04:00",
+      "next_run_at": null,
+      "last_run_at": "2026-07-03T16:16:17.371671-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "webhook",
+        "chat_id": "webhook:pagerduty-incidents:1783107245021",
+        "chat_name": "webhook/pagerduty-incidents",
+        "thread_id": null,
+        "user_id": "webhook:pagerduty-incidents"
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "file"
+      ],
+      "workdir": null,
+      "fire_claim": null
+    },
+    {
+      "id": "75f58781165a",
+      "name": "pd11708-pr2834-check-followup",
+      "prompt": "Autonomous follow-up for PagerDuty incident 11708 / PR https://github.com/Transformity/TransformityPOSFrontend/pull/2834. Check GitHub PR status checks from /root/code/TransformityPOSFrontend/pd-11708-indexeddb-auth-persistence using gh. Report only when there is a terminal outcome: all latest visible checks pass, or any check fails/errors/times out, or this is the final repeat with checks still pending. Do not modify code, do not merge, do not deploy, do not acknowledge/resolve PagerDuty, and do not attempt PagerDuty/Sentry API calls or PagerDuty note posting because the original incident run had an explicit no-retry approval block for credentialed PagerDuty/Sentry operations. Include PR URL, head SHA, latest check statuses, and local validation already observed in the original run: focused Vitest passed, TypeScript build passed, git diff --check passed; local full npm run build was killed with exit 137 during Vite asset rendering after TypeScript/transform/chunk rendering. If checks are still in progress and this is not terminal/final, produce an empty final response so nothing is delivered.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "provider_snapshot": "openai-codex",
+      "model_snapshot": "gpt-5.5",
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-07-04T02:34:01.582086-04:00",
+        "display": "once in 10m"
+      },
+      "schedule_display": "once in 10m",
+      "repeat": {
+        "times": 12,
+        "completed": 1
+      },
+      "enabled": false,
+      "state": "completed",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-04T02:24:01.582201-04:00",
+      "next_run_at": null,
+      "last_run_at": "2026-07-04T02:35:23.515144-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "webhook",
+        "chat_id": "webhook:pagerduty-incidents:1783144673793",
+        "chat_name": "webhook/pagerduty-incidents",
+        "thread_id": null,
+        "user_id": "webhook:pagerduty-incidents"
+      },
+      "enabled_toolsets": [
+        "terminal"
+      ],
+      "workdir": null,
+      "fire_claim": null
+    },
+    {
+      "id": "fb4d799082d6",
+      "name": "Daily merged Git cleanup",
+      "prompt": "Run the deterministic cleanup script. It scans all Git repositories under /root, fetches/prunes remotes, removes only clean eligible non-primary worktrees (using force only after explicit cleanliness checks), and deletes only branches with a configured upstream that is either gone or present and merged into the fetched default branch. Branches without configured upstreams are preserved. Successful runs emit no stdout and therefore deliver no message; only actionable warnings/errors notify the user.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "provider_snapshot": null,
+      "model_snapshot": null,
+      "base_url": null,
+      "script": "cleanup_merged_git.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "33 3 * * *",
+        "display": "33 3 * * *"
+      },
+      "schedule_display": "33 3 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 5
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-21T13:00:27.280045-04:00",
+      "next_run_at": "2026-07-24T03:33:00-04:00",
+      "last_run_at": "2026-07-23T03:34:34.865098-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "slack",
+        "chat_id": "D0B19N5SA4V",
+        "chat_name": "D0B19N5SA4V",
+        "thread_id": "1784652742.770629",
+        "user_id": "U068K4E4DFC"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "fire_claim": null
     }
   ],
-  "updated_at": "2026-06-23T12:35:34.024994-04:00"
+  "updated_at": "2026-07-23T10:39:45.339593-04:00"
 }

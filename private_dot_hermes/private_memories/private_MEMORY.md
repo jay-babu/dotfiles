@@ -1,13 +1,21 @@
-Hermes AWS: AWS_PROFILE gamma/production; fish `dev_t` exports AWS creds + PG env for RDS. Roles Anywhere `gamma`=165569969323/HermesAgentPowerUser, `production`=928004597368/HermesAgentReadOnly; certs /root/.aws/rolesanywhere, leaf expires 2026-10-31. IAM/RA IaC /root/code/zeus/main/iac/nerv; public CA cert ok in repo, private keys not.
+AWS profiles: gamma=165569969323/HermesAgentPowerUser; production=928004597368/HermesAgentReadOnly. Nerv IaC: /root/code/zeus/main/iac/nerv.
 §
-Incident workflow: Do not treat alert downgrades/suppression or hypotheses as fixes. For app incidents (incl. Intercom token 502s), identify concrete backend/product cause from logs/replay first; if evidence is insufficient, add bounded diagnostics. Fix only after dynamic reproduction+verification.
+Incident workflow: fixes require a concrete backend/product cause, dynamic reproduction, and verification; insufficient evidence warrants bounded diagnostics.
 §
-POS permission migrations: gist review before PRs; reconcile FE/BE/Zeus + prod casbin distinct perms (parquet ok) without dropping source-only; singular `Resource:Action`, CRUD-prefixed actions w/domain exceptions; split backfill vs later-delete PRs; handle `*`.
+POS/Zeus permissions: source=`permissionDualWrite.ts` RHS. Aggregates: All=`*`, Read=Get+List, Write=Create+Update, Delete=Delete. `*` globs anywhere; drop subsumed same-namespace grants; OWNER/ADMIN use `*`. Rollout: canonicalize/stop legacy writes → deploy → clean DB → reject legacy. Kurama APIs favor generated Bob + direct `expandparam` preloads, never SQLC/manual expand checks. Tests: external `_test`, `t.Context()`, whole-value `testkit.MustEqual`. Errors use `httpproblem`; preserve causes/classify via `errors.AsType[*problem.Problem]`. PRs rebase `origin/main`.
 §
-Incident workflow completion criterion: after an incident PR has passing status checks and the issue has been dynamically verified fixed, the agent is done. It should not wait for merge/deploy verification unless separately requested.
+PagerDuty automation: From=jay@transformity.tech; Sentry org=transformity. Dedupe against all-open PD plus unresolved Sentry enrichment; merge confident duplicates after approval; resolve inactive >60d when applicable.
 §
-PagerDuty automation: From=jay@transformity.tech; Sentry org=transformity. Dedupe via all-open PD + unresolved Sentry dry-run/enrichment (not just canaries); merge confident duplicates after approval; resolve inactive >60d if applicable.
-§
-Hermes incident gateway local patches/quirks: /usr/local/lib/hermes-agent/gateway/platforms/webhook.py validates PagerDuty Webhooks V3 via X-PagerDuty-Signature `v1=<hex HMAC-SHA256(raw body, route secret)>`; invalid signatures tested 401 and valid 202 at https://hermes.usemargin.dev/webhooks/pagerduty-incidents. Webhook approval prompts now delegate through the configured delivery target’s `send_exec_approval(..., session_key=<webhook key>)`, and PagerDuty route `pagerduty-incidents` is configured with `deliver: slack` so Slack approval buttons can unblock webhook-run dangerous-command prompts.
+Hermes incident gateway: PagerDuty V3 webhook uses `X-PagerDuty-Signature` HMAC-SHA256 with route secret; route `pagerduty-incidents` delivers to Slack, whose approval buttons unblock webhook dangerous-command prompts.
 §
 PD→Slack incident thread mapping: JSONL not JSON. Plivo creds: Bitwarden Secrets Manager, not files.
+§
+Stripe PM sync: `customer_id` is expected for `card_present` with `generated_card`, not plain `card`; never silently skip the former when missing. `card_present` without `generated_card` may skip.
+§
+Discuss before scope/push. DB migrations: static SQL, split lock-taking DDL per table. POSBackend skill only for POSBackend.
+§
+Kakashi: production requires `audit.audit_log_gin_cohort_idx`; performance fixes must preserve it.
+§
+Sales-channel inventory sync discards stale entity-item events and events whose matching channel-item relation exists; prefer fetching the row over custom SQL EXISTS.
+§
+POS-device upserts key on cohort+entity+metadata.external_id; generate insert TypeID, preserve matched ID, unarchive, increment version, and use updated audit reason.

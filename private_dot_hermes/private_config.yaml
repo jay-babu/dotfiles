@@ -2,12 +2,9 @@ model:
   base_url: https://chatgpt.com/backend-api/codex
   default: gpt-5.6-sol
   provider: openai-codex
-providers: {}
 fallback_providers: []
-credential_pool_strategies: {}
 toolsets:
-- hermes-cli
-max_concurrent_sessions: null
+  - hermes-cli
 agent:
   max_turns: 150
   gateway_timeout: 1800
@@ -27,22 +24,19 @@ agent:
   image_input_mode: auto
   disabled_toolsets: []
   personalities:
-    catgirl: "You are Neko-chan, an anime catgirl AI assistant, nya~! Add 'nya' and\
-      \ cat-like expressions to your speech. Use kaomoji like (=^\uFF65\u03C9\uFF65\
-      ^=) and \u0E05^\u2022\uFECC\u2022^\u0E05. Be playful and curious like a cat,\
-      \ nya~!"
+    catgirl: You are Neko-chan, an anime catgirl AI assistant, nya~! Add 'nya' and
+      cat-like expressions to your speech. Use kaomoji like (=^･ω･^=) and ฅ^•ﻌ•^ฅ.
+      Be playful and curious like a cat, nya~!
     concise: You are a concise assistant. Keep responses brief and to the point.
     creative: You are a creative assistant. Think outside the box and offer innovative
       solutions.
     helpful: You are a helpful, friendly AI assistant.
-    hype: "YOOO LET'S GOOOO!!! \U0001F525\U0001F525\U0001F525 I am SO PUMPED to help\
-      \ you today! Every question is AMAZING and we're gonna CRUSH IT together! This\
-      \ is gonna be LEGENDARY! ARE YOU READY?! LET'S DO THIS! \U0001F4AA\U0001F624\
-      \U0001F680"
-    kawaii: "You are a kawaii assistant! Use cute expressions like (\u25D5\u203F\u25D5\
-      ), \u2605, \u266A, and ~! Add sparkles and be super enthusiastic about everything!\
-      \ Every response should feel warm and adorable desu~! \u30FD(>\u2200<\u2606\
-      )\u30CE"
+    hype: YOOO LET'S GOOOO!!! 🔥🔥🔥 I am SO PUMPED to help you today! Every question
+      is AMAZING and we're gonna CRUSH IT together! This is gonna be LEGENDARY! ARE
+      YOU READY?! LET'S DO THIS! 💪😤🚀
+    kawaii: You are a kawaii assistant! Use cute expressions like (◕‿◕), ★, ♪, and
+      ~! Add sparkles and be super enthusiastic about everything! Every response should
+      feel warm and adorable desu~! ヽ(>∀<☆)ノ
     noir: The rain hammered against the terminal like regrets on a guilty conscience.
       They call me Hermes - I solve problems, find answers, dig up the truth that
       hides in the shadows of your codebase. In this city of silicon and secrets,
@@ -58,16 +52,17 @@ agent:
       I shall respond in the eloquent manner of William Shakespeare, with flowery
       prose, dramatic flair, and perhaps a soliloquy or two. What light through yonder
       terminal breaks?
-    surfer: "Duuude! You're chatting with the chillest AI on the web, bro! Everything's\
-      \ gonna be totally rad. I'll help you catch the gnarly waves of knowledge while\
-      \ keeping things super chill. Cowabunga! \U0001F919"
+    surfer: Duuude! You're chatting with the chillest AI on the web, bro! Everything's
+      gonna be totally rad. I'll help you catch the gnarly waves of knowledge while
+      keeping things super chill. Cowabunga! 🤙
     teacher: You are a patient teacher. Explain concepts clearly with examples.
     technical: You are a technical expert. Provide detailed, accurate technical information.
     uwu: hewwo! i'm your fwiendwy assistant uwu~ i wiww twy my best to hewp you! *nuzzles
       your code* OwO what's this? wet me take a wook! i pwomise to be vewy hewpful
       >w<
-  reasoning_effort: medium
+  reasoning_effort: max
   verbose: false
+  verify_on_stop: false
 terminal:
   backend: local
   modal_mode: auto
@@ -79,7 +74,6 @@ terminal:
   auto_source_bashrc: false
   docker_image: nikolaik/python-nodejs:python3.11-nodejs20
   docker_forward_env: []
-  docker_env: {}
   singularity_image: docker://nikolaik/python-nodejs:python3.11-nodejs20
   modal_image: nikolaik/python-nodejs:python3.11-nodejs20
   daytona_image: nikolaik/python-nodejs:python3.11-nodejs20
@@ -128,7 +122,6 @@ checkpoints:
   retention_days: 7
   delete_orphans: true
   min_interval_hours: 24
-context_file_max_chars: null
 file_read_max_chars: 100000
 mcp_discovery_timeout: 1.5
 tool_output:
@@ -164,7 +157,6 @@ kanban:
   worker_log_backup_count: 1
   orchestrator_profile: ''
   default_assignee: ''
-  max_in_progress_per_profile: null
   auto_decompose: true
   auto_decompose_per_tick: 3
   dispatch_stale_timeout_seconds: 14400
@@ -192,7 +184,6 @@ auxiliary:
     base_url: ''
     api_key: ''
     timeout: 120
-    extra_body: {}
     download_timeout: 30
   web_extract:
     provider: auto
@@ -200,42 +191,36 @@ auxiliary:
     base_url: ''
     api_key: ''
     timeout: 360
-    extra_body: {}
   compression:
     provider: auto
     model: ''
     base_url: ''
     api_key: ''
     timeout: 300
-    extra_body: {}
   skills_hub:
     provider: auto
     model: ''
     base_url: ''
     api_key: ''
     timeout: 30
-    extra_body: {}
   approval:
     provider: auto
     model: ''
     base_url: ''
     api_key: ''
     timeout: 30
-    extra_body: {}
   mcp:
     provider: auto
     model: ''
     base_url: ''
     api_key: ''
     timeout: 30
-    extra_body: {}
   title_generation:
     provider: auto
     model: ''
     base_url: ''
     api_key: ''
     timeout: 30
-    extra_body: {}
     language: ''
   tts_audio_tags:
     provider: auto
@@ -243,42 +228,36 @@ auxiliary:
     base_url: ''
     api_key: ''
     timeout: 30
-    extra_body: {}
   triage_specifier:
     provider: auto
     model: ''
     base_url: ''
     api_key: ''
     timeout: 120
-    extra_body: {}
   kanban_decomposer:
     provider: auto
     model: ''
     base_url: ''
     api_key: ''
     timeout: 180
-    extra_body: {}
   profile_describer:
     provider: auto
     model: ''
     base_url: ''
     api_key: ''
     timeout: 60
-    extra_body: {}
   curator:
     provider: auto
     model: ''
     base_url: ''
     api_key: ''
     timeout: 600
-    extra_body: {}
   monitor:
     provider: auto
     model: ''
     base_url: ''
     api_key: ''
     timeout: 60
-    extra_body: {}
   session_search:
     api_key: ''
     base_url: ''
@@ -323,7 +302,6 @@ display:
     last_lines: 2
   interim_assistant_messages: true
   tool_progress_command: false
-  tool_progress_overrides: {}
   tool_preview_length: 0
   tool_progress_grouping: accumulate
   ephemeral_system_ttl: 0
@@ -335,9 +313,9 @@ display:
   runtime_footer:
     enabled: false
     fields:
-    - model
-    - context_pct
-    - cwd
+      - model
+      - context_pct
+      - cwd
   copy_shortcut: auto
   background_process_notifications: all
   tool_progress: all
@@ -435,7 +413,6 @@ delegation:
   child_timeout_seconds: 600
   reasoning_effort: ''
   max_concurrent_children: 3
-  max_async_children: 3
   max_spawn_depth: 1
   orchestrator_enabled: true
   subagent_auto_approve: false
@@ -461,13 +438,11 @@ curator:
   backup:
     enabled: true
     keep: 5
-honcho: {}
 timezone: ''
 slack:
   require_mention: true
   free_response_channels: C09V8QSAACT
   allowed_channels: ''
-  channel_prompts: {}
   strict_mention: true
 discord:
   require_mention: true
@@ -478,7 +453,6 @@ discord:
   history_backfill: true
   history_backfill_limit: 50
   reactions: true
-  channel_prompts: {}
   dm_role_auth_guild: ''
   server_actions: ''
   allow_any_attachment: false
@@ -492,15 +466,13 @@ discord:
     speech_gain: 1.0
     ack_enabled: true
     ack_phrases:
-    - Let me look into that.
-    - One moment.
-    - Checking on that now.
-    - Give me a sec.
-    - On it.
-whatsapp: {}
+      - Let me look into that.
+      - One moment.
+      - Checking on that now.
+      - Give me a sec.
+      - On it.
 telegram:
   reactions: false
-  channel_prompts: {}
   allowed_chats: ''
   extra:
     rich_messages: true
@@ -508,7 +480,6 @@ mattermost:
   require_mention: true
   free_response_channels: ''
   allowed_channels: ''
-  channel_prompts: {}
 matrix:
   require_mention: true
   free_response_rooms: ''
@@ -520,11 +491,7 @@ approvals:
   mcp_reload_confirm: true
   destructive_slash_confirm: true
 command_allowlist: []
-quick_commands: {}
-platform_hints: {}
-hooks: {}
 hooks_auto_accept: false
-personalities: {}
 security:
   allow_private_urls: false
   redact_secrets: false
@@ -546,7 +513,6 @@ cron:
     expected_audience: ''
     nas_jwks_url: ''
   wrap_response: true
-  max_parallel_jobs: null
 code_execution:
   mode: project
   max_tool_calls: 50
@@ -567,8 +533,7 @@ logging:
 model_catalog:
   enabled: true
   url: https://hermes-agent.nousresearch.com/docs/api/model-catalog.json
-  ttl_hours: 24
-  providers: {}
+  ttl_hours: 1
 network:
   force_ipv4: false
 gateway:
@@ -585,7 +550,7 @@ streaming:
   transport: auto
   edit_interval: 0.8
   buffer_threshold: 24
-  cursor: " \u2589"
+  cursor: ' ▉'
   fresh_final_after_seconds: 0.0
 sessions:
   auto_prune: false
@@ -606,7 +571,6 @@ lsp:
   wait_mode: document
   wait_timeout: 5.0
   install_strategy: auto
-  servers: {}
 x_search:
   model: grok-4.20-reasoning
   timeout_seconds: 180
@@ -623,7 +587,7 @@ secrets:
 paste_collapse_threshold: 5
 paste_collapse_threshold_fallback: 5
 paste_collapse_char_threshold: 2000
-_config_version: 24
+_config_version: 33
 group_sessions_per_user: true
 image_gen:
   model: gpt-image-2-high
@@ -631,81 +595,81 @@ image_gen:
   use_gateway: false
 known_plugin_toolsets:
   cli:
-  - google_meet
-  - spotify
+    - google_meet
+    - spotify
   slack:
-  - google_meet
-  - spotify
+    - google_meet
+    - spotify
 platform_toolsets:
   cli:
-  - browser
-  - clarify
-  - code_execution
-  - cronjob
-  - delegation
-  - file
-  - google_meet
-  - image_gen
-  - memory
-  - messaging
-  - session_search
-  - skills
-  - terminal
-  - todo
-  - tts
-  - vision
-  - web
+    - browser
+    - clarify
+    - code_execution
+    - cronjob
+    - delegation
+    - file
+    - google_meet
+    - image_gen
+    - memory
+    - messaging
+    - session_search
+    - skills
+    - terminal
+    - todo
+    - tts
+    - vision
+    - web
   discord:
-  - hermes-discord
+    - hermes-discord
   homeassistant:
-  - hermes-homeassistant
+    - hermes-homeassistant
   qqbot:
-  - hermes-qqbot
+    - hermes-qqbot
   signal:
-  - hermes-signal
+    - hermes-signal
   slack:
-  - browser
-  - clarify
-  - code_execution
-  - cronjob
-  - delegation
-  - file
-  - google_meet
-  - image_gen
-  - memory
-  - messaging
-  - session_search
-  - skills
-  - terminal
-  - todo
-  - tts
-  - vision
-  - web
+    - browser
+    - clarify
+    - code_execution
+    - cronjob
+    - delegation
+    - file
+    - google_meet
+    - image_gen
+    - memory
+    - messaging
+    - session_search
+    - skills
+    - terminal
+    - todo
+    - tts
+    - vision
+    - web
   teams:
-  - hermes-teams
+    - hermes-teams
   telegram:
-  - hermes-telegram
+    - hermes-telegram
   webhook:
-  - browser
-  - clarify
-  - code_execution
-  - cronjob
-  - delegation
-  - file
-  - image_gen
-  - memory
-  - messaging
-  - session_search
-  - skills
-  - terminal
-  - todo
-  - tts
-  - vision
-  - web
+    - browser
+    - clarify
+    - code_execution
+    - cronjob
+    - delegation
+    - file
+    - image_gen
+    - memory
+    - messaging
+    - session_search
+    - skills
+    - terminal
+    - todo
+    - tts
+    - vision
+    - web
   whatsapp:
-  - hermes-whatsapp
+    - hermes-whatsapp
   yuanbao:
-  - hermes-yuanbao
+    - hermes-yuanbao
 platforms:
   webhook:
     enabled: true
@@ -715,8 +679,8 @@ platforms:
 plugins:
   disabled: []
   enabled:
-  - browser/browser_use
-  - google_meet
+    - browser/browser_use
+    - google_meet
 session_reset:
   at_hour: 4
   idle_minutes: 1440

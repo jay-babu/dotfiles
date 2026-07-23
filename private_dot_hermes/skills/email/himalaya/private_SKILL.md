@@ -28,6 +28,7 @@ requires the external `himalaya` CLI.
 - `references/message-composition.md` (MML syntax for composing emails)
 - `references/gmail-gws-oauth.md` (reuse Hermes Google Workspace OAuth client for Gmail IMAP/SMTP, including scope and feature pitfalls)
 - `references/mise-cargo-features.md` (mise Cargo backend config and clean reinstall verification for `+oauth2 +keyring` builds)
+- `references/email-tracking-audit.md` (workflow for finding shipment/sample tracking links across All Mail and Trash)
 
 ## Prerequisites
 

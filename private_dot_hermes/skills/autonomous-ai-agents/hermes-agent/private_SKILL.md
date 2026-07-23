@@ -218,7 +218,7 @@ hermes auth reset PROVIDER  Clear exhaustion status
 ```
 
 ### Other
-
+### Other
 ```
 hermes insights [--days N]  Usage analytics
 hermes update               Update to latest version
@@ -231,6 +231,29 @@ hermes acp                  ACP server (IDE integration)
 hermes claw migrate         Migrate from OpenClaw
 hermes uninstall            Uninstall Hermes
 ```
+
+#### Updating with local carried patches
+
+When a Hermes install has local commits or dirty files that must survive `hermes update`:
+
+1. Capture a safety branch and patch first:
+   ```bash
+   cd /usr/local/lib/hermes-agent
+   stamp=$(date +%Y%m%d-%H%M%S)
+   git diff > /root/hermes-update-backups/worktree-$stamp.patch
+   git log --oneline origin/main..HEAD > /root/hermes-update-backups/carried-commits-$stamp.txt
+   git branch "backup/pre-update-$stamp"
+   ```
+2. Stash dirty worktree changes before running `hermes update`; the updater may reset to `origin/main` when histories diverge.
+3. After update, cherry-pick required local commits from the backup branch in original order, then reapply the stash and resolve conflicts. Prefer keeping upstream generated files such as `package-lock.json` unless the local diff is intentional.
+4. If the update reports `Web UI build failed` with `tsc: not found`, install the web workspace dev deps and rebuild before final verification:
+   ```bash
+   cd /usr/local/lib/hermes-agent
+   npm install --include=dev --workspace web
+   npm run build --workspace web
+   git checkout -- package-lock.json  # if npm only removed peer markers / lockfile churn
+   ```
+5. Verify with `hermes --version` (should say `Up to date` and show local carried commits), run focused tests for the touched areas, and note that the currently-running gateway may need `/restart` before it imports updated code.
 
 ---
 

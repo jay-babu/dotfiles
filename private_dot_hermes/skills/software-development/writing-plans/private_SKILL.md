@@ -149,6 +149,12 @@ When planning a port from one repository/framework to another (for example, a PR
 - Target side: analogous APIs/services/query builders/models/tests so the plan follows local conventions instead of copying source-framework structure.
 - Workspace state: target branch/worktree status and unrelated dirty files/submodules, called out explicitly so implementers do not stage or overwrite them.
 
+When planning legacy-to-new API/model migrations, preserve the target-native contract exactly:
+- Do not add compatibility mappings, adapter layers, extra catalog metadata, or fallback behavior unless the user explicitly asks or a technical constraint requires it.
+- If the user states a convention is inferred from existing data (for example permission buckets inferred from action prefixes), plan that inference directly instead of adding redundant fields.
+- If the user specifies scoped save semantics (for example saving only the currently visible namespace and discarding hidden unsaved changes), make that a first-class implementation and test requirement.
+- After each correction to a saved plan, immediately update the plan and search/read it back for stale rejected terminology.
+
 ```python
 # Understand project structure
 search_files("*.py", target="files", path="src/")
