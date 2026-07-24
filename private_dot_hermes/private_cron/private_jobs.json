@@ -601,6 +601,42 @@
       "enabled_toolsets": null,
       "workdir": null,
       "fire_claim": null
+    },
+    {
+      "id": "74cd4bc9ba5d",
+      "name": "Weekly production DB RDS export refresh",
+      "prompt": "Failure-only weekly production database snapshot refresh. Run the managed script to verify AWS account 928004597368; export postgres.reference and postgres.public from transformity-production; wait for a warning-free, fully complete export; download with S3 checksum validation; verify all table statuses plus the exact S3 object inventory; and atomically replace /root/dev/production_db. Successful runs intentionally emit no output and must not be delivered. Non-zero failures must be delivered to the origin Slack thread.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "provider_snapshot": null,
+      "model_snapshot": null,
+      "base_url": null,
+      "script": "weekly_production_db_export.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 7 * * 0",
+        "display": "0 7 * * 0"
+      },
+      "schedule_display": "0 7 * * 0",
+      "repeat": {
+        "times": null
+      },
+      "enabled": true,
+      "created_at": "2026-07-24T16:24:57.886637-04:00",
+      "deliver": "origin",
+      "origin": {
+        "platform": "slack",
+        "chat_id": "D0B19N5SA4V",
+        "chat_name": "D0B19N5SA4V",
+        "thread_id": "1784924062.178179",
+        "user_id": "U068K4E4DFC"
+      },
+      "enabled_toolsets": null,
+      "workdir": null
     }
   ],
   "updated_at": "2026-07-23T10:39:45.339593-04:00"
