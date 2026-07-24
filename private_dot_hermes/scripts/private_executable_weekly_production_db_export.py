@@ -3,9 +3,10 @@
 
 The script is designed for a weekly Hermes no-agent cron job. It keeps the
 current local snapshot until a complete replacement has downloaded with S3
-checksum validation and passed metadata plus object-for-object size checks,
-then swaps the directories on the same filesystem. Successful scheduled runs
-are silent; failures exit non-zero while preserving a validated snapshot.
+checksum validation and passed exact key grammar, metadata, size, and local
+SHA-256 manifest checks, then swaps the directories on the same filesystem.
+Successful scheduled runs are silent; failures exit non-zero while preserving
+a validated snapshot.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from __future__ import annotations
 import argparse
 import ctypes
 import fcntl
+import hashlib
 import json
 import os
 import re
@@ -466,18 +468,71 @@ def validate_completed_task(settings: Settings, task_id: str, task: dict) -> Non
         )
 
 
+def is_allowed_export_data_key(relative: str, export_only: tuple[str, ...]) -> bool:
+    parts = PurePosixPath(relative).parts
+    if len(parts) != 4:
+        return False
+    database, qualified_table, partition, filename = parts
+    if not partition.isdecimal():
+        return False
+    if filename != "_SUCCESS" and not (
+        filename.startswith("part-") and filename.endswith(".parquet")
+    ):
+        return False
+    for scope in export_only:
+        expected_database, schema = scope.split(".", maxsplit=1)
+        table_prefix = f"{schema}."
+        if database != expected_database or not qualified_table.startswith(
+            table_prefix
+        ):
+            continue
+        table = qualified_table.removeprefix(table_prefix)
+        return re.fullmatch(r"[A-Za-z_][A-Za-z0-9_$]*", table) is not None
+    return False
+
+
+def validate_inventory_names(
+    task_id: str,
+    names: set[str] | dict[str, int],
+    export_only: tuple[str, ...],
+) -> None:
+    expected_info = f"export_info_{task_id}.json"
+    table_info_prefix = f"export_tables_info_{task_id}_"
+    table_info_pattern = re.compile(
+        rf"{re.escape(table_info_prefix)}from_\d+_to_\d+\.json"
+    )
+    allowed_data_prefixes = tuple(
+        f"{scope.split('.', maxsplit=1)[0]}/{scope.split('.', maxsplit=1)[1]}."
+        for scope in export_only
+    )
+    for relative in names:
+        parts = PurePosixPath(relative).parts
+        if not relative or relative.startswith("/") or ".." in parts:
+            raise RuntimeError(f"unsafe export object key for {task_id}: {relative!r}")
+        is_table_metadata = table_info_pattern.fullmatch(relative) is not None
+        if relative.startswith(table_info_prefix) and not is_table_metadata:
+            raise RuntimeError(f"unexpected table metadata key: {relative}")
+        is_metadata = relative == expected_info or is_table_metadata
+        if not is_metadata and not relative.startswith(allowed_data_prefixes):
+            raise RuntimeError(
+                f"S3 object is outside requested export scopes: {relative}"
+            )
+        if not is_metadata and not is_allowed_export_data_key(relative, export_only):
+            raise RuntimeError(f"unexpected export data key: {relative}")
+    if expected_info not in names:
+        raise RuntimeError(f"RDS export {task_id} is missing {expected_info}")
+    if not any(table_info_pattern.fullmatch(name) is not None for name in names):
+        raise RuntimeError(f"RDS export {task_id} has no table metadata")
+    if not any(name.endswith(".parquet") for name in names):
+        raise RuntimeError(f"RDS export {task_id} has no Parquet files")
+
+
 def build_inventory(
     task_id: str,
     raw_objects: list[dict],
     export_only: tuple[str, ...],
 ) -> Inventory:
     prefix = f"{task_id}/"
-    expected_info = f"export_info_{task_id}.json"
-    table_info_prefix = f"export_tables_info_{task_id}_"
-    allowed_data_prefixes = tuple(
-        f"{scope.split('.', maxsplit=1)[0]}/{scope.split('.', maxsplit=1)[1]}."
-        for scope in export_only
-    )
     objects: dict[str, int] = {}
     for item in raw_objects:
         if not isinstance(item, dict):
@@ -489,16 +544,6 @@ def build_inventory(
         if not isinstance(key, str) or not key.startswith(prefix):
             raise RuntimeError(f"unexpected S3 object key for {task_id}: {key!r}")
         relative = key.removeprefix(prefix)
-        parts = PurePosixPath(relative).parts
-        if not relative or relative.startswith("/") or ".." in parts:
-            raise RuntimeError(f"unsafe S3 object key for {task_id}: {key!r}")
-        is_metadata = relative == expected_info or (
-            relative.startswith(table_info_prefix) and relative.endswith(".json")
-        )
-        if not is_metadata and not relative.startswith(allowed_data_prefixes):
-            raise RuntimeError(
-                f"S3 object is outside requested export scopes: {relative}"
-            )
         if not isinstance(size, int) or size < 0:
             raise RuntimeError(f"unexpected S3 object size for {key}: {size!r}")
         checksum_algorithms = item.get("ChecksumAlgorithm")
@@ -515,15 +560,7 @@ def build_inventory(
             raise RuntimeError(f"duplicate S3 object key for {task_id}: {relative}")
         objects[relative] = size
 
-    if expected_info not in objects:
-        raise RuntimeError(f"RDS export {task_id} is missing {expected_info}")
-    if not any(
-        name.startswith(table_info_prefix) and name.endswith(".json")
-        for name in objects
-    ):
-        raise RuntimeError(f"RDS export {task_id} has no table metadata")
-    if not any(name.endswith(".parquet") for name in objects):
-        raise RuntimeError(f"RDS export {task_id} has no Parquet files")
+    validate_inventory_names(task_id, objects, export_only)
     return Inventory(objects, len(objects), sum(objects.values()))
 
 
@@ -542,6 +579,58 @@ def local_inventory(directory: Path) -> dict[str, int]:
             relative = path.relative_to(directory).as_posix()
             result[relative] = path.stat().st_size
     return result
+
+
+def sha256_inventory(directory: Path, names: dict[str, int]) -> dict[str, str]:
+    checksums: dict[str, str] = {}
+    for relative in sorted(names):
+        digest = hashlib.sha256()
+        path = directory / relative
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+        with os.fdopen(descriptor, "rb") as stream:
+            while chunk := stream.read(8 * 1024 * 1024):
+                digest.update(chunk)
+        checksums[relative] = digest.hexdigest()
+    return checksums
+
+
+def validate_sha256_manifest(value: object, inventory: Inventory) -> dict[str, str]:
+    if not isinstance(value, dict) or set(value) != set(inventory.objects):
+        raise RuntimeError("missing or incomplete local SHA-256 manifest")
+    manifest: dict[str, str] = {}
+    for name, checksum in value.items():
+        if not isinstance(name, str) or not isinstance(checksum, str):
+            raise RuntimeError(  # noqa: TRY004 - malformed persisted manifest
+                "invalid local SHA-256 manifest"
+            )
+        if re.fullmatch(r"[0-9a-f]{64}", checksum) is None:
+            raise RuntimeError(f"invalid SHA-256 checksum for {name}")
+        manifest[name] = checksum
+    return manifest
+
+
+def discard_untrusted_reusable_files(
+    directory: Path,
+    local: dict[str, int],
+    inventory: Inventory,
+    expected_sha256: dict[str, str] | None,
+) -> dict[str, int]:
+    """Force transfer unless a same-size staging file matches trusted state."""
+    reusable = {
+        name: size
+        for name, size in local.items()
+        if inventory.objects.get(name) == size
+    }
+    if not reusable:
+        return local
+    discard = list(reusable)
+    if expected_sha256 is not None:
+        actual = sha256_inventory(directory, reusable)
+        discard = [name for name in reusable if actual[name] != expected_sha256[name]]
+    for name in discard:
+        (directory / name).unlink()
+        local.pop(name)
+    return local
 
 
 def validate_table_metadata(
@@ -601,6 +690,7 @@ def validate_download(
     task_id: str,
     inventory: Inventory,
     export_only: tuple[str, ...],
+    expected_sha256: dict[str, str] | None = None,
 ) -> None:
     if not directory.is_dir() or directory.is_symlink():
         raise RuntimeError(f"download directory is missing or unsafe: {directory}")
@@ -636,23 +726,48 @@ def validate_download(
         validate_table_metadata(directory, task_id, export_only)
     except RuntimeError as exc:
         raise PermanentExportError(str(exc)) from exc
+    if expected_sha256 is not None:
+        manifest = validate_sha256_manifest(expected_sha256, inventory)
+        actual = sha256_inventory(directory, inventory.objects)
+        mismatches = [
+            name for name in inventory.objects if actual[name] != manifest[name]
+        ]
+        if mismatches:
+            raise RuntimeError(
+                f"local SHA-256 mismatch for exported objects: {mismatches[:5]}"
+            )
 
 
-def ensure_download_space(
+def validate_installed_snapshot(
     settings: Settings,
-    inventory: Inventory,
-    existing: dict[str, int] | None = None,
-) -> None:
+    task_id: str,
+    manifest_value: object,
+) -> Inventory:
+    if not settings.target.is_dir() or settings.target.is_symlink():
+        raise RuntimeError(
+            f"download directory is missing or unsafe: {settings.target}"
+        )
+    local = local_inventory(settings.target)
+    validate_inventory_names(task_id, local, settings.export_only)
+    inventory = Inventory(local, len(local), sum(local.values()))
+    manifest = validate_sha256_manifest(manifest_value, inventory)
+    validate_download(
+        settings.target,
+        task_id,
+        inventory,
+        settings.export_only,
+        manifest,
+    )
+    return inventory
+
+
+def ensure_download_space(settings: Settings, inventory: Inventory) -> None:
     settings.target.parent.mkdir(parents=True, exist_ok=True)
     free = shutil.disk_usage(settings.target.parent).free
-    existing = existing or {}
-    reusable_bytes = sum(
-        size for name, size in existing.items() if inventory.objects.get(name) == size
-    )
-    required = (
-        max(inventory.total_bytes - reusable_bytes, 0)
-        + settings.free_space_headroom_bytes
-    )
+    # Checksum-aware sync may still redownload manifest-matching files based on
+    # timestamps and writes through temporary files. Reserve the complete export
+    # rather than crediting staging bytes that might coexist with a replacement.
+    required = inventory.total_bytes + settings.free_space_headroom_bytes
     if free < required:
         raise RuntimeError(
             f"not enough free disk for export: need {required / 1024**3:.2f} GiB, "
@@ -779,7 +894,14 @@ def finish_install(
     backup = settings.backup_path(task_id)
     staging = settings.staging_path(task_id)
     try:
-        validate_download(settings.target, task_id, inventory, settings.export_only)
+        expected_sha256 = validate_sha256_manifest(state.get("sha256"), inventory)
+        validate_download(
+            settings.target,
+            task_id,
+            inventory,
+            settings.export_only,
+            expected_sha256,
+        )
     except Exception:
         rollback_install(settings, task_id)
         raise
@@ -844,31 +966,28 @@ def refresh_once(
             shutil.rmtree(rejected_staging)
             fsync_directory(settings.target.parent)
 
-    if state.get("phase") == "installed" and not force:
+    if phase == "installed":
         installed_at = parse_timestamp(state.get("installed_at"))
-        if installed_at is not None and now - installed_at < settings.min_interval:
-            installed_task_id = str(state.get("task_id", ""))
-            backup = settings.backup_path(installed_task_id)
-            installed_task = aws.describe_export(installed_task_id)
-            if installed_task is None:
-                raise RuntimeError(
-                    f"installed RDS export task no longer exists: {installed_task_id}"
-                )
-            validate_completed_task(settings, installed_task_id, installed_task)
-            installed_inventory = build_inventory(
-                installed_task_id,
-                aws.list_export_objects(installed_task_id),
-                settings.export_only,
+        installed_task_id = str(state.get("task_id", ""))
+        backup = settings.backup_path(installed_task_id)
+        checksum_state = state.get("sha256")
+        if checksum_state is None:
+            raise RuntimeError(
+                "installed state does not have a trusted local SHA-256 manifest; "
+                "refusing to bless the current snapshot without a verified transfer"
             )
-            validate_download(
-                settings.target,
-                installed_task_id,
-                installed_inventory,
-                settings.export_only,
-            )
-            if backup.exists():
-                shutil.rmtree(backup)
-                fsync_directory(settings.target.parent)
+        # The committed local manifest is the proof for the installed snapshot.
+        # Do not couple local availability to RDS task history or S3 objects that
+        # may have been removed later by the independently managed lifecycle rule.
+        validate_installed_snapshot(settings, installed_task_id, checksum_state)
+        if backup.exists():
+            shutil.rmtree(backup)
+            fsync_directory(settings.target.parent)
+        if (
+            not force
+            and installed_at is not None
+            and now - installed_at < settings.min_interval
+        ):
             return RefreshResult(False, installed_task_id)
 
     task_id = str(state.get("task_id", "")) if phase in ACTIVE_PHASES else ""
@@ -932,19 +1051,39 @@ def refresh_once(
 
     try:
         validate_completed_task(settings, task_id, task)
-        state = updated_state(state, clock, phase="complete", status="COMPLETE")
+        # Preserve the transactional recovery checkpoint. Downgrading
+        # "installing" to "complete" here can strand a published target beside
+        # its backup if the process exits before finish_install records success.
+        completion_phase = "installing" if phase == "installing" else "complete"
+        state = updated_state(state, clock, phase=completion_phase, status="COMPLETE")
         save_state(settings.state_file, state)
         inventory = build_inventory(
             task_id, aws.list_export_objects(task_id), settings.export_only
         )
+    except AWSCommandError:
+        # AWS CLI failures are transient. Preserve the current checkpoint so a
+        # retry can resume the same task and, for installing, retain the old
+        # snapshot until publication has been durably validated.
+        raise
     except RuntimeError as exc:
-        save_rejected_state(settings, state, task_id, clock, exc)
+        # An installing checkpoint may be between atomic rename steps. Marking
+        # it rejected could make the rejected-state cleanup delete the only old
+        # snapshot still parked under the staging name.
+        if phase != "installing":
+            save_rejected_state(settings, state, task_id, clock, exc)
         raise
 
     # If a prior run crashed after the swap, finish cleanup instead of downloading again.
     if phase == "installing" and settings.target.exists():
         try:
-            validate_download(settings.target, task_id, inventory, settings.export_only)
+            expected_sha256 = validate_sha256_manifest(state.get("sha256"), inventory)
+            validate_download(
+                settings.target,
+                task_id,
+                inventory,
+                settings.export_only,
+                expected_sha256,
+            )
         except RuntimeError:
             recover_interrupted_install_paths(settings, task_id)
         else:
@@ -958,32 +1097,54 @@ def refresh_once(
             )
 
     staging = settings.staging_path(task_id)
-    staging_complete = False
     staging_inventory: dict[str, int] = {}
     if staging.exists():
         if not staging.is_dir() or staging.is_symlink():
             raise RuntimeError(f"refusing to use unsafe staging path: {staging}")
         # Reject nested symlinks before allowing AWS CLI to reuse the directory.
         staging_inventory = local_inventory(staging)
-        try:
-            validate_download(staging, task_id, inventory, settings.export_only)
-        except RuntimeError:
-            pass
-        else:
-            staging_complete = True
 
-    if not staging_complete:
-        ensure_download_space(settings, inventory, staging_inventory)
-        staging.mkdir(parents=True, exist_ok=True)
-        state = updated_state(state, clock, phase="downloading")
-        save_state(settings.state_file, state)
-        aws.sync_export(task_id, staging)
-        try:
-            validate_download(staging, task_id, inventory, settings.export_only)
-        except PermanentExportError as exc:
-            save_rejected_state(settings, state, task_id, clock, exc)
-            raise
-    state = updated_state(state, clock, phase="downloaded")
+    resume_sha256: dict[str, str] | None = None
+    if state.get("sha256") is not None:
+        resume_sha256 = validate_sha256_manifest(state.get("sha256"), inventory)
+    # AWS CLI can skip equal-size/equal-mtime files even in checksum mode. Only
+    # retain complete staging files when a trusted manifest proves their bytes.
+    staging_inventory = discard_untrusted_reusable_files(
+        staging,
+        staging_inventory,
+        inventory,
+        resume_sha256,
+    )
+
+    ensure_download_space(settings, inventory)
+    staging.mkdir(parents=True, exist_ok=True)
+    state = updated_state(state, clock, phase="downloading")
+    save_state(settings.state_file, state)
+    # Always invoke checksum-aware sync, even for a size-complete staging tree.
+    # A same-size corruption after an interrupted run must not bypass S3 checksums.
+    aws.sync_export(task_id, staging)
+    try:
+        validate_download(
+            staging,
+            task_id,
+            inventory,
+            settings.export_only,
+            resume_sha256,
+        )
+    except PermanentExportError as exc:
+        save_rejected_state(settings, state, task_id, clock, exc)
+        raise
+    downloaded_sha256 = (
+        resume_sha256
+        if resume_sha256 is not None
+        else sha256_inventory(staging, inventory.objects)
+    )
+    state = updated_state(
+        state,
+        clock,
+        phase="downloaded",
+        sha256=downloaded_sha256,
+    )
     save_state(settings.state_file, state)
 
     state = updated_state(state, clock, phase="installing")
