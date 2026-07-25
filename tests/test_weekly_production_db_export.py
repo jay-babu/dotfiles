@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import importlib.util
 import io
 import json
@@ -37,11 +38,15 @@ class FakeAWS:
         self.started = []
         self.synced = []
         self.known_tasks = set()
+        self.expired_object_tasks = set()
+        self.list_error: Exception | None = None
         self.warning_message: str | None = None
         self.table_status = "COMPLETE"
         self.omit_checksum = False
         self.extra_scope_object = False
         self.extra_table_target = False
+        self.nested_metadata_key = False
+        self.malformed_data_key = False
 
     def get_identity(self):
         return {
@@ -60,6 +65,10 @@ class FakeAWS:
         return self._task(task_id)
 
     def list_export_objects(self, task_id):
+        if self.list_error is not None:
+            raise self.list_error
+        if task_id in self.expired_object_tasks:
+            return []
         result = []
         for key, value in self._objects(task_id).items():
             item = {"Key": key, "Size": len(value)}
@@ -131,6 +140,12 @@ class FakeAWS:
             objects[prefix + "postgres/private.secret/1/part-00000.gz.parquet"] = (
                 b"PAR1secret"
             )
+        if self.nested_metadata_key:
+            objects[
+                prefix + f"export_tables_info_{task_id}_shadow/postgres/private.json"
+            ] = b"not parsed or scoped"
+        if self.malformed_data_key:
+            objects[prefix + "postgres/public.example/1/not-parquet.txt"] = b"invalid"
         return objects
 
 
@@ -157,6 +172,14 @@ class WeeklyProductionDBExportTests(unittest.TestCase):
             clock=lambda: self.now,
             sleeper=lambda _: None,
         )
+
+    @staticmethod
+    def checksum_manifest(aws, task_id):
+        prefix = f"{task_id}/"
+        return {
+            key.removeprefix(prefix): hashlib.sha256(value).hexdigest()
+            for key, value in aws._objects(task_id).items()
+        }
 
     def test_managed_cron_job_excludes_mutable_runtime_state(self):
         payload = json.loads(CRON_JOBS.read_text())
@@ -296,13 +319,98 @@ class WeeklyProductionDBExportTests(unittest.TestCase):
         result = self.run_refresh(aws)
 
         self.assertTrue(result.changed)
-        self.assertEqual(aws.synced, [])
+        self.assertEqual(aws.synced, [task_id])
         self.assertTrue((self.target / f"export_info_{task_id}.json").is_file())
         self.assertFalse(backup.exists())
         self.assertFalse(self.settings.staging_path(task_id).exists())
 
+    def test_installing_phase_survives_interruption_before_finish_install(self):
+        task_id = "transformity-production-no-audit-scraper-20260724-170000"
+        aws = FakeAWS(self.settings)
+        aws.known_tasks.add(task_id)
+        aws.sync_export(task_id, self.target)
+        aws.synced.clear()
+        exporter.save_state(
+            self.state_file,
+            {
+                "version": 1,
+                "phase": "installing",
+                "task_id": task_id,
+                "started_at": self.now.isoformat(),
+                "sha256": self.checksum_manifest(aws, task_id),
+            },
+        )
+        backup = self.settings.backup_path(task_id)
+        backup.mkdir()
+        (backup / "old.txt").write_text("old")
+
+        with (
+            mock.patch.object(
+                exporter,
+                "finish_install",
+                side_effect=OSError("simulated interruption before finish"),
+            ),
+            self.assertRaisesRegex(OSError, "simulated interruption before finish"),
+        ):
+            self.run_refresh(aws)
+
+        interrupted = json.loads(self.state_file.read_text())
+        self.assertEqual(interrupted["phase"], "installing")
+        self.assertTrue(backup.is_dir())
+
+        result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertEqual(result.task_id, task_id)
+        self.assertFalse(backup.exists())
+        self.assertFalse(self.settings.staging_path(task_id).exists())
+        self.assertEqual(json.loads(self.state_file.read_text())["phase"], "installed")
+
+    def test_transient_inventory_error_preserves_installing_checkpoint(self):
+        task_id = "transformity-production-no-audit-scraper-20260724-170000"
+        aws = FakeAWS(self.settings)
+        aws.known_tasks.add(task_id)
+        aws.sync_export(task_id, self.target)
+        aws.synced.clear()
+        staging = self.settings.staging_path(task_id)
+        staging.mkdir()
+        (staging / "old.txt").write_text("old")
+        exporter.save_state(
+            self.state_file,
+            {
+                "version": 1,
+                "phase": "installing",
+                "task_id": task_id,
+                "started_at": self.now.isoformat(),
+                "sha256": self.checksum_manifest(aws, task_id),
+            },
+        )
+        aws.list_error = exporter.AWSCommandError("transient inventory failure")
+
+        with self.assertRaisesRegex(
+            exporter.AWSCommandError, "transient inventory failure"
+        ):
+            self.run_refresh(aws)
+
+        interrupted = json.loads(self.state_file.read_text())
+        self.assertEqual(interrupted["phase"], "installing")
+        self.assertEqual((staging / "old.txt").read_text(), "old")
+
+        aws.list_error = None
+        result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertEqual(result.task_id, task_id)
+        self.assertEqual(aws.started, [])
+        self.assertFalse(staging.exists())
+        self.assertFalse(self.settings.backup_path(task_id).exists())
+        self.assertEqual(json.loads(self.state_file.read_text())["phase"], "installed")
+
     def test_recent_success_is_idempotent(self):
         task_id = "transformity-production-no-audit-scraper-20260723-180000"
+        aws = FakeAWS(self.settings)
+        aws.known_tasks.add(task_id)
+        aws.sync_export(task_id, self.target)
         exporter.save_state(
             self.state_file,
             {
@@ -310,11 +418,9 @@ class WeeklyProductionDBExportTests(unittest.TestCase):
                 "phase": "installed",
                 "task_id": task_id,
                 "installed_at": (self.now - timedelta(days=1)).isoformat(),
+                "sha256": self.checksum_manifest(aws, task_id),
             },
         )
-        aws = FakeAWS(self.settings)
-        aws.known_tasks.add(task_id)
-        aws.sync_export(task_id, self.target)
         aws.synced.clear()
 
         result = self.run_refresh(aws)
@@ -324,9 +430,17 @@ class WeeklyProductionDBExportTests(unittest.TestCase):
         self.assertEqual(aws.started, [])
         self.assertEqual(aws.synced, [])
         self.assertTrue((self.target / f"export_info_{task_id}.json").is_file())
+        state = json.loads(self.state_file.read_text())
+        self.assertEqual(
+            set(state["sha256"]),
+            {key.removeprefix(f"{task_id}/") for key in aws._objects(task_id)},
+        )
 
-    def test_recent_success_validates_target_even_without_a_cleanup_backup(self):
+    def test_installed_state_without_manifest_fails_closed(self):
         task_id = "transformity-production-no-audit-scraper-20260723-180000"
+        aws = FakeAWS(self.settings)
+        aws.known_tasks.add(task_id)
+        aws.sync_export(task_id, self.target)
         exporter.save_state(
             self.state_file,
             {
@@ -336,14 +450,64 @@ class WeeklyProductionDBExportTests(unittest.TestCase):
                 "installed_at": (self.now - timedelta(days=1)).isoformat(),
             },
         )
+        aws.synced.clear()
+
+        with self.assertRaisesRegex(RuntimeError, "trusted local SHA-256 manifest"):
+            self.run_refresh(aws)
+
+        state = json.loads(self.state_file.read_text())
+        self.assertNotIn("sha256", state)
+        self.assertEqual(aws.started, [])
+        self.assertEqual(aws.synced, [])
+
+    def test_recent_success_validates_target_even_without_a_cleanup_backup(self):
+        task_id = "transformity-production-no-audit-scraper-20260723-180000"
         aws = FakeAWS(self.settings)
         aws.known_tasks.add(task_id)
+        exporter.save_state(
+            self.state_file,
+            {
+                "version": 1,
+                "phase": "installed",
+                "task_id": task_id,
+                "installed_at": (self.now - timedelta(days=1)).isoformat(),
+                "sha256": self.checksum_manifest(aws, task_id),
+            },
+        )
 
         with self.assertRaisesRegex(RuntimeError, "download directory is missing"):
             self.run_refresh(aws)
 
         self.assertEqual(aws.started, [])
         self.assertEqual(aws.synced, [])
+
+    def test_recent_install_detects_same_size_local_corruption(self):
+        task_id = "transformity-production-no-audit-scraper-20260723-180000"
+        aws = FakeAWS(self.settings)
+        aws.known_tasks.add(task_id)
+        aws.sync_export(task_id, self.target)
+        prefix = f"{task_id}/"
+        checksums = {
+            key.removeprefix(prefix): hashlib.sha256(value).hexdigest()
+            for key, value in aws._objects(task_id).items()
+        }
+        exporter.save_state(
+            self.state_file,
+            {
+                "version": 1,
+                "phase": "installed",
+                "task_id": task_id,
+                "installed_at": (self.now - timedelta(days=1)).isoformat(),
+                "sha256": checksums,
+            },
+        )
+        parquet = next(self.target.rglob("*.parquet"))
+        parquet.write_bytes(b"BAD!test")
+
+        with self.assertRaisesRegex(RuntimeError, "SHA-256 mismatch"):
+            self.run_refresh(aws)
+
+        self.assertEqual(parquet.read_bytes(), b"BAD!test")
 
     def test_resumes_a_started_task_without_creating_a_duplicate(self):
         task_id = "transformity-production-no-audit-scraper-20260724-170000"
@@ -366,37 +530,7 @@ class WeeklyProductionDBExportTests(unittest.TestCase):
         self.assertEqual(aws.started, [])
         self.assertEqual(aws.synced, [task_id])
 
-    def test_reuses_a_complete_staging_download_without_requiring_free_space(self):
-        task_id = "transformity-production-no-audit-scraper-20260724-170000"
-        exporter.save_state(
-            self.state_file,
-            {
-                "version": 1,
-                "phase": "downloading",
-                "task_id": task_id,
-                "started_at": self.now.isoformat(),
-            },
-        )
-        self.target.mkdir()
-        (self.target / "current.txt").write_text("old")
-        aws = FakeAWS(self.settings, sync_error=RuntimeError("must not redownload"))
-        aws.known_tasks.add(task_id)
-        aws.sync_error = None
-        aws.sync_export(task_id, self.settings.staging_path(task_id))
-        aws.synced.clear()
-        aws.sync_error = RuntimeError("must not redownload")
-
-        with mock.patch.object(
-            exporter.shutil, "disk_usage", return_value=mock.Mock(free=0)
-        ):
-            result = self.run_refresh(aws)
-
-        self.assertTrue(result.changed)
-        self.assertEqual(aws.synced, [])
-        self.assertTrue((self.target / f"export_info_{task_id}.json").is_file())
-        self.assertFalse((self.target / "current.txt").exists())
-
-    def test_download_space_check_accounts_for_matching_partial_files(self):
+    def test_complete_staging_is_checksum_synced_before_install(self):
         task_id = "transformity-production-no-audit-scraper-20260724-170000"
         exporter.save_state(
             self.state_file,
@@ -411,9 +545,168 @@ class WeeklyProductionDBExportTests(unittest.TestCase):
         (self.target / "current.txt").write_text("old")
         aws = FakeAWS(self.settings)
         aws.known_tasks.add(task_id)
+        staging = self.settings.staging_path(task_id)
+        aws.sync_export(task_id, staging)
+        aws.synced.clear()
+        parquet = next(staging.rglob("*.parquet"))
+        parquet.write_bytes(b"BAD!test")
+
+        result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertEqual(aws.synced, [task_id])
+        installed_parquet = next(self.target.rglob("*.parquet"))
+        self.assertEqual(installed_parquet.read_bytes(), b"PAR1test")
+        self.assertFalse((self.target / "current.txt").exists())
+
+    def test_resume_repairs_corruption_even_if_sync_skips_same_size_files(self):
+        task_id = "transformity-production-no-audit-scraper-20260724-170000"
+        self.target.mkdir()
+        (self.target / "current.txt").write_text("old")
+        aws = FakeAWS(self.settings)
+        aws.known_tasks.add(task_id)
+        staging = self.settings.staging_path(task_id)
+        aws.sync_export(task_id, staging)
+        aws.synced.clear()
+        exporter.save_state(
+            self.state_file,
+            {
+                "version": 1,
+                "phase": "downloaded",
+                "task_id": task_id,
+                "started_at": self.now.isoformat(),
+                "sha256": self.checksum_manifest(aws, task_id),
+            },
+        )
+        parquet = next(staging.rglob("*.parquet"))
+        parquet.write_bytes(b"BAD!test")
+
+        def skip_existing_same_size(task, destination):
+            aws.synced.append(task)
+            prefix = f"{task}/"
+            destination.mkdir(parents=True, exist_ok=True)
+            for key, value in aws._objects(task).items():
+                path = destination / key.removeprefix(prefix)
+                if path.is_file() and path.stat().st_size == len(value):
+                    continue
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(value)
+
+        with mock.patch.object(aws, "sync_export", side_effect=skip_existing_same_size):
+            result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertEqual(aws.synced, [task_id])
+        installed_parquet = next(self.target.rglob("*.parquet"))
+        self.assertEqual(installed_parquet.read_bytes(), b"PAR1test")
+        self.assertFalse((self.target / "current.txt").exists())
+
+    def test_resume_rejects_wrong_bytes_written_after_manifest_precheck(self):
+        task_id = "transformity-production-no-audit-scraper-20260724-170000"
+        self.target.mkdir()
+        (self.target / "current.txt").write_text("old")
+        aws = FakeAWS(self.settings)
+        aws.known_tasks.add(task_id)
+        staging = self.settings.staging_path(task_id)
+        aws.sync_export(task_id, staging)
+        aws.synced.clear()
+        exporter.save_state(
+            self.state_file,
+            {
+                "version": 1,
+                "phase": "downloaded",
+                "task_id": task_id,
+                "started_at": self.now.isoformat(),
+                "sha256": self.checksum_manifest(aws, task_id),
+            },
+        )
+
+        def write_wrong_same_size_bytes(task, destination):
+            aws.synced.append(task)
+            prefix = f"{task}/"
+            for key, value in aws._objects(task).items():
+                path = destination / key.removeprefix(prefix)
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b"BAD!test" if key.endswith(".parquet") else value)
+
+        with (
+            mock.patch.object(
+                aws, "sync_export", side_effect=write_wrong_same_size_bytes
+            ),
+            mock.patch.object(exporter, "atomic_exchange") as exchange,
+            self.assertRaisesRegex(RuntimeError, "SHA-256 mismatch"),
+        ):
+            self.run_refresh(aws)
+
+        exchange.assert_not_called()
+        self.assertEqual((self.target / "current.txt").read_text(), "old")
+        self.assertEqual(next(staging.rglob("*.parquet")).read_bytes(), b"BAD!test")
+        self.assertEqual(
+            json.loads(self.state_file.read_text())["phase"], "downloading"
+        )
+
+    def test_resume_without_manifest_retransfers_complete_files(self):
+        task_id = "transformity-production-no-audit-scraper-20260724-170000"
+        self.target.mkdir()
+        (self.target / "current.txt").write_text("old")
+        aws = FakeAWS(self.settings)
+        aws.known_tasks.add(task_id)
+        staging = self.settings.staging_path(task_id)
+        aws.sync_export(task_id, staging)
+        aws.synced.clear()
+        exporter.save_state(
+            self.state_file,
+            {
+                "version": 1,
+                "phase": "downloading",
+                "task_id": task_id,
+                "started_at": self.now.isoformat(),
+            },
+        )
+        parquet = next(staging.rglob("*.parquet"))
+        parquet.write_bytes(b"BAD!test")
+
+        def skip_existing_same_size(task, destination):
+            aws.synced.append(task)
+            prefix = f"{task}/"
+            destination.mkdir(parents=True, exist_ok=True)
+            for key, value in aws._objects(task).items():
+                path = destination / key.removeprefix(prefix)
+                if path.is_file() and path.stat().st_size == len(value):
+                    continue
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(value)
+
+        with mock.patch.object(aws, "sync_export", side_effect=skip_existing_same_size):
+            result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertEqual(aws.synced, [task_id])
+        installed_parquet = next(self.target.rglob("*.parquet"))
+        self.assertEqual(installed_parquet.read_bytes(), b"PAR1test")
+        self.assertFalse((self.target / "current.txt").exists())
+
+    def test_download_space_requires_full_incoming_capacity_with_reusable_files(
+        self,
+    ):
+        task_id = "transformity-production-no-audit-scraper-20260724-170000"
+        self.target.mkdir()
+        (self.target / "current.txt").write_text("old")
+        aws = FakeAWS(self.settings)
+        aws.known_tasks.add(task_id)
         objects = aws._objects(task_id)
         inventory = exporter.build_inventory(
             task_id, aws.list_export_objects(task_id), self.settings.export_only
+        )
+        exporter.save_state(
+            self.state_file,
+            {
+                "version": 1,
+                "phase": "downloading",
+                "task_id": task_id,
+                "started_at": self.now.isoformat(),
+                "sha256": self.checksum_manifest(aws, task_id),
+            },
         )
         prefix = f"{task_id}/"
         first_key, first_value = next(iter(objects.items()))
@@ -422,17 +715,19 @@ class WeeklyProductionDBExportTests(unittest.TestCase):
         partial.parent.mkdir(parents=True)
         partial.write_bytes(first_value)
         self.settings.free_space_headroom_bytes = 10
-        remaining_bytes = inventory.total_bytes - len(first_value)
+        insufficient_free = inventory.total_bytes + 9
 
-        with mock.patch.object(
-            exporter.shutil,
-            "disk_usage",
-            return_value=mock.Mock(free=remaining_bytes + 10),
+        with (
+            mock.patch.object(
+                exporter.shutil,
+                "disk_usage",
+                return_value=mock.Mock(free=insufficient_free),
+            ),
+            self.assertRaisesRegex(RuntimeError, "not enough free disk"),
         ):
-            result = self.run_refresh(aws)
+            self.run_refresh(aws)
 
-        self.assertTrue(result.changed)
-        self.assertEqual(aws.synced, [task_id])
+        self.assertEqual(aws.synced, [])
 
     def test_finishes_cleanup_after_a_crash_following_the_directory_swap(self):
         task_id = "transformity-production-no-audit-scraper-20260724-170000"
@@ -458,7 +753,7 @@ class WeeklyProductionDBExportTests(unittest.TestCase):
         self.assertTrue(result.changed)
         self.assertEqual(result.task_id, task_id)
         self.assertEqual(aws.started, [])
-        self.assertEqual(aws.synced, [])
+        self.assertEqual(aws.synced, [task_id])
         self.assertFalse(backup.exists())
         state = json.loads(self.state_file.read_text())
         self.assertEqual(state["phase"], "installed")
@@ -525,8 +820,69 @@ class WeeklyProductionDBExportTests(unittest.TestCase):
         self.assertEqual(aws.started, [expected_task])
         self.assertEqual(aws.synced, [expected_task])
 
+    def test_expired_install_cleans_old_backup_before_starting_next_export(self):
+        installed_task = "transformity-production-no-audit-scraper-20260717-180000"
+        aws = FakeAWS(self.settings)
+        aws.known_tasks.add(installed_task)
+        aws.sync_export(installed_task, self.target)
+        exporter.save_state(
+            self.state_file,
+            {
+                "version": 1,
+                "phase": "installed",
+                "task_id": installed_task,
+                "installed_at": (self.now - timedelta(days=7)).isoformat(),
+                "sha256": self.checksum_manifest(aws, installed_task),
+            },
+        )
+        aws.synced.clear()
+        backup = self.settings.backup_path(installed_task)
+        backup.mkdir()
+        (backup / "old.txt").write_text("old")
+
+        result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertFalse(backup.exists())
+        self.assertEqual(
+            aws.started,
+            ["transformity-production-no-audit-scraper-20260724-180000"],
+        )
+
+    def test_expired_install_refreshes_after_source_objects_expire(self):
+        installed_task = "transformity-production-no-audit-scraper-20260617-180000"
+        aws = FakeAWS(self.settings)
+        aws.known_tasks.add(installed_task)
+        aws.sync_export(installed_task, self.target)
+        exporter.save_state(
+            self.state_file,
+            {
+                "version": 1,
+                "phase": "installed",
+                "task_id": installed_task,
+                "installed_at": (self.now - timedelta(days=37)).isoformat(),
+                "sha256": self.checksum_manifest(aws, installed_task),
+            },
+        )
+        aws.synced.clear()
+        aws.expired_object_tasks.add(installed_task)
+
+        result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertEqual(
+            aws.started,
+            ["transformity-production-no-audit-scraper-20260724-180000"],
+        )
+        self.assertEqual(
+            json.loads(self.state_file.read_text())["task_id"], result.task_id
+        )
+
     def test_cleanup_retry_preserves_backup_when_installed_target_is_invalid(self):
         task_id = "transformity-production-no-audit-scraper-20260724-170000"
+        aws = FakeAWS(self.settings)
+        aws.known_tasks.add(task_id)
+        aws.sync_export(task_id, self.target)
         exporter.save_state(
             self.state_file,
             {
@@ -534,20 +890,16 @@ class WeeklyProductionDBExportTests(unittest.TestCase):
                 "phase": "installed",
                 "task_id": task_id,
                 "installed_at": (self.now - timedelta(days=1)).isoformat(),
+                "sha256": self.checksum_manifest(aws, task_id),
             },
         )
-        aws = FakeAWS(self.settings)
-        aws.known_tasks.add(task_id)
-        aws.sync_export(task_id, self.target)
         parquet = next(self.target.rglob("*.parquet"))
         parquet.unlink()
         backup = self.settings.backup_path(task_id)
         backup.mkdir()
         (backup / "old.txt").write_text("old")
 
-        with self.assertRaisesRegex(
-            RuntimeError, "download does not match S3 inventory"
-        ):
+        with self.assertRaisesRegex(RuntimeError, "has no Parquet files"):
             self.run_refresh(aws)
 
         self.assertTrue(backup.is_dir())
@@ -644,6 +996,30 @@ class WeeklyProductionDBExportTests(unittest.TestCase):
         aws.extra_scope_object = True
 
         with self.assertRaisesRegex(RuntimeError, "outside requested export scopes"):
+            self.run_refresh(aws)
+
+        self.assertEqual((self.target / "current.txt").read_text(), "keep")
+        self.assertEqual(aws.synced, [])
+
+    def test_nested_metadata_key_cannot_bypass_scope_validation(self):
+        self.target.mkdir()
+        (self.target / "current.txt").write_text("keep")
+        aws = FakeAWS(self.settings)
+        aws.nested_metadata_key = True
+
+        with self.assertRaisesRegex(RuntimeError, "unexpected table metadata key"):
+            self.run_refresh(aws)
+
+        self.assertEqual((self.target / "current.txt").read_text(), "keep")
+        self.assertEqual(aws.synced, [])
+
+    def test_malformed_data_key_is_rejected_before_download(self):
+        self.target.mkdir()
+        (self.target / "current.txt").write_text("keep")
+        aws = FakeAWS(self.settings)
+        aws.malformed_data_key = True
+
+        with self.assertRaisesRegex(RuntimeError, "unexpected export data key"):
             self.run_refresh(aws)
 
         self.assertEqual((self.target / "current.txt").read_text(), "keep")
