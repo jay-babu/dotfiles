@@ -1,19 +1,21 @@
-local fly = function()
-  local handle = io.popen "figlet -c 'Flying Raijin\nLevel 2'"
-  local result = ""
-  if handle ~= nil then
-    result = handle:read "*a"
-    handle:close()
-  end
-  return result
-end
-
 return {
   "folke/snacks.nvim",
   opts = {
     dashboard = {
       preset = {
-        header = fly(),
+        header = [[
+ _____ _       _               ____       _  _ _
+|  ___| |_   _(_)_ __   __ _  |  _ \ __ _(_)(_|_)_ __
+| |_  | | | | | | '_ \ / _` | | |_) / _` | || | | | '_ \
+|  _| | | |_| | | | | | (_| | |  _ < (_| | || | | | | |
+|_|   |_|\__, |_|_| |_|\__, | |_| \_\__,_|_| |_|_| |_|
+         |___/         |___/
+ _                   _   ____
+| |    _____   _____| | |___ \
+| |   / _ \ \ / / _ \ |   __) |
+| |__|  __/\ V /  __/ |  / __/
+|_____|\___| \_/ \___|_| |_____|
+]],
       },
     },
   },

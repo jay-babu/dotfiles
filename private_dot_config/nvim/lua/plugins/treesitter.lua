@@ -113,32 +113,4 @@ return {
       },
     },
   },
-  {
-    "AstroNvim/astrolsp",
-    opts = function(
-      _,
-      ---@type AstroLSPOpts
-      opts
-    )
-      opts.servers = opts.servers or {}
-      table.insert(opts.servers, "kotlin_lsp")
-      table.insert(opts.servers, "postgres_lsp")
-
-      -- extend our configuration table with manually configured servers
-      opts.config = require("astrocore").extend_tbl(opts.config or {}, {
-        kotlin_lsp = {
-          cmd = { "kotlin-ls", "--stdio" },
-          single_file_support = true,
-          filetypes = { "kotlin" },
-          root_markers = { "build.gradle", "build.gradle.kts", "pom.xml" },
-        },
-        postgres_lsp = {
-          cmd = { "postgrestools", "lsp-proxy" },
-          single_file_support = true,
-          filetypes = { "sql" },
-          root_markers = { "postgrestools.jsonc", ".git" },
-        },
-      })
-    end,
-  },
 }

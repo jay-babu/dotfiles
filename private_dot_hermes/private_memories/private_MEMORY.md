@@ -1,21 +1,23 @@
-AWS profiles: gamma=165569969323/HermesAgentPowerUser; production=928004597368/HermesAgentReadOnly. Nerv IaC: /root/code/zeus/main/iac/nerv.
+AWS: gamma=165569969323/HermesAgentPowerUser; production=928004597368/HermesAgentReadOnly. Nerv IaC=/root/code/zeus/main/iac/nerv.
 §
-Incident workflow: fixes require a concrete backend/product cause, dynamic reproduction, and verification; insufficient evidence warrants bounded diagnostics.
+Incidents need concrete cause/repro/verification; otherwise bounded diagnostics. Jay prefers lightweight targeted validation; avoid broad builds when spec-level tests suffice.
 §
-POS/Zeus permissions: source=`permissionDualWrite.ts` RHS. Aggregates: All=`*`, Read=Get+List, Write=Create+Update, Delete=Delete. `*` globs anywhere; drop subsumed same-namespace grants; OWNER/ADMIN use `*`. Rollout: canonicalize/stop legacy writes → deploy → clean DB → reject legacy. Kurama APIs favor generated Bob + direct `expandparam` preloads, never SQLC/manual expand checks. Tests: external `_test`, `t.Context()`, whole-value `testkit.MustEqual`. Errors use `httpproblem`; preserve causes/classify via `errors.AsType[*problem.Problem]`. PRs rebase `origin/main`.
+Permissions: Casbin v2=namespace/v3=action; nullable namespace is metadata; legacy rows have canonical copies. All=`*`; Read=Get+List; Write=Create+Update; Delete=Delete; action globs/subsumption stay in namespace. Token ops: absent=unscoped; present empty/blank/malformed=none. POSBackend defaults named roles; OWNER/ADMIN=`*`.
 §
-PagerDuty automation: From=jay@transformity.tech; Sentry org=transformity. Dedupe against all-open PD plus unresolved Sentry enrichment; merge confident duplicates after approval; resolve inactive >60d when applicable.
+Plivo creds: Bitwarden Secrets Manager, not files.
 §
-Hermes incident gateway: PagerDuty V3 webhook uses `X-PagerDuty-Signature` HMAC-SHA256 with route secret; route `pagerduty-incidents` delivers to Slack, whose approval buttons unblock webhook dangerous-command prompts.
+Stripe PM sync: `customer_id` is required for `card_present` + `generated_card`, not plain `card`; never skip the former when missing. `card_present` without `generated_card` may skip.
 §
-PD→Slack incident thread mapping: JSONL not JSON. Plivo creds: Bitwarden Secrets Manager, not files.
+Jay expects a plan before first prod automation run/schedule; PR≠operational approval. DB migrations: static SQL, split lock DDL/table. POSBackend skill only for POSBackend.
 §
-Stripe PM sync: `customer_id` is expected for `card_present` with `generated_card`, not plain `card`; never silently skip the former when missing. `card_present` without `generated_card` may skip.
+Kakashi: target is logged ephemeral ingest feeding permanent unpartitioned `audit_log`; never drop history. Preserve prod `audit_log_gin_cohort_idx`. Gamma 0.0002 insert-vacuum: 4.4x/avoided 82s stall, but cleanup took 108s—not sustained-proof; keep 32MiB GIN pending.
 §
-Discuss before scope/push. DB migrations: static SQL, split lock-taking DDL per table. POSBackend skill only for POSBackend.
-§
-Kakashi: production requires `audit.audit_log_gin_cohort_idx`; performance fixes must preserve it.
-§
-Sales-channel inventory sync discards stale entity-item events and events whose matching channel-item relation exists; prefer fetching the row over custom SQL EXISTS.
+Sales-channel inventory: discard stale events and rows with matching channel-item relation; fetch via SQL EXISTS. Provi JSONL is unfiltered; `verified_in_stock=false` can be orderable (unverified, not OOS). Alt-Hero retains true/false/missing/null.
 §
 POS-device upserts key on cohort+entity+metadata.external_id; generate insert TypeID, preserve matched ID, unarchive, increment version, and use updated audit reason.
+§
+PL: switch+profit; POS irrelevant. Low-pop ≤cost→50%. Tito/Goose/Ketel private. Wine: WS-exact; Bezel≠Sonoma; Chalk Hill national. Spirits: base/style; Beefeater≠low-pop.
+§
+Transformity DB FK convention: referenced composite keys are named UNIQUE constraints backed by concurrently built indexes (`UNIQUE USING INDEX`), not bare unique indexes.
+§
+Sales channels: allow_negative_inventory makes negative stock in stock, but never zero.

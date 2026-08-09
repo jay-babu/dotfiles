@@ -37,15 +37,17 @@ return {
       end,
     },
     -- enable servers that you already have installed without mason
-    servers = {
-      -- "pyright"
-    },
-    -- customize language server configuration options passed to `vim.lsp.config`
+    servers = { "postgres_lsp" },
+    -- Customize language server configuration options passed to `vim.lsp.config`.
     ---@diagnostic disable: missing-fields
     config = {
-      -- clangd = { capabilities = { offsetEncoding = "utf-8" } },
+      postgres_lsp = {
+        cmd = { "postgrestools", "lsp-proxy" },
+        root_markers = { "postgres-language-server.jsonc" },
+        workspace_required = true,
+      },
     },
-    -- customize how language servers are attached
+    -- Customize how language servers are attached.
     handlers = {
       -- a function with the key `*` modifies the default handler, functions take the server name as the parameter
       -- ["*"] = function(server) vim.lsp.enable(server) end

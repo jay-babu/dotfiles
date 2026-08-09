@@ -1,7 +1,7 @@
 approvals_reviewer = "guardian_subagent"
 plan_mode_reasoning_effort = "high"
-model = "gpt-5.6-sol"
-model_reasoning_effort = "max"
+model = "gpt-5.6-terra"
+model_reasoning_effort = "xhigh"
 service_tier = "fast"
 approval_policy = "on-request"
 sandbox_mode = "workspace-write"
@@ -132,6 +132,15 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/root/code/horus/main"]
+trust_level = "trusted"
+
+[projects."/root/.local/share/chezmoi"]
+trust_level = "trusted"
+
+[projects."/root/dev/sakura"]
+trust_level = "trusted"
+
+[projects."/root/code/sales-channel-inventory-processor"]
 trust_level = "trusted"
 
 [mcp_servers.linear]

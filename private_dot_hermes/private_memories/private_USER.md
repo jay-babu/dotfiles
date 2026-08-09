@@ -1,21 +1,23 @@
-Jay prefers concise Slack bullets, uninterrupted execution, exact API tests, and candid PR readiness reports with failures disclosed.
+Jay: concise/PR-ready; Browser Use for browser automation; whole-object assertions; Kotlin throwable logger overload.
 §
-Prefers mise, uv, and existing auth/creds.
+Prefers mise/uv, existing auth/StackReferences, CLI `pulumi import`; bootstraps IaC manually—no persistent grants. IAM: `getPolicyDocument` + account-bound confused-deputy controls.
 §
-Architecture-first; prefers one high-impact, low-maint change. Admin UI: visible controls, readable labels, minimal headers; warn before discarding edits.
+Architecture-first; low-maint/minimal-admin; one PR/artifact per rollout phase. TypeSpec-only: named bodies + exhaustive Body/Headers; no postprocessors/per-op tests/OpenSpec.
 §
-POS/Kurama: accurate parser/nullability, cohort-scoped auth, exploded arrays, nested expands, total_pages, CRUD perms, generated Bob joins; user-access writes use row-level operations.
+POS/Kurama: exact parsing/nullability; cohort auth; nested/exploded expands; total_pages; CRUD; Bob joins; row-scoped writes.
 §
-Jay direct: @mention <@U068K4E4DFC> in final review; no tags for webhook/cron. PRs: rebase main and verify GitHub mergeability/conflicts, not just CI.
+Final reviews tag <@U068K4E4DFC>; webhooks/crons untagged. Rebase PRs on main; verify mergeability.
 §
-Prefers direct DB migrations; don't add role-existence guards unless asked.
+DB: direct migrations; one concurrent CREATE INDEX/file; avoid broad Squawk concurrency ignores; no tests for metadata-only PRs/role guards unless asked.
 §
-Jay prefers narrow, purpose-revealing package paths—not core/common/helper/utils or generic tools dumping grounds; favors internal/cmd/<command>. Prefers gomock and inferred mockgen package names.
+Prefers direct ownership and generated APIs over wrapper/sync abstractions; narrow paths—not core/common/helper/utils.
 §
-Jay expects approved plan items tracked until completed or explicitly deferred; new wins don't replace agreed workstreams.
+Approved work stays tracked to done/deferred; new wins don't replace it.
 §
-Transaction-report verification runs only in gamma, never production.
+Prod defects: use production-faithful gamma fixtures + DB-verified A/B; never run transaction reports in prod.
 §
-Jay expects public config names and allowed string values to match his requested contract exactly.
+Public config names/values must exactly match the requested contract.
 §
-For authorized repo work, Jay prefers logical commits pushed incrementally and a PR maintained as work progresses.
+Logical commits; reviews pushed PRs only.
+§
+Shortlists: no national brands; like-for-like flavors; locked picks need approval.

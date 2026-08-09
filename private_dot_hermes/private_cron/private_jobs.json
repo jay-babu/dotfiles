@@ -20,15 +20,15 @@
       "schedule_display": "0 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 10
+        "completed": 12
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:04:19.883907-04:00",
-      "next_run_at": "2026-07-27T09:00:00-04:00",
-      "last_run_at": "2026-07-20T09:00:38.995525-04:00",
+      "next_run_at": "2026-08-10T09:00:00-04:00",
+      "last_run_at": "2026-08-03T09:00:48.656898-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -66,15 +66,15 @@
       "schedule_display": "5 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 8
+        "completed": 10
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:13:56.866960-04:00",
-      "next_run_at": "2026-07-27T09:05:00-04:00",
-      "last_run_at": "2026-07-20T09:05:23.902889-04:00",
+      "next_run_at": "2026-08-10T09:05:00-04:00",
+      "last_run_at": "2026-08-03T09:05:31.553753-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -112,17 +112,17 @@
       "schedule_display": "10 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 9
+        "completed": 11
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:18:07.212763-04:00",
-      "next_run_at": "2026-07-27T09:10:00-04:00",
-      "last_run_at": "2026-07-20T09:10:28.943056-04:00",
+      "next_run_at": "2026-08-10T09:10:00-04:00",
+      "last_run_at": "2026-08-03T09:10:38.858869-04:00",
       "last_status": "error",
-      "last_error": "Script exited with code 1\nstderr:\nInstalled 12 packages in 105ms\nTraceback (most recent call last):\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 277, in <module>\n    main()\n    ~~~~^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 268, in main\n    upload_to_slack(path, summary_text)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 239, in upload_to_slack\n    raise RuntimeError('SLACK_BOT_TOKEN not found for Slack image upload')\nRuntimeError: SLACK_BOT_TOKEN not found for Slack image upload",
+      "last_error": "Script exited with code 1\nstderr:\nInstalled 12 packages in 23ms\nTraceback (most recent call last):\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 277, in <module>\n    main()\n    ~~~~^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 268, in main\n    upload_to_slack(path, summary_text)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 239, in upload_to_slack\n    raise RuntimeError('SLACK_BOT_TOKEN not found for Slack image upload')\nRuntimeError: SLACK_BOT_TOKEN not found for Slack image upload",
       "last_delivery_error": null,
       "deliver": "slack:C059SQ4H88H",
       "origin": {
@@ -137,102 +137,6 @@
       "workdir": null,
       "profile": null,
       "fire_claim": null
-    },
-    {
-      "id": "464232144a9d",
-      "name": "pd-11061-pr-check-followup",
-      "prompt": "Autonomous PagerDuty follow-up for incident Q21PP0PZUQK97Z / PD #11061. Do not schedule more cron jobs. Check GitHub PR https://github.com/Transformity/TransformityPOSFrontend/pull/2734 and Actions run 27150868905. If all PR checks relevant to PR #2734 are terminal and passing enough for merge (Amplify preview pass, unit-test pass, and Stably fix-tests/stably verification either pass or a clear Stably tool blocker is present), fetch PagerDuty notes for Q21PP0PZUQK97Z and add at most one final PagerDuty note if no note already mentions PR #2734 with final check/verification evidence. Use PAGERDUTY_API_TOKEN/PAGERDUTY_FROM_EMAIL from the terminal environment; never print secrets. Final note should summarize root cause, before evidence from Stably run 27148308709 and PR run 27150868905, PR URL, local verification (`bun install --frozen-lockfile`, `oxfmt`, `git diff --check`, `bun run build`), and current PR check status. If checks are still pending, output a concise status only and do not post another PagerDuty note. If fix-tests fails or hangs over 60 minutes from 16:25Z, post at most one concise PagerDuty blocker note only if no similar blocker note exists, naming the stuck/failed job URL and safest next human action. Do not acknowledge, resolve, merge, deploy, or mutate production resources.",
-      "skills": [],
-      "skill": null,
-      "model": null,
-      "provider": null,
-      "base_url": null,
-      "script": null,
-      "no_agent": false,
-      "context_from": null,
-      "schedule": {
-        "kind": "once",
-        "run_at": "2026-06-08T13:00:16.743049-04:00",
-        "display": "once in 10m"
-      },
-      "schedule_display": "once in 10m",
-      "repeat": {
-        "times": 6,
-        "completed": 1
-      },
-      "enabled": false,
-      "state": "completed",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-06-08T12:50:16.743184-04:00",
-      "next_run_at": null,
-      "last_run_at": "2026-06-08T13:00:57.846926-04:00",
-      "last_status": "ok",
-      "last_error": null,
-      "last_delivery_error": null,
-      "deliver": "origin",
-      "origin": {
-        "platform": "webhook",
-        "chat_id": "webhook:pagerduty-incidents:1780933647740",
-        "chat_name": "webhook/pagerduty-incidents",
-        "thread_id": null
-      },
-      "enabled_toolsets": [
-        "terminal",
-        "file"
-      ],
-      "workdir": null,
-      "profile": null
-    },
-    {
-      "id": "60e6916cc366",
-      "name": "PD11211 Stably fix-tests follow-up",
-      "prompt": "Autonomous PagerDuty follow-up for incident Q00FXII7PW90OL / PD #11211. Do not recursively schedule cron jobs. Load and follow skill devops/webhook-subscriptions plus references/stably-github-actions-incident-remediation.md and references/stably-backend-gamma-dispatch-hidden-failure.md. Incident title: \"Stably tests failed for Transformity/POSBackend - committed by jay-babu\". Current evidence already posted in PagerDuty note marker pd-11211-stably-fix-tests-interim: no pd-11211 duplicate worktree/branch existed; PagerDuty had no alerts; source POSBackend deploy commit 8e2bde3 / PR https://github.com/Transformity/POSBackend/pull/1824; downstream frontend Stably run https://github.com/Transformity/TransformityPOSFrontend/actions/runs/27287092075 failed at stably-test-main / stably-test job 80597192371 with no concrete spec/assertion in GitHub log; companion fix-tests job 80599781331 was in_progress; gamma frontend smoke reached normal sign-in page with no console errors. Task: re-fetch PagerDuty notes first and stop silently if a final/blocker note marker pd-11211-stably-fix-tests-final or pd-11211-stably-fix-tests-blocker already exists. Re-fetch GitHub run/jobs/logs using gh auth hosts token if needed (do not print secrets). If fix-tests is still in_progress, report only a concise status and do not post PagerDuty. If fix-tests completed and reveals concrete failing spec/assertion, continue incident remediation per policy: run duplicate guard again, reproduce dynamically before code changes, fix/test/PR only if concrete and reproducible. If fix-tests completed but logs remain unavailable or only show no actionable spec/assertion, re-fetch PagerDuty notes immediately before posting and add one concise PagerDuty blocker note with marker pd-11211-stably-fix-tests-blocker summarizing run URL, log status, and no code/production mutations. If a PR/fix is created and checks pass plus dynamic verification succeeds, add final note marker pd-11211-stably-fix-tests-final with PR and evidence. Never ack/resolve/merge/deploy/rerun workflows or mutate production resources.",
-      "skills": [
-        "devops/webhook-subscriptions"
-      ],
-      "skill": "devops/webhook-subscriptions",
-      "model": null,
-      "provider": null,
-      "base_url": null,
-      "script": null,
-      "no_agent": false,
-      "context_from": null,
-      "schedule": {
-        "kind": "once",
-        "run_at": "2026-06-10T11:56:48.289101-04:00",
-        "display": "once in 10m"
-      },
-      "schedule_display": "once in 10m",
-      "repeat": {
-        "times": 6,
-        "completed": 1
-      },
-      "enabled": false,
-      "state": "completed",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-06-10T11:46:48.289186-04:00",
-      "next_run_at": null,
-      "last_run_at": "2026-06-10T11:58:22.373498-04:00",
-      "last_status": "ok",
-      "last_error": null,
-      "last_delivery_error": null,
-      "deliver": "origin",
-      "origin": {
-        "platform": "webhook",
-        "chat_id": "webhook:pagerduty-incidents:1781106154701",
-        "chat_name": "webhook/pagerduty-incidents",
-        "thread_id": null
-      },
-      "enabled_toolsets": [
-        "terminal",
-        "file",
-        "browser",
-        "web"
-      ],
-      "workdir": null,
-      "profile": null
     },
     {
       "id": "72be28b02e54",
@@ -254,15 +158,15 @@
       "schedule_display": "0 6 * * *",
       "repeat": {
         "times": null,
-        "completed": 42
+        "completed": 58
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-06-11T11:30:43.346515-04:00",
-      "next_run_at": "2026-07-24T06:00:00-04:00",
-      "last_run_at": "2026-07-23T06:00:08.905244-04:00",
+      "next_run_at": "2026-08-09T06:00:00-04:00",
+      "last_run_at": "2026-08-08T06:00:45.490960-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -277,99 +181,6 @@
       "workdir": null,
       "profile": null,
       "fire_claim": null
-    },
-    {
-      "id": "df3aa650cbbd",
-      "name": "pd11248-stably-fix-tests-followup",
-      "prompt": "Autonomous PagerDuty follow-up for PD #11248 / incident Q0P8X52NAFEZ5Y. Do not schedule any further cron jobs. Context: PagerDuty incident title: \"Stably tests failed for Transformity/TransformityPOSFrontend - committed by rishi517\". Triggering main Actions run: https://github.com/Transformity/TransformityPOSFrontend/actions/runs/27377857186, main stably job 80906712699 failed after Stably suite upload with 1/11 failed-tests gate; result URL https://app.stably.ai/project/cmkh7ptwn00aul504i6cxisgi/playwright/history/github-Transformity_TransformityPOSFrontend-27377857186-1; companion main fix-tests job 80909363806 was in_progress at 2026-06-11T21:34Z. Source PR: https://github.com/Transformity/TransformityPOSFrontend/pull/2757, source PR Stably run https://github.com/Transformity/TransformityPOSFrontend/actions/runs/27375372811, source PR fix-tests job 80905948466 was also in_progress. Interim PagerDuty note marker already posted: pd-11248-stably-fix-tests-interim. Follow the loaded webhook-subscriptions Stably main hidden failure guidance: first re-fetch PagerDuty notes; suppress duplicate notes if a note already contains equivalent final/blocker evidence. Fetch the main and PR fix-tests job statuses via gh/API from /root/code/TransformityPOSFrontend/main. If fix-tests is still in_progress and less than ~60 minutes old, do not post another PagerDuty note; final response may just say still pending. If main fix-tests completed, fetch its logs (and PR fix-tests logs if useful) and inspect for concrete failing spec/assertion and any autoheal edits/report. Only create a branch/code changes if logs reveal a concrete product/test failure that can be dynamically reproduced. If logs are unavailable, non-actionable, or only say all failing tests skipped/unfixed/no concrete spec, re-fetch PagerDuty notes immediately before posting one concise blocker note with marker pd-11248-stably-fix-tests-blocker, run/job URLs, status, why code changes are unsafe, and next human action. If you do make a fix, follow full incident workflow: duplicate guard, local dynamic reproduction before fix, implement tests/fix in a proper TransformityPOSFrontend worktree/branch, verify, push PR, poll checks when possible, and post final PagerDuty note marker pd-11248-stably-fix-tests-final with PR/check/repro/verification evidence. Never acknowledge, resolve, merge, deploy, rerun Actions, or mutate production resources.",
-      "skills": [
-        "devops/webhook-subscriptions",
-        "github-pr-workflow"
-      ],
-      "skill": "devops/webhook-subscriptions",
-      "model": null,
-      "provider": null,
-      "base_url": null,
-      "script": null,
-      "no_agent": false,
-      "context_from": null,
-      "schedule": {
-        "kind": "once",
-        "run_at": "2026-06-11T17:45:04.971599-04:00",
-        "display": "once in 10m"
-      },
-      "schedule_display": "once in 10m",
-      "repeat": {
-        "times": 6,
-        "completed": 1
-      },
-      "enabled": false,
-      "state": "completed",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-06-11T17:35:04.971742-04:00",
-      "next_run_at": null,
-      "last_run_at": "2026-06-11T17:47:44.543264-04:00",
-      "last_status": "ok",
-      "last_error": null,
-      "last_delivery_error": null,
-      "deliver": "local",
-      "origin": {
-        "platform": "webhook",
-        "chat_id": "webhook:pagerduty-incidents:1781213387265",
-        "chat_name": "webhook/pagerduty-incidents",
-        "thread_id": null
-      },
-      "enabled_toolsets": [
-        "terminal",
-        "file",
-        "cronjob"
-      ],
-      "workdir": null,
-      "profile": null
-    },
-    {
-      "id": "bb7182a58b5b",
-      "name": "PD11282 PR2774 CI follow-up",
-      "prompt": "",
-      "skills": [],
-      "skill": null,
-      "model": null,
-      "provider": null,
-      "base_url": null,
-      "script": "pd11282_pr2774_watch.py",
-      "no_agent": true,
-      "context_from": null,
-      "schedule": {
-        "kind": "once",
-        "run_at": "2026-06-15T14:46:29.323743-04:00",
-        "display": "once in 10m"
-      },
-      "schedule_display": "once in 10m",
-      "repeat": {
-        "times": 8,
-        "completed": 1
-      },
-      "enabled": false,
-      "state": "completed",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-06-15T14:36:29.323833-04:00",
-      "next_run_at": null,
-      "last_run_at": "2026-06-15T14:46:53.412638-04:00",
-      "last_status": "error",
-      "last_error": "Script exited with code 1\nstderr:\nTraceback (most recent call last):\n  File \"/root/.hermes/scripts/pd11282_pr2774_watch.py\", line 20, in <module>\n    raw = gh('pr', 'view', '2774', '-R', 'Transformity/TransformityPOSFrontend', '--json', 'url,statusCheckRollup')\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.hermes/scripts/pd11282_pr2774_watch.py\", line 13, in gh\n    p = subprocess.run(['gh', *args], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/subprocess.py\", line 548, in run\n    with Popen(*popenargs, **kwargs) as process:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/subprocess.py\", line 1026, in __init__\n    self._execute_child(args, executable, preexec_fn, close_fds,\n  File \"/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/subprocess.py\", line 1955, in _execute_child\n    raise child_exception_type(errno_num, err_msg, err_filename)\nFileNotFoundError: [Errno 2] No such file or directory: 'gh'",
-      "last_delivery_error": null,
-      "deliver": "origin",
-      "origin": {
-        "platform": "webhook",
-        "chat_id": "webhook:pagerduty-incidents:1781545149635",
-        "chat_name": "webhook/pagerduty-incidents",
-        "thread_id": null
-      },
-      "enabled_toolsets": null,
-      "workdir": null,
-      "profile": null
     },
     {
       "id": "37f7a1b79ced",
@@ -415,148 +226,6 @@
       "profile": null
     },
     {
-      "id": "dcd2cff76d99",
-      "name": "PD 11478 PR 2799 CI follow-up",
-      "prompt": "Autonomous PagerDuty follow-up for incident Q3B0MTCTG2K1OI / PD #11478 and PR https://github.com/Transformity/TransformityPOSFrontend/pull/2799. Use terminal tools only. From workdir /root/code/TransformityPOSFrontend/pd-11478-loyalty-points-program if present, run `gh pr checks 2799` to inspect CI. Then fetch PagerDuty notes for incident Q3B0MTCTG2K1OI using PAGERDUTY_API_TOKEN (or fallback env names) and PAGERDUTY_FROM_EMAIL/jay@transformity.tech; never print tokens. If a note already contains the PR URL and final check result evidence, do not post another note; final response should say duplicate final note exists. If all required code checks have completed successfully (unit-test and stably-test-pr/stably-test; ignore/label AWS Amplify preview if it remains an external preview pending), post one PagerDuty final note summarizing: PR URL, root cause (profile used selected entity loyalty program id 1 for points/transactions instead of viewed program 991), before-fix dynamic repro (focused CustomerLoyaltyProfile test failed because child tables received no loyaltyProgramId), fix (pass viewed customer/profile loyaltyProgramId to points/transactions tables with fallback for non-profile callers), verification (`npm test -- --run src/pages/loyalty/CustomerLoyaltyProfile.test.tsx` passed 4 tests; `npm run build` passed), and final CI statuses. If a code check fails, inspect failing run logs with `gh run view --log` and post one concise PagerDuty blocker note only if no equivalent blocker note exists. If checks are still pending and an interim pending note with PR URL already exists, do not post another note; final response should simply state still pending.",
-      "skills": [],
-      "skill": null,
-      "model": null,
-      "provider": null,
-      "base_url": null,
-      "script": null,
-      "no_agent": false,
-      "context_from": null,
-      "schedule": {
-        "kind": "once",
-        "run_at": "2026-06-24T16:57:26.611774-04:00",
-        "display": "once in 10m"
-      },
-      "schedule_display": "once in 10m",
-      "repeat": {
-        "times": 12,
-        "completed": 1
-      },
-      "enabled": false,
-      "state": "completed",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-06-24T16:47:26.611895-04:00",
-      "next_run_at": null,
-      "last_run_at": "2026-06-24T16:58:57.011307-04:00",
-      "last_status": "ok",
-      "last_error": null,
-      "last_delivery_error": null,
-      "deliver": "origin",
-      "origin": {
-        "platform": "webhook",
-        "chat_id": "webhook:pagerduty-incidents:1782332949574",
-        "chat_name": "webhook/pagerduty-incidents",
-        "thread_id": null
-      },
-      "enabled_toolsets": [
-        "terminal"
-      ],
-      "workdir": "/root/code/TransformityPOSFrontend/pd-11478-loyalty-points-program",
-      "fire_claim": null
-    },
-    {
-      "id": "8d74cbc04f67",
-      "name": "PD11693 PR checks follow-up",
-      "prompt": "Autonomous guarded follow-up for PagerDuty incident Q05I86RKU5MX2W / PD #11693. Do not ask questions and do not schedule more cron jobs. Check GitHub PR https://github.com/Transformity/TransformityPOSFrontend/pull/2833 status checks using gh from /root/code/TransformityPOSFrontend/pd-11693-department-list-shape. Re-fetch PagerDuty notes for incident Q05I86RKU5MX2W before posting. If all PR checks are successful/passing, post one final PagerDuty note (using PagerDuty token from env or /root/.hermes/.env and From jay@transformity.tech; never print secrets) unless an equivalent final note already exists. Final note should include PR URL, root cause (DepartmentContext called .reduce on wrapped/non-array /departments/list response), dynamic verification (local DepartmentContext regression test for wrapped departments shape), tests (vitest, tsc, git diff --check), and final CI status. If any check fails, inspect the failing check logs with gh, post one concise blocker note unless already present, and summarize. If checks are still pending/in_progress, stay silent unless this is the last repeat and then report pending status without posting duplicate PagerDuty noise. Do not acknowledge/resolve/merge/deploy.",
-      "skills": [],
-      "skill": null,
-      "model": null,
-      "provider": null,
-      "provider_snapshot": "openai-codex",
-      "model_snapshot": "gpt-5.5",
-      "base_url": null,
-      "script": null,
-      "no_agent": false,
-      "context_from": null,
-      "schedule": {
-        "kind": "once",
-        "run_at": "2026-07-03T16:14:30.255748-04:00",
-        "display": "once in 10m"
-      },
-      "schedule_display": "once in 10m",
-      "repeat": {
-        "times": 6,
-        "completed": 1
-      },
-      "enabled": false,
-      "state": "completed",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-07-03T16:04:30.255840-04:00",
-      "next_run_at": null,
-      "last_run_at": "2026-07-03T16:16:17.371671-04:00",
-      "last_status": "ok",
-      "last_error": null,
-      "last_delivery_error": null,
-      "deliver": "origin",
-      "origin": {
-        "platform": "webhook",
-        "chat_id": "webhook:pagerduty-incidents:1783107245021",
-        "chat_name": "webhook/pagerduty-incidents",
-        "thread_id": null,
-        "user_id": "webhook:pagerduty-incidents"
-      },
-      "enabled_toolsets": [
-        "terminal",
-        "file"
-      ],
-      "workdir": null,
-      "fire_claim": null
-    },
-    {
-      "id": "75f58781165a",
-      "name": "pd11708-pr2834-check-followup",
-      "prompt": "Autonomous follow-up for PagerDuty incident 11708 / PR https://github.com/Transformity/TransformityPOSFrontend/pull/2834. Check GitHub PR status checks from /root/code/TransformityPOSFrontend/pd-11708-indexeddb-auth-persistence using gh. Report only when there is a terminal outcome: all latest visible checks pass, or any check fails/errors/times out, or this is the final repeat with checks still pending. Do not modify code, do not merge, do not deploy, do not acknowledge/resolve PagerDuty, and do not attempt PagerDuty/Sentry API calls or PagerDuty note posting because the original incident run had an explicit no-retry approval block for credentialed PagerDuty/Sentry operations. Include PR URL, head SHA, latest check statuses, and local validation already observed in the original run: focused Vitest passed, TypeScript build passed, git diff --check passed; local full npm run build was killed with exit 137 during Vite asset rendering after TypeScript/transform/chunk rendering. If checks are still in progress and this is not terminal/final, produce an empty final response so nothing is delivered.",
-      "skills": [],
-      "skill": null,
-      "model": null,
-      "provider": null,
-      "provider_snapshot": "openai-codex",
-      "model_snapshot": "gpt-5.5",
-      "base_url": null,
-      "script": null,
-      "no_agent": false,
-      "context_from": null,
-      "schedule": {
-        "kind": "once",
-        "run_at": "2026-07-04T02:34:01.582086-04:00",
-        "display": "once in 10m"
-      },
-      "schedule_display": "once in 10m",
-      "repeat": {
-        "times": 12,
-        "completed": 1
-      },
-      "enabled": false,
-      "state": "completed",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-07-04T02:24:01.582201-04:00",
-      "next_run_at": null,
-      "last_run_at": "2026-07-04T02:35:23.515144-04:00",
-      "last_status": "ok",
-      "last_error": null,
-      "last_delivery_error": null,
-      "deliver": "origin",
-      "origin": {
-        "platform": "webhook",
-        "chat_id": "webhook:pagerduty-incidents:1783144673793",
-        "chat_name": "webhook/pagerduty-incidents",
-        "thread_id": null,
-        "user_id": "webhook:pagerduty-incidents"
-      },
-      "enabled_toolsets": [
-        "terminal"
-      ],
-      "workdir": null,
-      "fire_claim": null
-    },
-    {
       "id": "fb4d799082d6",
       "name": "Daily merged Git cleanup",
       "prompt": "Run the deterministic cleanup script. It scans all Git repositories under /root, fetches/prunes remotes, removes only clean eligible non-primary worktrees (using force only after explicit cleanliness checks), and deletes only branches with a configured upstream that is either gone or present and merged into the fetched default branch. Branches without configured upstreams are preserved. Successful runs emit no stdout and therefore deliver no message; only actionable warnings/errors notify the user.",
@@ -578,15 +247,15 @@
       "schedule_display": "33 3 * * *",
       "repeat": {
         "times": null,
-        "completed": 5
+        "completed": 21
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-07-21T13:00:27.280045-04:00",
-      "next_run_at": "2026-07-24T03:33:00-04:00",
-      "last_run_at": "2026-07-23T03:34:34.865098-04:00",
+      "next_run_at": "2026-08-09T03:33:00-04:00",
+      "last_run_at": "2026-08-08T03:36:13.668571-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -623,10 +292,19 @@
       },
       "schedule_display": "0 7 * * 0",
       "repeat": {
-        "times": null
+        "times": null,
+        "completed": 5
       },
       "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
       "created_at": "2026-07-24T16:24:57.886637-04:00",
+      "next_run_at": "2026-08-09T07:00:00-04:00",
+      "last_run_at": "2026-08-02T07:25:31.235375-04:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
       "deliver": "origin",
       "origin": {
         "platform": "slack",
@@ -636,8 +314,61 @@
         "user_id": "U068K4E4DFC"
       },
       "enabled_toolsets": null,
-      "workdir": null
+      "workdir": null,
+      "fire_claim": null
+    },
+    {
+      "id": "e4ec265558c9",
+      "name": "Remove legacy Temporal RDS export path",
+      "prompt": "Create a PR in Transformity/zeus to remove the legacy Temporal RDS export compatibility path, but only if it is now replay-safe to do so.\n\nContext:\n- PR #770 (merge commit d470c5d122a9d52b8344e94a667f9299a33fd0fa) changed RDS export polling from the legacy long-running heartbeat activity to short StartRDSExportBackup / CheckRDSExportBackup activities separated by durable 10-minute workflow timers.\n- The shared task queue remains app.TaskQueue / campaign-queue.\n- Gamma's Temporal namespace was margin-dev.saeka with 30-day retention. Its latest known pre-refactor execution closed at 2026-07-29T02:55:31Z, making 2026-08-28T02:55:31Z the earliest gamma-only cleanup point.\n- Production deployment was still waiting for approval on 2026-07-29, so do not assume production is safe based only on gamma's date.\n- Repo manager: /root/code/zeus, canonical main worktree: /root/code/zeus/main.\n\nSafety gate before editing:\n1. Fetch latest origin/main and inspect the current code; do not assume filenames or code are unchanged.\n2. Verify current gamma AND production deployments and query both live Temporal namespaces for RDSExportBackupWorkflow executions, namespace retention, open histories, and any pre-refactor histories still inside retention/reset risk. Retrieve Temporal endpoints/API keys through the existing environment-specific Pulumi configuration without printing secrets. Verify no legacy activity execution can still need replay or retry.\n3. If either environment is not safe, do not modify code or open a PR. Report the exact blocker and earliest defensible cleanup date.\n\nIf safe:\n1. Create a clean worktree under /root/code/zeus from current origin/main on branch refactor/remove-legacy-rds-export-path. Do not modify unrelated dirty files in /root/code/zeus/main.\n2. Remove only obsolete compatibility machinery, including as applicable: the workflow.GetVersion/default-version branch, legacy RDSExportBackup long-running activity, its registration in main.go, legacy polling/heartbeat/timeout constants and wait injection, and tests that exist solely for the legacy branch. Preserve the current Start -> Check -> workflow durable timer behavior, schedule contract, app.TaskQueue, IAM, metrics, and deployment configuration.\n3. Follow repository TDD/conventions and keep the diff narrow. Run focused and full Temporal tests, race tests, go vet, formatting, lint/checks used by the repo, Linux/arm64 build if appropriate, and git diff --check.\n4. Rebase on latest origin/main before publishing. Commit logically, push, and open a PR with a clear replay-retention rationale and verification evidence. Do not merge it.\n5. Verify the remote PR head, mergeability/conflicts, and CI. Address failures caused by the change; report unrelated blockers honestly.\n6. Return a concise final summary with the PR URL, exact removed legacy pieces, live replay-safety evidence for both environments, tests/checks run, and CI state. Tag <@U068K4E4DFC> in the final review summary.",
+      "skills": [
+        "temporal-application-engineering",
+        "github-pr-workflow",
+        "test-driven-development"
+      ],
+      "skill": "temporal-application-engineering",
+      "model": null,
+      "provider": null,
+      "provider_snapshot": "openai-codex",
+      "model_snapshot": "gpt-5.6-sol",
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-08-29T15:21:25+00:00",
+        "display": "once at 2026-08-29 15:21"
+      },
+      "schedule_display": "once at 2026-08-29 15:21",
+      "repeat": {
+        "times": 1,
+        "completed": 0
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-29T11:21:51.881310-04:00",
+      "next_run_at": "2026-08-29T15:21:25+00:00",
+      "last_run_at": null,
+      "last_status": null,
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "slack",
+        "chat_id": "D0B19N5SA4V",
+        "chat_name": "D0B19N5SA4V",
+        "thread_id": "1785182765.749499",
+        "user_id": "U068K4E4DFC"
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "file"
+      ],
+      "workdir": "/root/code/zeus/main"
     }
   ],
-  "updated_at": "2026-07-23T10:39:45.339593-04:00"
+  "updated_at": "2026-08-08T06:00:45.491909-04:00"
 }

@@ -111,7 +111,6 @@ return {
   },
   { import = "astrocommunity.test.neotest" },
   { import = "astrocommunity.pack.json" },
-  { import = "astrocommunity.pack.lua" },
   { import = "astrocommunity.pack.markdown" },
   { import = "astrocommunity.pack.python.ruff" },
   { import = "astrocommunity.pack.typescript" },
@@ -128,7 +127,6 @@ return {
   { import = "astrocommunity.motion.nvim-spider" },
   { import = "astrocommunity.recipes.neovide" },
   { import = "astrocommunity.media.vim-wakatime" },
-  { import = "astrocommunity.editing-support.nvim-regexplainer" },
   {
     "HiPhish/rainbow-delimiters.nvim",
     event = "VeryLazy",

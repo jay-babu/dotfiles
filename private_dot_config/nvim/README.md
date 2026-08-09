@@ -1,34 +1,26 @@
-# AstroNvim Template
+# Neovim
 
-**NOTE:** This is for AstroNvim v6+
+Personal AstroNvim v6 configuration, managed by chezmoi.
 
-A template for getting started with [AstroNvim](https://github.com/AstroNvim/AstroNvim)
+The source of truth is `private_dot_config/nvim` in the chezmoi source
+directory. Plugin revisions are pinned in `lazy-lock.json`.
 
-## 🛠️ Installation
+## Managed language tools
 
-#### Make a backup of your current nvim and shared folder
+Global tools are declared in `private_dot_config/mise/config.toml`:
 
-```shell
-mv ~/.config/nvim ~/.config/nvim.bak
-mv ~/.local/share/nvim ~/.local/share/nvim.bak
-mv ~/.local/state/nvim ~/.local/state/nvim.bak
-mv ~/.cache/nvim ~/.cache/nvim.bak
+- `http:kotlin-lsp` powers `kotlin.nvim`.
+- `npm:@postgrestools/postgrestools` powers `postgres_lsp`.
+- `pipx:mypy` completes Python linting alongside Ruff.
+
+After changing the source, apply only this configuration with:
+
+```sh
+chezmoi apply ~/.config/nvim
 ```
 
-#### Create a new user repository from this template
+Install the declared tools with:
 
-Press the "Use this template" button above to create a new repository to store your user configuration.
-
-You can also just clone this repository directly if you do not want to track your user configuration in GitHub.
-
-#### Clone the repository
-
-```shell
-git clone https://github.com/<your_user>/<your_repository> ~/.config/nvim
-```
-
-#### Start Neovim
-
-```shell
-nvim
+```sh
+mise install
 ```

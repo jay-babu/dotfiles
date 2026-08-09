@@ -129,9 +129,11 @@ Quick scan before dispatching the reviewer:
 
 Call `delegate_task` directly — it is NOT available inside execute_code or scripts.
 
-The reviewer gets ONLY the diff and static scan results. No shared context with
-the implementer. Fail-closed: unparseable response = fail.
+The reviewer gets ONLY the diff and static scan results. No shared context with the implementer. Fail-closed: unparseable response = fail.
 
+The reviewer is a **read-only diff reviewer**. Do not rerun the project test suite when the parent verification supplies test results; concurrent Testcontainers/Gradle runs can corrupt or cancel each other. Never run host-global daemon shutdown commands such as `./gradlew --stop` from a reviewer or fix agent: Hermes sessions share the host, and that command terminates unrelated builds in other worktrees. If an isolated reviewer test is explicitly required, use `--no-daemon`, avoid global cleanup, and report its result separately.
+
+```python
 ```python
 delegate_task(
     goal="""You are an independent code reviewer. You have no context about how
