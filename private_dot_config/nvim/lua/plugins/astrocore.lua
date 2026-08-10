@@ -76,6 +76,21 @@ return {
           -- tables with just a `desc` key will be registered with which-key if it's installed
           -- this is useful for naming menus
           ["<Leader>b"] = { desc = "Buffers" },
+          ["<Leader>e"] = { "<Cmd>Oil<CR>", desc = "Open Explorer" },
+          ["<Leader>D"] = { desc = "Database" },
+          ["<Leader>Du"] = { "<cmd>DBUIToggle<cr>", desc = "Toggle database UI" },
+          ["<Leader>Da"] = { "<cmd>DBUIAddConnection<cr>", desc = "Add database connection" },
+          ["<Leader>Df"] = { "<cmd>DBUIFindBuffer<cr>", desc = "Find database buffer" },
+          ["<Leader>fW"] = {
+            function()
+              require("fzf-lua").live_grep_native {
+                rg_opts = [[--column --line-number --no-heading --color=always --smart-case --hidden --glob='!.git/**' --glob='!.jj/**' --max-columns=4096 -e]],
+              }
+            end,
+            desc = "Find hidden words",
+          },
+          ["<Leader>T"] = { desc = "Tests" },
+          ["<Leader>W"] = { desc = "Worktrees" },
 
           -- resize with arrows
           ["<Up>"] = {

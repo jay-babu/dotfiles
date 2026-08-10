@@ -3,6 +3,14 @@
 -- NOTE: We highly recommend setting up the Lua Language Server (`:LspInstall lua_ls`)
 --       as this provides autocomplete and documentation while editing
 
+local function should_autoformat(bufnr)
+  local path = vim.api.nvim_buf_get_name(bufnr)
+  for _, directory in ipairs { "/generated/", "/gen/", "/migration/", "/migrations/" } do
+    if path:find(directory, 1, true) then return false end
+  end
+  return true
+end
+
 ---@type LazySpec
 return {
   "AstroNvim/astrolsp",
@@ -25,6 +33,7 @@ return {
         ignore_filetypes = { -- disable format on save for specified filetypes
           -- "python",
         },
+        filter = should_autoformat,
       },
       disabled = { -- disable formatting capabilities for the listed language servers
         -- disable lua_ls formatting capability if you want to use StyLua to format your lua code

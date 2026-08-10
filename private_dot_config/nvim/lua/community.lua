@@ -2,6 +2,14 @@
 -- We import this file in `lazy_setup.lua` before the `plugins/` folder.
 -- This guarantees that the specs are processed before any user plugins.
 
+local function should_autoformat(bufnr)
+  local path = vim.api.nvim_buf_get_name(bufnr)
+  for _, directory in ipairs { "/generated/", "/gen/", "/migration/", "/migrations/" } do
+    if path:find(directory, 1, true) then return false end
+  end
+  return true
+end
+
 ---@type LazySpec
 return {
   { "AstroNvim/astrocommunity" },
@@ -47,30 +55,19 @@ return {
     end,
   },
   {
-    "stevearc/conform.nvim",
-    optional = true,
-    opts = {
-      formatters_by_ft = {
-        sql = { "pg_format" },
-      },
-      formatters = {
-        pg_format = {
-          command = "pg_format",
-          args = { "--function-case=2" },
-          stdin = true,
-        },
-      },
-    },
-  },
-  {
     "mfussenegger/nvim-lint",
     optional = true,
-    opts = {
-      linters_by_ft = {
-        python = { "ruff", "mypy" },
-        go = { "golangcilint" },
-      },
-    },
+    opts = function(_, opts)
+      opts.linters_by_ft = opts.linters_by_ft or {}
+      opts.linters_by_ft.python = { "ruff", "mypy" }
+      opts.linters_by_ft.go = { "golangcilint" }
+      opts.linters = opts.linters or {}
+      opts.linters.mypy = vim.tbl_deep_extend("force", opts.linters.mypy or {}, {
+        condition = function(ctx)
+          return vim.fs.root(ctx.dirname, { "pyproject.toml", "mypy.ini", "setup.cfg" }) ~= nil
+        end,
+      })
+    end,
   },
 
   { import = "astrocommunity.quickfix.nvim-bqf" },
@@ -134,6 +131,27 @@ return {
   },
   { import = "astrocommunity.lsp.nvim-lint" },
   { import = "astrocommunity.editing-support.conform-nvim" },
+  {
+    "stevearc/conform.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.formatters_by_ft = opts.formatters_by_ft or {}
+      opts.formatters_by_ft.sql = { "pg_format" }
+      opts.formatters = opts.formatters or {}
+      opts.formatters.pg_format = {
+        command = "pg_format",
+        args = { "--function-case=2" },
+        stdin = true,
+      }
+
+      local upstream_format_on_save = opts.format_on_save
+      opts.format_on_save = function(bufnr)
+        if not should_autoformat(bufnr) then return end
+        if type(upstream_format_on_save) == "function" then return upstream_format_on_save(bufnr) end
+        return upstream_format_on_save
+      end
+    end,
+  },
   { import = "astrocommunity.completion.blink-cmp" },
   { import = "astrocommunity.pack.full-dadbod" },
   { import = "astrocommunity.completion.copilot-lua-cmp" },

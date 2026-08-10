@@ -23,7 +23,6 @@ return {
       end
     end,
     dependencies = {
-      { "nvim-neo-tree/neo-tree.nvim", opts = { filesystem = { hijack_netrw_behavior = "disabled" } } },
       {
         "AstroNvim/astrocore",
         opts = {
