@@ -60,6 +60,12 @@ class FakeAWS:
         self.nested_metadata_key = False
         self.malformed_data_key = False
         self.foreign_metadata_name = False
+        self.missing_success = False
+        self.partition_without_success = False
+        self.unlisted_data_table = False
+        self.omit_reference_partition = False
+        self.public_metadata_target = "postgres.public.example"
+        self.all_tables_empty = False
 
     def task(
         self,
@@ -140,7 +146,7 @@ class FakeAWS:
         prefix = f"{task_id}/"
         metadata_task = TASK_FOREIGN if self.foreign_metadata_name else task_id
         table_statuses = [
-            {"target": "postgres.public.example", "status": self.table_status},
+            {"target": self.public_metadata_target, "status": self.table_status},
             {"target": "postgres.reference.example", "status": "COMPLETE"},
         ]
         if self.extra_table_target:
@@ -158,11 +164,23 @@ class FakeAWS:
             prefix + f"export_tables_info_{metadata_task}_from_1_to_2.json": json.dumps(
                 {"perTableStatus": table_statuses}
             ).encode(),
-            prefix + "postgres/public.example/1/_SUCCESS": b"",
         }
-        if not self.omit_parquet:
+        if not self.missing_success:
+            objects[prefix + "postgres/public.example/1/_SUCCESS"] = b""
+        if not self.all_tables_empty and not self.omit_parquet:
             objects[prefix + "postgres/public.example/1/part-00000.gz.parquet"] = (
                 b"PAR1test"
+            )
+        if not self.omit_reference_partition:
+            objects[prefix + "postgres/reference.example/1/_SUCCESS"] = b""
+        if self.partition_without_success:
+            objects[prefix + "postgres/public.example/2/part-00000.gz.parquet"] = (
+                b"PAR1second"
+            )
+        if self.unlisted_data_table:
+            objects[prefix + "postgres/public.unlisted/1/_SUCCESS"] = b""
+            objects[prefix + "postgres/public.unlisted/1/part-00000.gz.parquet"] = (
+                b"PAR1unlisted"
             )
         if self.extra_scope_object:
             objects[prefix + "postgres/private.secret/1/part-00000.gz.parquet"] = (
@@ -232,6 +250,21 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
         }
         if trusted:
             state["sha256"] = self.checksum_manifest(aws, task_id)
+        exporter.save_state(self.state_file, state)
+
+    def write_active_state(self, task, phase="downloading", **changes):
+        state = {
+            "version": 2,
+            "phase": phase,
+            "task_id": task["ExportTaskIdentifier"],
+            "task_timestamp": task["TaskEndTime"],
+            "source_arn": self.settings.source_arn,
+            "s3_bucket": self.settings.s3_bucket,
+            "export_only": list(self.settings.export_only),
+            "iam_role_arn": self.settings.iam_role_arn,
+            "kms_key_arn": self.settings.kms_key_arn,
+        }
+        state.update(changes)
         exporter.save_state(self.state_file, state)
 
     def test_managed_cron_job_has_follower_contract_without_runtime_state(self):
@@ -304,6 +337,14 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
             "AWS_ENDPOINT_URL_STS": "https://example.invalid",
             "AWS_CONFIG_FILE": "/tmp/untrusted-config",
             "AWS_SHARED_CREDENTIALS_FILE": "/tmp/untrusted-credentials",
+            "AWS_CREDENTIAL_FILE": "/tmp/legacy-credentials",
+            "AWS_CREDENTIALS_FILE": "/tmp/other-legacy-credentials",
+            "AWS_SECURITY_TOKEN": "legacy-token",
+            "AWS_ROLE_SESSION_NAME": "ambient-session",
+            "AWS_SDK_LOAD_CONFIG": "0",
+            "AWS_CONTAINER_AUTHORIZATION_TOKEN": "container-token",
+            "AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE": "/tmp/container-token",
+            "BOTO_CONFIG": "/tmp/untrusted-boto-config",
         }
         with mock.patch.dict(os.environ, ambient, clear=True):
             environment = exporter.clean_aws_environment(self.settings)
@@ -316,11 +357,19 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
             "AWS_ENDPOINT_URL_S3",
             "AWS_ENDPOINT_URL_RDS",
             "AWS_ENDPOINT_URL_STS",
+            "AWS_CREDENTIAL_FILE",
+            "AWS_CREDENTIALS_FILE",
+            "AWS_SECURITY_TOKEN",
+            "AWS_ROLE_SESSION_NAME",
+            "AWS_SDK_LOAD_CONFIG",
+            "AWS_CONTAINER_AUTHORIZATION_TOKEN",
+            "AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE",
         ):
             self.assertNotIn(key, environment)
         self.assertEqual(environment["AWS_PROFILE"], "production")
         self.assertEqual(environment["AWS_CONFIG_FILE"], "/root/.aws/config")
         self.assertEqual(environment["AWS_SHARED_CREDENTIALS_FILE"], "/dev/null")
+        self.assertEqual(environment["BOTO_CONFIG"], "/dev/null")
 
     def test_aws_client_exposes_no_export_or_aws_mutation_method(self):
         client = exporter.AWSClient(self.settings, binary="/usr/bin/aws")
@@ -471,6 +520,60 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
         self.assertEqual(result.task_id, TASK_LATEST)
         self.assertEqual(aws.synced, [TASK_LATEST])
 
+    def test_prior_installed_backup_is_validated_and_removed_before_new_task(self):
+        import shutil
+
+        aws = FakeAWS(self.settings)
+        aws.tasks = [
+            aws.task(TASK_OLDER, completed_at=OLDER_COMPLETED),
+            aws.task(TASK_LATEST, completed_at=LATEST_COMPLETED),
+        ]
+        self.write_installed_state(aws, TASK_OLDER)
+        old_backup = self.settings.backup_path(TASK_OLDER)
+        shutil.copytree(self.target, old_backup)
+        real_rmtree = shutil.rmtree
+
+        def fail_old_backup(path, *args, **kwargs):
+            if Path(path) == old_backup:
+                raise OSError("simulated old backup cleanup failure")
+            return real_rmtree(path, *args, **kwargs)
+
+        with (
+            mock.patch.object(exporter.shutil, "rmtree", side_effect=fail_old_backup),
+            self.assertRaisesRegex(OSError, "old backup cleanup failure"),
+        ):
+            self.run_refresh(aws)
+
+        self.assertEqual(aws.synced, [])
+        self.assertTrue(old_backup.exists())
+        self.assertTrue((self.target / f"export_info_{TASK_OLDER}.json").is_file())
+
+        result = self.run_refresh(aws)
+        self.assertEqual(result.task_id, TASK_LATEST)
+        self.assertFalse(old_backup.exists())
+        self.assertEqual(aws.synced, [TASK_LATEST])
+
+    def test_invalid_installed_target_preserves_prior_backup_and_blocks_advance(self):
+        import shutil
+
+        aws = FakeAWS(self.settings)
+        aws.tasks = [
+            aws.task(TASK_OLDER, completed_at=OLDER_COMPLETED),
+            aws.task(TASK_LATEST, completed_at=LATEST_COMPLETED),
+        ]
+        self.write_installed_state(aws, TASK_OLDER)
+        old_backup = self.settings.backup_path(TASK_OLDER)
+        shutil.copytree(self.target, old_backup)
+        next(self.target.rglob("*.parquet")).write_bytes(b"corrupt!")
+
+        with self.assertRaisesRegex(
+            RuntimeError, "installed target before backup cleanup"
+        ):
+            self.run_refresh(aws)
+
+        self.assertTrue(old_backup.exists())
+        self.assertEqual(aws.synced, [])
+
     def test_force_redownloads_latest_but_never_starts_an_export(self):
         aws = FakeAWS(self.settings)
         self.write_installed_state(aws)
@@ -555,7 +658,90 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
         self.assertEqual(aws.list_calls, 0)
         self.assertEqual(aws.described, [TASK_OLDER])
 
-    def test_stale_in_progress_task_is_not_resumed(self):
+    def test_active_checkpoint_cannot_replace_a_newer_declared_target(self):
+        aws = FakeAWS(self.settings)
+        aws.tasks = [
+            aws.task(TASK_OLDER, completed_at=OLDER_COMPLETED),
+            aws.task(TASK_LATEST, completed_at=LATEST_COMPLETED),
+        ]
+        self.write_installed_state(aws, TASK_LATEST)
+        self.write_active_state(aws.tasks[0])
+
+        result = self.run_refresh(aws)
+
+        self.assertEqual(result.task_id, TASK_LATEST)
+        self.assertEqual(aws.synced, [TASK_LATEST])
+        self.assertTrue((self.target / f"export_info_{TASK_LATEST}.json").is_file())
+        self.assertFalse((self.target / f"export_info_{TASK_OLDER}.json").exists())
+
+    def test_malformed_active_checkpoint_still_protects_newer_declared_target(self):
+        aws = FakeAWS(self.settings)
+        older = aws.task(TASK_OLDER, completed_at=OLDER_COMPLETED)
+        latest = aws.task(TASK_LATEST, completed_at=LATEST_COMPLETED)
+        aws.tasks = [older, latest]
+        self.write_installed_state(aws, TASK_LATEST)
+        self.write_active_state(older)
+        state = json.loads(self.state_file.read_text())
+        del state["task_timestamp"]
+        exporter.save_state(self.state_file, state)
+        aws.tasks = [older]
+
+        def describe_historical(task_id):
+            return latest if task_id == TASK_LATEST else older
+
+        with (
+            mock.patch.object(aws, "describe_export", side_effect=describe_historical),
+            self.assertRaisesRegex(RuntimeError, "refusing a downgrade"),
+        ):
+            self.run_refresh(aws)
+
+        self.assertEqual(aws.synced, [])
+        self.assertTrue((self.target / f"export_info_{TASK_LATEST}.json").is_file())
+
+    def test_stale_prepublication_checkpoint_is_abandoned_for_new_candidate(self):
+        stale_completed = self.now - self.settings.max_export_age - timedelta(seconds=1)
+        aws = FakeAWS(self.settings)
+        stale = aws.task(TASK_PREVIOUS_WEEK, completed_at=stale_completed)
+        latest = aws.task(TASK_LATEST, completed_at=LATEST_COMPLETED)
+        aws.tasks = [stale, latest]
+        staging = self.settings.staging_path(TASK_PREVIOUS_WEEK)
+        staging.mkdir()
+        (staging / "partial").write_text("discard")
+        self.write_active_state(stale)
+
+        result = self.run_refresh(aws)
+
+        self.assertEqual(result.task_id, TASK_LATEST)
+        self.assertEqual(aws.synced, [TASK_LATEST])
+        self.assertFalse(staging.exists())
+
+    def test_stale_postswap_install_is_restored_before_replanning(self):
+        stale_completed = self.now - self.settings.max_export_age - timedelta(seconds=1)
+        aws = FakeAWS(self.settings)
+        stale = aws.task(TASK_PREVIOUS_WEEK, completed_at=stale_completed)
+        latest = aws.task(TASK_LATEST, completed_at=LATEST_COMPLETED)
+        aws.tasks = [stale, latest]
+        self.target.mkdir()
+        (self.target / "current.txt").write_text("keep")
+        staging = self.settings.staging_path(TASK_PREVIOUS_WEEK)
+        aws.sync_export(TASK_PREVIOUS_WEEK, staging)
+        manifest = self.checksum_manifest(aws, TASK_PREVIOUS_WEEK)
+        exporter.atomic_exchange(self.target, staging)
+        self.write_active_state(stale, phase="installing", sha256=manifest)
+        aws.synced.clear()
+        aws.sync_error = RuntimeError("new candidate download failed")
+
+        with self.assertRaisesRegex(RuntimeError, "new candidate download failed"):
+            self.run_refresh(aws)
+
+        self.assertEqual((self.target / "current.txt").read_text(), "keep")
+        self.assertFalse(staging.exists())
+        self.assertEqual(aws.synced, [TASK_LATEST])
+        self.assertEqual(
+            json.loads(self.state_file.read_text())["task_id"], TASK_LATEST
+        )
+
+    def test_stale_in_progress_task_without_newer_candidate_fails_freshness(self):
         stale_completed = self.now - self.settings.max_export_age - timedelta(seconds=1)
         aws = FakeAWS(
             self.settings,
@@ -646,6 +832,85 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
             [(self.target, self.settings.staging_path(TASK_LATEST))],
         )
 
+    def test_state_write_failure_before_swap_preserves_current_target(self):
+        self.target.mkdir()
+        (self.target / "current.txt").write_text("keep")
+        aws = FakeAWS(self.settings)
+        real_save_state = exporter.save_state
+
+        def fail_installing_state(path, state):
+            if state.get("phase") == "installing":
+                raise OSError("simulated installing checkpoint failure")
+            return real_save_state(path, state)
+
+        with (
+            mock.patch.object(
+                exporter, "save_state", side_effect=fail_installing_state
+            ),
+            self.assertRaisesRegex(OSError, "installing checkpoint failure"),
+        ):
+            self.run_refresh(aws)
+
+        self.assertEqual((self.target / "current.txt").read_text(), "keep")
+        self.assertEqual(json.loads(self.state_file.read_text())["phase"], "downloaded")
+
+    def test_crash_after_atomic_exchange_is_recovered_on_retry(self):
+        self.target.mkdir()
+        (self.target / "current.txt").write_text("old")
+        aws = FakeAWS(self.settings)
+        real_exchange = exporter.atomic_exchange
+
+        def exchange_then_crash(left, right):
+            real_exchange(left, right)
+            raise OSError("simulated crash after exchange")
+
+        with (
+            mock.patch.object(
+                exporter, "atomic_exchange", side_effect=exchange_then_crash
+            ),
+            self.assertRaisesRegex(OSError, "crash after exchange"),
+        ):
+            self.run_refresh(aws)
+
+        self.assertTrue((self.target / f"export_info_{TASK_LATEST}.json").is_file())
+        self.assertEqual(
+            (self.settings.staging_path(TASK_LATEST) / "current.txt").read_text(),
+            "old",
+        )
+
+        result = self.run_refresh(aws)
+        self.assertTrue(result.changed)
+        self.assertEqual(json.loads(self.state_file.read_text())["phase"], "installed")
+        self.assertFalse(self.settings.staging_path(TASK_LATEST).exists())
+
+    def test_postpublication_cleanup_failure_keeps_new_target_and_retries_cleanup(self):
+        self.target.mkdir()
+        (self.target / "current.txt").write_text("old")
+        aws = FakeAWS(self.settings)
+        backup = self.settings.backup_path(TASK_LATEST)
+        real_rmtree = exporter.shutil.rmtree
+
+        def fail_backup(path, *args, **kwargs):
+            if Path(path) == backup:
+                raise OSError("simulated publication cleanup failure")
+            return real_rmtree(path, *args, **kwargs)
+
+        with (
+            mock.patch.object(exporter.shutil, "rmtree", side_effect=fail_backup),
+            self.assertRaisesRegex(OSError, "publication cleanup failure"),
+        ):
+            self.run_refresh(aws)
+
+        self.assertEqual(json.loads(self.state_file.read_text())["phase"], "installed")
+        self.assertTrue((self.target / f"export_info_{TASK_LATEST}.json").is_file())
+        self.assertTrue(backup.exists())
+
+        aws.synced.clear()
+        result = self.run_refresh(aws)
+        self.assertFalse(result.changed)
+        self.assertFalse(backup.exists())
+        self.assertEqual(aws.synced, [])
+
     def test_sync_failure_preserves_existing_directory(self):
         self.target.mkdir()
         (self.target / "current.txt").write_text("keep")
@@ -659,7 +924,6 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
 
     def test_inventory_and_metadata_integrity_fail_before_publication(self):
         cases = (
-            ("omit_parquet", True, "no Parquet files"),
             ("omit_checksum", True, "does not expose an S3 checksum"),
             ("warning_message", "warning", "completed with a warning"),
             ("table_status", "FAILED", "table metadata is incomplete"),
@@ -667,6 +931,19 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
             ("extra_table_target", True, "table target outside export scopes"),
             ("nested_metadata_key", True, "unexpected table metadata key"),
             ("malformed_data_key", True, "unexpected export data key"),
+            ("missing_success", True, "missing _SUCCESS"),
+            ("partition_without_success", True, "missing _SUCCESS"),
+            ("unlisted_data_table", True, "has no exact table metadata"),
+            (
+                "omit_reference_partition",
+                True,
+                "has no export data or _SUCCESS",
+            ),
+            (
+                "public_metadata_target",
+                "postgres.public.different",
+                "has no exact table metadata",
+            ),
         )
         for attribute, value, message in cases:
             with (
@@ -689,6 +966,26 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
                     exporter.refresh_once(settings, aws, clock=lambda: self.now)
                 self.assertEqual((settings.target / "current.txt").read_text(), "keep")
 
+    def test_completed_metadata_supports_empty_tables_with_success_markers(self):
+        aws = FakeAWS(self.settings)
+        aws.all_tables_empty = True
+
+        result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertEqual(result.task_id, TASK_LATEST)
+        self.assertFalse(any(self.target.rglob("*.parquet")))
+
+    def test_success_only_empty_partition_does_not_require_parquet(self):
+        aws = FakeAWS(self.settings)
+        aws.omit_parquet = True
+
+        result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertTrue(next(self.target.rglob("_SUCCESS")).is_file())
+        self.assertFalse(any(self.target.rglob("*.parquet")))
+
     def test_same_size_corrupt_resumed_file_is_not_reused(self):
         aws = FakeAWS(self.settings)
         staging = self.settings.staging_path(TASK_LATEST)
@@ -705,6 +1002,11 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
                 "task_id": TASK_LATEST,
                 "task_timestamp": LATEST_COMPLETED.isoformat(),
                 "sha256": manifest,
+                "source_arn": self.settings.source_arn,
+                "s3_bucket": self.settings.s3_bucket,
+                "export_only": list(self.settings.export_only),
+                "iam_role_arn": self.settings.iam_role_arn,
+                "kms_key_arn": self.settings.kms_key_arn,
             },
         )
 
@@ -720,6 +1022,8 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
 
         with mock.patch.object(aws, "sync_export", side_effect=skip_same_size):
             self.run_refresh(aws)
+        self.assertEqual(aws.list_calls, 0)
+        self.assertEqual(aws.described, [TASK_LATEST])
         self.assertEqual(next(self.target.rglob("*.parquet")).read_bytes(), b"PAR1test")
 
     def test_disk_check_requires_complete_incoming_export_plus_headroom(self):
@@ -774,9 +1078,40 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
 
         with self.assertRaisesRegex(RuntimeError, "refusing a downgrade"):
             self.run_refresh(aws)
+        with self.assertRaisesRegex(RuntimeError, "refusing a downgrade"):
+            exporter.dry_run(self.settings, aws, clock=lambda: self.now)
 
         self.assertEqual(aws.synced, [])
         self.assertTrue((self.target / f"export_info_{TASK_LATEST}.json").is_file())
+
+    def test_dry_run_does_not_resume_checkpoint_older_than_declared_target(self):
+        aws = FakeAWS(self.settings)
+        aws.tasks = [
+            aws.task(TASK_OLDER, completed_at=OLDER_COMPLETED),
+            aws.task(TASK_LATEST, completed_at=LATEST_COMPLETED),
+        ]
+        self.write_installed_state(aws, TASK_LATEST)
+        self.write_active_state(aws.tasks[0])
+        before_target = {
+            path.relative_to(self.target): path.read_bytes()
+            for path in self.target.rglob("*")
+            if path.is_file()
+        }
+        before_state = self.state_file.read_bytes()
+
+        report = exporter.dry_run(self.settings, aws, clock=lambda: self.now)
+
+        self.assertIn(TASK_LATEST, report)
+        self.assertNotIn(f"resume selected follower task {TASK_OLDER}", report)
+        self.assertEqual(self.state_file.read_bytes(), before_state)
+        self.assertEqual(
+            {
+                path.relative_to(self.target): path.read_bytes()
+                for path in self.target.rglob("*")
+                if path.is_file()
+            },
+            before_target,
+        )
 
     def test_main_dry_run_does_not_create_lock_state_or_target(self):
         aws = FakeAWS(self.settings)

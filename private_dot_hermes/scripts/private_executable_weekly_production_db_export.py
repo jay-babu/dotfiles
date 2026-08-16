@@ -154,6 +154,12 @@ class ExportCandidate(NamedTuple):
     task: dict
 
 
+class CandidatePlan(NamedTuple):
+    candidate: ExportCandidate
+    resume: bool
+    abandoned_task_id: str = ""
+
+
 class AWSCommandError(RuntimeError):
     pass
 
@@ -332,7 +338,15 @@ def clean_aws_environment(settings: Settings) -> dict[str, str]:
         "AWS_WEB_IDENTITY_TOKEN_FILE",
         "AWS_CONTAINER_CREDENTIALS_FULL_URI",
         "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI",
+        "AWS_CONTAINER_AUTHORIZATION_TOKEN",
+        "AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE",
         "AWS_DEFAULT_PROFILE",
+        "AWS_CREDENTIAL_FILE",
+        "AWS_CREDENTIALS_FILE",
+        "AWS_SECURITY_TOKEN",
+        "AWS_ROLE_SESSION_NAME",
+        "AWS_SDK_LOAD_CONFIG",
+        "BOTO_CONFIG",
     ):
         environment.pop(key, None)
     for key in tuple(environment):
@@ -344,6 +358,7 @@ def clean_aws_environment(settings: Settings) -> dict[str, str]:
             "AWS_PROFILE": settings.profile,
             "AWS_CONFIG_FILE": "/root/.aws/config",
             "AWS_SHARED_CREDENTIALS_FILE": "/dev/null",
+            "BOTO_CONFIG": "/dev/null",
             "AWS_REGION": settings.region,
             "AWS_DEFAULT_REGION": settings.region,
             "AWS_PAGER": "",
@@ -615,8 +630,6 @@ def validate_inventory_names(
         raise RuntimeError(f"RDS export {task_id} is missing {expected_info}")
     if not any(table_info_pattern.fullmatch(name) is not None for name in names):
         raise RuntimeError(f"RDS export {task_id} has no table metadata")
-    if not any(name.endswith(".parquet") for name in names):
-        raise RuntimeError(f"RDS export {task_id} has no Parquet files")
 
 
 def build_inventory(
@@ -726,7 +739,10 @@ def discard_untrusted_reusable_files(
 
 
 def validate_table_metadata(
-    directory: Path, task_id: str, export_only: tuple[str, ...]
+    directory: Path,
+    task_id: str,
+    export_only: tuple[str, ...],
+    object_names: set[str] | dict[str, int],
 ) -> None:
     paths = sorted(directory.glob(f"export_tables_info_{task_id}_*.json"))
     seen_targets: set[str] = set()
@@ -751,7 +767,13 @@ def validate_table_metadata(
                     f"invalid table status in downloaded metadata: {path}"
                 )
             target = entry["target"]
-            if not any(target.startswith(f"{scope}.") for scope in export_only):
+            target_parts = target.split(".")
+            scope = ".".join(target_parts[:2])
+            if (
+                len(target_parts) != 3
+                or scope not in export_only
+                or re.fullmatch(r"[A-Za-z_][A-Za-z0-9_$]*", target_parts[2]) is None
+            ):
                 raise RuntimeError(
                     f"downloaded table target outside export scopes: {target}"
                 )
@@ -774,6 +796,36 @@ def validate_table_metadata(
     if missing_scopes:
         raise RuntimeError(
             f"downloaded table metadata is missing export scopes: {missing_scopes}"
+        )
+
+    data_partitions: dict[tuple[str, str], set[str]] = {}
+    for name in object_names:
+        parts = PurePosixPath(name).parts
+        if len(parts) != 4:
+            continue
+        database, qualified_table, partition, filename = parts
+        target = f"{database}.{qualified_table}"
+        if target not in seen_targets:
+            raise RuntimeError(
+                f"export data table {target} has no exact table metadata"
+            )
+        data_partitions.setdefault((target, partition), set()).add(filename)
+    data_targets = {target for target, _partition in data_partitions}
+    missing_data = sorted(seen_targets - data_targets)
+    if missing_data:
+        raise RuntimeError(
+            "table metadata target has no export data or _SUCCESS: "
+            + ", ".join(missing_data[:10])
+        )
+    missing_success = sorted(
+        f"{target}/{partition}"
+        for (target, partition), filenames in data_partitions.items()
+        if "_SUCCESS" not in filenames
+    )
+    if missing_success:
+        raise RuntimeError(
+            "export data partitions are missing _SUCCESS: "
+            + ", ".join(missing_success[:10])
         )
 
 
@@ -815,7 +867,7 @@ def validate_download(
             f"downloaded export metadata does not confirm {task_id}"
         )
     try:
-        validate_table_metadata(directory, task_id, export_only)
+        validate_table_metadata(directory, task_id, export_only, local)
     except RuntimeError as exc:
         raise PermanentExportError(str(exc)) from exc
     if expected_sha256 is not None:
@@ -940,6 +992,182 @@ def directory_declares_export(directory: Path, task_id: str) -> bool:
     return info.get("exportTaskIdentifier") == task_id
 
 
+def declared_export_task_id(directory: Path) -> str | None:
+    """Return the one exact Temporal task declared by a snapshot directory."""
+    if not directory.exists():
+        return None
+    if not directory.is_dir() or directory.is_symlink():
+        raise RuntimeError(f"unsafe snapshot directory during planning: {directory}")
+    declared: list[str] = []
+    for path in directory.glob(f"export_info_{TASK_PREFIX}*.json"):
+        match = re.fullmatch(r"export_info_(.+)\.json", path.name)
+        if match is None or TASK_ID_PATTERN.fullmatch(match.group(1)) is None:
+            continue
+        task_id = match.group(1)
+        try:
+            info = json.loads(path.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(info, dict) and info.get("exportTaskIdentifier") == task_id:
+            declared.append(task_id)
+    if len(declared) > 1:
+        raise RuntimeError(
+            f"snapshot directory declares multiple export tasks: {directory}"
+        )
+    return declared[0] if declared else None
+
+
+def describe_candidate(settings: Settings, aws, task_id: str) -> ExportCandidate:
+    task = aws.describe_export(task_id)
+    if task is None:
+        raise RuntimeError(f"saved RDS export task no longer exists: {task_id}")
+    validate_completed_task(settings, task_id, task)
+    return ExportCandidate(task_id, task_timestamp(task_id, task), task)
+
+
+def declared_snapshot_candidates(
+    settings: Settings,
+    aws,
+    phase: object,
+    active_task_id: str | None = None,
+) -> list[ExportCandidate]:
+    paths = [settings.target]
+    if phase == "installing" and active_task_id is not None:
+        paths.extend(
+            [
+                settings.staging_path(active_task_id),
+                settings.backup_path(active_task_id),
+            ]
+        )
+    candidates: dict[str, ExportCandidate] = {}
+    for path in paths:
+        task_id = declared_export_task_id(path)
+        if task_id is not None and task_id not in candidates:
+            candidates[task_id] = describe_candidate(settings, aws, task_id)
+    return list(candidates.values())
+
+
+def validate_no_downgrade(
+    candidate: ExportCandidate,
+    protected: list[ExportCandidate],
+) -> None:
+    newer = [item for item in protected if item.timestamp > candidate.timestamp]
+    if newer:
+        newest = max(newer, key=lambda item: item.timestamp)
+        raise RuntimeError(
+            "latest listed RDS export is older than the installed task; refusing a "
+            f"downgrade from {newest.task_id} to {candidate.task_id}"
+        )
+
+
+def plan_candidate(
+    settings: Settings,
+    aws,
+    state: dict,
+    now: datetime,
+) -> CandidatePlan:
+    """Choose resume versus replan with shared execution/dry-run safety gates."""
+    phase = state.get("phase")
+    protected: list[ExportCandidate] = []
+    if phase == "installed" and state_has_static_provenance(settings, state):
+        try:
+            installed_task_id = validate_task_id(state.get("task_id"))
+        except RuntimeError:
+            pass
+        else:
+            installed_timestamp = parse_timestamp(state.get("task_timestamp"))
+            if installed_timestamp is not None:
+                protected.append(
+                    ExportCandidate(installed_task_id, installed_timestamp, {})
+                )
+
+    abandoned_task_id = ""
+    if phase in ACTIVE_PHASES:
+        saved_timestamp = parse_timestamp(state.get("task_timestamp"))
+        try:
+            active_task_id = validate_task_id(state.get("task_id"))
+        except RuntimeError:
+            active_task_id = ""
+        protected.extend(
+            declared_snapshot_candidates(
+                settings,
+                aws,
+                phase,
+                active_task_id=active_task_id or None,
+            )
+        )
+        if active_task_id and saved_timestamp is not None:
+            active = describe_candidate(settings, aws, active_task_id)
+            if active.timestamp != saved_timestamp:
+                raise RuntimeError(
+                    f"saved timestamp for RDS export {active_task_id} no longer "
+                    "matches AWS"
+                )
+            if not state_has_provenance(settings, state, active):
+                abandoned_task_id = active_task_id
+            else:
+                try:
+                    validate_candidate_freshness(settings, active, now)
+                except RuntimeError:
+                    abandoned_task_id = active_task_id
+                else:
+                    target_is_newer = any(
+                        item.task_id != active.task_id
+                        and item.timestamp > active.timestamp
+                        for item in protected
+                    )
+                    if not target_is_newer:
+                        return CandidatePlan(active, True)
+                    abandoned_task_id = active_task_id
+        elif active_task_id:
+            abandoned_task_id = active_task_id
+
+    candidate = select_latest_completed_export(settings, aws.list_export_tasks(), now)
+    validate_no_downgrade(candidate, protected)
+    return CandidatePlan(candidate, False, abandoned_task_id)
+
+
+def resolve_installed_backup(
+    settings: Settings,
+    state: dict,
+    *,
+    remove: bool,
+) -> bool:
+    """Validate the installed snapshot before resolving its retained backup."""
+    if state.get("phase") != "installed" or not state_has_static_provenance(
+        settings, state
+    ):
+        return False
+    task_id = validate_task_id(state.get("task_id"))
+    backup = settings.backup_path(task_id)
+    if not backup.exists():
+        return False
+    try:
+        validate_installed_snapshot(settings, task_id, state.get("sha256"))
+    except RuntimeError as exc:
+        raise RuntimeError(
+            "cannot validate installed target before backup cleanup"
+        ) from exc
+    if remove:
+        shutil.rmtree(backup)
+        fsync_directory(settings.target.parent)
+    return True
+
+
+def abandon_active_checkpoint(settings: Settings, task_id: str) -> None:
+    backup = settings.backup_path(task_id)
+    if backup.exists():
+        raise RuntimeError(
+            f"cannot abandon active checkpoint with unresolved backup: {backup}"
+        )
+    staging = settings.staging_path(task_id)
+    if staging.exists():
+        if not staging.is_dir() or staging.is_symlink():
+            raise RuntimeError(f"refusing to remove unsafe staging path: {staging}")
+        shutil.rmtree(staging)
+        fsync_directory(settings.target.parent)
+
+
 def recover_interrupted_install_paths(settings: Settings, task_id: str) -> None:
     """Restore old target orientation after a crash during rollback."""
     target = settings.target
@@ -1037,53 +1265,24 @@ def refresh_once(
     verify_identity(settings, aws.get_identity())
     state = load_state(settings.state_file)
     phase = state.get("phase")
+    resolve_installed_backup(settings, state, remove=True)
 
-    candidate: ExportCandidate | None = None
-    resume = False
-    if phase in ACTIVE_PHASES:
-        saved_task_id = state.get("task_id")
-        saved_timestamp = parse_timestamp(state.get("task_timestamp"))
+    if phase == "installing":
         try:
-            task_id = validate_task_id(saved_task_id)
+            active_task_id = validate_task_id(state.get("task_id"))
         except RuntimeError:
-            task_id = ""
-        if task_id and saved_timestamp is not None:
-            if phase == "installing":
-                restore_interrupted_target(settings, task_id)
-            task = aws.describe_export(task_id)
-            if task is None:
-                raise RuntimeError(f"saved RDS export task no longer exists: {task_id}")
-            validate_completed_task(settings, task_id, task)
-            candidate = ExportCandidate(task_id, task_timestamp(task_id, task), task)
-            if candidate.timestamp != saved_timestamp:
-                raise RuntimeError(
-                    f"saved timestamp for RDS export {task_id} no longer matches AWS"
-                )
-            if not state_has_provenance(settings, state, candidate):
-                candidate = None
-            else:
-                resume = True
+            pass
+        else:
+            restore_interrupted_target(settings, active_task_id)
+            if settings.target.exists():
+                recover_interrupted_install_paths(settings, active_task_id)
 
-    if candidate is None:
-        candidate = select_latest_completed_export(
-            settings, aws.list_export_tasks(), now
-        )
-
-        if phase == "installed" and state_has_static_provenance(settings, state):
-            installed_task_id = state.get("task_id")
-            installed_timestamp = parse_timestamp(state.get("task_timestamp"))
-            try:
-                validate_task_id(installed_task_id)
-            except RuntimeError:
-                installed_timestamp = None
-            if (
-                installed_timestamp is not None
-                and installed_timestamp > candidate.timestamp
-            ):
-                raise RuntimeError(
-                    "latest listed RDS export is older than the installed task; "
-                    "refusing a downgrade"
-                )
+    plan = plan_candidate(settings, aws, state, now)
+    candidate = plan.candidate
+    resume = plan.resume
+    if not resume:
+        if plan.abandoned_task_id:
+            abandon_active_checkpoint(settings, plan.abandoned_task_id)
 
         if (
             phase == "installed"
@@ -1136,10 +1335,6 @@ def refresh_once(
         )
         save_state(settings.state_file, state)
         phase = "selected"
-    else:
-        # A crash-resume checkpoint is valid only while its selected upstream
-        # export remains fresh. Do not finish publishing a week-old download.
-        validate_candidate_freshness(settings, candidate, now)
 
     task_id = candidate.task_id
     try:
@@ -1255,33 +1450,17 @@ def dry_run(
     verify_identity(settings, identity)
     state = load_state(settings.state_file)
     phase = state.get("phase")
+    resolve_installed_backup(settings, state, remove=False)
 
-    if phase in ACTIVE_PHASES:
-        task_id = state.get("task_id")
-        timestamp = parse_timestamp(state.get("task_timestamp"))
-        try:
-            task_id = validate_task_id(task_id)
-        except RuntimeError:
-            task_id = ""
-        if task_id and timestamp is not None:
-            task = aws.describe_export(task_id)
-            if task is None:
-                raise RuntimeError(f"saved RDS export task no longer exists: {task_id}")
-            validate_completed_task(settings, task_id, task)
-            candidate = ExportCandidate(task_id, task_timestamp(task_id, task), task)
-            if candidate.timestamp != timestamp:
-                raise RuntimeError(
-                    f"saved timestamp for RDS export {task_id} no longer matches AWS"
-                )
-            if state_has_provenance(settings, state, candidate):
-                validate_candidate_freshness(settings, candidate, now)
-                action = f"resume selected follower task {task_id} from phase {phase}"
-                return (
-                    f"Dry run OK: account {identity['Account']}; would {action}; "
-                    f"target {settings.target}"
-                )
+    plan = plan_candidate(settings, aws, state, now)
+    candidate = plan.candidate
+    if plan.resume:
+        action = f"resume selected follower task {candidate.task_id} from phase {phase}"
+        return (
+            f"Dry run OK: account {identity['Account']}; would {action}; "
+            f"target {settings.target}"
+        )
 
-    candidate = select_latest_completed_export(settings, aws.list_export_tasks(), now)
     action = f"download latest follower task {candidate.task_id}"
     if phase == "installed" and state_has_provenance(settings, state, candidate):
         manifest = state.get("sha256")
