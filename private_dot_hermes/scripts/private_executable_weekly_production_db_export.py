@@ -160,6 +160,11 @@ class CandidatePlan(NamedTuple):
     abandoned_task_id: str = ""
 
 
+class InstallRecoveryPlan(NamedTuple):
+    task_id: str
+    action: str
+
+
 class AWSCommandError(RuntimeError):
     pass
 
@@ -191,6 +196,7 @@ class AWSClient:
         timeout: int,
         json_output: bool = True,
     ) -> dict:
+        self._validate_read_only_command(args)
         command = self._command(*args)
         if json_output:
             command.extend(["--output", "json"])
@@ -226,6 +232,29 @@ class AWSClient:
                 f"AWS command returned unexpected JSON: {' '.join(args[:2])}"
             )
         return value
+
+    def _validate_read_only_command(self, args: tuple[str, ...]) -> None:
+        operation = args[:2]
+        allowed = {
+            ("sts", "get-caller-identity"),
+            ("rds", "describe-export-tasks"),
+            ("s3api", "list-objects-v2"),
+            ("s3", "sync"),
+        }
+        if operation not in allowed:
+            raise RuntimeError(
+                f"AWS operation is not read-only allowlisted: {operation}"
+            )
+        if operation == ("s3", "sync"):
+            expected_source = f"s3://{self.settings.s3_bucket}/"
+            if (
+                len(args) < 4
+                or not args[2].startswith(expected_source)
+                or args[3].startswith("s3://")
+            ):
+                raise RuntimeError(
+                    "AWS S3 sync must copy from the pinned bucket to disk"
+                )
 
     def get_identity(self) -> dict:
         return self._run("sts", "get-caller-identity", timeout=60)
@@ -329,28 +358,11 @@ def resolve_aws_binary() -> str:
 
 def clean_aws_environment(settings: Settings) -> dict[str, str]:
     environment = os.environ.copy()
-    for key in (
-        "AWS_ACCESS_KEY_ID",
-        "AWS_SECRET_ACCESS_KEY",
-        "AWS_SESSION_TOKEN",
-        "AWS_CREDENTIAL_EXPIRATION",
-        "AWS_ROLE_ARN",
-        "AWS_WEB_IDENTITY_TOKEN_FILE",
-        "AWS_CONTAINER_CREDENTIALS_FULL_URI",
-        "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI",
-        "AWS_CONTAINER_AUTHORIZATION_TOKEN",
-        "AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE",
-        "AWS_DEFAULT_PROFILE",
-        "AWS_CREDENTIAL_FILE",
-        "AWS_CREDENTIALS_FILE",
-        "AWS_SECURITY_TOKEN",
-        "AWS_ROLE_SESSION_NAME",
-        "AWS_SDK_LOAD_CONFIG",
-        "BOTO_CONFIG",
-    ):
-        environment.pop(key, None)
+    # The follower's AWS subprocess gets an allowlisted environment. Ambient
+    # AWS variables can select credentials, endpoints, trust bundles, account
+    # endpoint modes, or custom service models even when --profile is present.
     for key in tuple(environment):
-        if key == "AWS_ENDPOINT_URL" or key.startswith("AWS_ENDPOINT_URL_"):
+        if key.startswith("AWS_") or key == "BOTO_CONFIG":
             environment.pop(key, None)
     environment.update(
         {
@@ -569,7 +581,17 @@ def select_latest_completed_export(
         candidates.append(ExportCandidate(task_id, task_timestamp(task_id, task), task))
     if not candidates:
         raise RuntimeError("no qualifying completed Temporal RDS export exists")
-    selected = max(candidates, key=lambda candidate: candidate.timestamp)
+    newest_timestamp = max(candidate.timestamp for candidate in candidates)
+    newest = [
+        candidate for candidate in candidates if candidate.timestamp == newest_timestamp
+    ]
+    newest_ids = {candidate.task_id for candidate in newest}
+    if len(newest_ids) != 1:
+        raise RuntimeError(
+            "multiple completed Temporal RDS exports share the newest timestamp: "
+            + ", ".join(sorted(newest_ids))
+        )
+    selected = newest[0]
     validate_completed_task(settings, selected.task_id, selected.task)
     validate_candidate_freshness(settings, selected, now)
     return selected
@@ -882,27 +904,39 @@ def validate_download(
             )
 
 
-def validate_installed_snapshot(
+def validate_snapshot_directory(
     settings: Settings,
+    directory: Path,
     task_id: str,
     manifest_value: object,
 ) -> Inventory:
-    if not settings.target.is_dir() or settings.target.is_symlink():
-        raise RuntimeError(
-            f"download directory is missing or unsafe: {settings.target}"
-        )
-    local = local_inventory(settings.target)
+    if not directory.is_dir() or directory.is_symlink():
+        raise RuntimeError(f"download directory is missing or unsafe: {directory}")
+    local = local_inventory(directory)
     validate_inventory_names(task_id, local, settings.export_only)
     inventory = Inventory(local, len(local), sum(local.values()))
     manifest = validate_sha256_manifest(manifest_value, inventory)
     validate_download(
-        settings.target,
+        directory,
         task_id,
         inventory,
         settings.export_only,
         manifest,
     )
     return inventory
+
+
+def validate_installed_snapshot(
+    settings: Settings,
+    task_id: str,
+    manifest_value: object,
+) -> Inventory:
+    return validate_snapshot_directory(
+        settings,
+        settings.target,
+        task_id,
+        manifest_value,
+    )
 
 
 def ensure_download_space(settings: Settings, inventory: Inventory) -> None:
@@ -969,29 +1003,6 @@ def rollback_install(settings: Settings, task_id: str) -> None:
         fsync_directory(target.parent)
 
 
-def restore_interrupted_target(settings: Settings, task_id: str) -> None:
-    backup = settings.backup_path(task_id)
-    if settings.target.exists() or not backup.exists():
-        return
-    if not backup.is_dir() or backup.is_symlink():
-        raise RuntimeError(f"refusing to restore unsafe replacement backup: {backup}")
-    backup.rename(settings.target)
-    fsync_directory(settings.target.parent)
-
-
-def directory_declares_export(directory: Path, task_id: str) -> bool:
-    if not directory.is_dir() or directory.is_symlink():
-        raise RuntimeError(f"unsafe snapshot directory during recovery: {directory}")
-    info_path = directory / f"export_info_{task_id}.json"
-    try:
-        info = json.loads(info_path.read_text())
-    except (OSError, json.JSONDecodeError):
-        return False
-    if not isinstance(info, dict):
-        return False
-    return info.get("exportTaskIdentifier") == task_id
-
-
 def declared_export_task_id(directory: Path) -> str | None:
     """Return the one exact Temporal task declared by a snapshot directory."""
     if not directory.exists():
@@ -1006,10 +1017,11 @@ def declared_export_task_id(directory: Path) -> str | None:
         task_id = match.group(1)
         try:
             info = json.loads(path.read_text())
-        except (OSError, json.JSONDecodeError):
-            continue
-        if isinstance(info, dict) and info.get("exportTaskIdentifier") == task_id:
-            declared.append(task_id)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise RuntimeError(f"invalid snapshot export metadata: {path}") from exc
+        if not isinstance(info, dict) or info.get("exportTaskIdentifier") != task_id:
+            raise RuntimeError(f"mismatched snapshot export metadata: {path}")
+        declared.append(task_id)
     if len(declared) > 1:
         raise RuntimeError(
             f"snapshot directory declares multiple export tasks: {directory}"
@@ -1030,6 +1042,7 @@ def declared_snapshot_candidates(
     aws,
     phase: object,
     active_task_id: str | None = None,
+    excluded_task_ids: set[str] | None = None,
 ) -> list[ExportCandidate]:
     paths = [settings.target]
     if phase == "installing" and active_task_id is not None:
@@ -1040,9 +1053,14 @@ def declared_snapshot_candidates(
             ]
         )
     candidates: dict[str, ExportCandidate] = {}
+    excluded = excluded_task_ids or set()
     for path in paths:
         task_id = declared_export_task_id(path)
-        if task_id is not None and task_id not in candidates:
+        if (
+            task_id is not None
+            and task_id not in excluded
+            and task_id not in candidates
+        ):
             candidates[task_id] = describe_candidate(settings, aws, task_id)
     return list(candidates.values())
 
@@ -1057,6 +1075,17 @@ def validate_no_downgrade(
         raise RuntimeError(
             "latest listed RDS export is older than the installed task; refusing a "
             f"downgrade from {newest.task_id} to {candidate.task_id}"
+        )
+    conflicts = [
+        item
+        for item in protected
+        if item.timestamp == candidate.timestamp and item.task_id != candidate.task_id
+    ]
+    if conflicts:
+        conflict = min(conflicts, key=lambda item: item.task_id)
+        raise RuntimeError(
+            "different RDS export tasks share a protected timestamp; refusing to "
+            f"replace {conflict.task_id} with {candidate.task_id}"
         )
 
 
@@ -1088,15 +1117,24 @@ def plan_candidate(
             active_task_id = validate_task_id(state.get("task_id"))
         except RuntimeError:
             active_task_id = ""
+        saved_is_stale = (
+            saved_timestamp is not None
+            and now - saved_timestamp > settings.max_export_age
+        )
         protected.extend(
             declared_snapshot_candidates(
                 settings,
                 aws,
                 phase,
                 active_task_id=active_task_id or None,
+                excluded_task_ids={active_task_id}
+                if active_task_id and saved_is_stale
+                else None,
             )
         )
-        if active_task_id and saved_timestamp is not None:
+        if active_task_id and saved_timestamp is not None and saved_is_stale:
+            abandoned_task_id = active_task_id
+        elif active_task_id and saved_timestamp is not None:
             active = describe_candidate(settings, aws, active_task_id)
             if active.timestamp != saved_timestamp:
                 raise RuntimeError(
@@ -1111,14 +1149,12 @@ def plan_candidate(
                 except RuntimeError:
                     abandoned_task_id = active_task_id
                 else:
-                    target_is_newer = any(
-                        item.task_id != active.task_id
-                        and item.timestamp > active.timestamp
-                        for item in protected
-                    )
-                    if not target_is_newer:
+                    try:
+                        validate_no_downgrade(active, protected)
+                    except RuntimeError:
+                        abandoned_task_id = active_task_id
+                    else:
                         return CandidatePlan(active, True)
-                    abandoned_task_id = active_task_id
         elif active_task_id:
             abandoned_task_id = active_task_id
 
@@ -1140,8 +1176,10 @@ def resolve_installed_backup(
         return False
     task_id = validate_task_id(state.get("task_id"))
     backup = settings.backup_path(task_id)
-    if not backup.exists():
+    if not backup.exists() and not backup.is_symlink():
         return False
+    if backup.is_symlink() or not backup.is_dir():
+        raise RuntimeError(f"unsafe installed backup path: {backup}")
     try:
         validate_installed_snapshot(settings, task_id, state.get("sha256"))
     except RuntimeError as exc:
@@ -1156,52 +1194,150 @@ def resolve_installed_backup(
 
 def abandon_active_checkpoint(settings: Settings, task_id: str) -> None:
     backup = settings.backup_path(task_id)
-    if backup.exists():
+    if backup.exists() or backup.is_symlink():
         raise RuntimeError(
             f"cannot abandon active checkpoint with unresolved backup: {backup}"
         )
     staging = settings.staging_path(task_id)
-    if staging.exists():
+    if staging.exists() or staging.is_symlink():
         if not staging.is_dir() or staging.is_symlink():
             raise RuntimeError(f"refusing to remove unsafe staging path: {staging}")
         shutil.rmtree(staging)
         fsync_directory(settings.target.parent)
 
 
-def recover_interrupted_install_paths(settings: Settings, task_id: str) -> None:
-    """Restore old target orientation after a crash during rollback."""
+def artifact_matches_active_manifest(
+    settings: Settings,
+    path: Path,
+    task_id: str,
+    manifest_value: object,
+) -> bool:
+    if path.is_symlink() or (path.exists() and not path.is_dir()):
+        raise RuntimeError(f"unsafe install-recovery artifact: {path}")
+    if not path.exists():
+        return False
+    try:
+        validate_snapshot_directory(settings, path, task_id, manifest_value)
+    except RuntimeError:
+        return False
+    return True
+
+
+def plan_interrupted_install(
+    settings: Settings,
+    state: dict,
+) -> InstallRecoveryPlan | None:
+    """Classify install artifacts without mutating them; shared by dry-run."""
+    if state.get("phase") != "installing":
+        return None
+    if not state_has_static_provenance(settings, state):
+        raise RuntimeError("installing checkpoint has untrusted static provenance")
+    task_id = validate_task_id(state.get("task_id"))
+    manifest = state.get("sha256")
+    if not isinstance(manifest, dict) or not manifest:
+        raise RuntimeError("installing checkpoint has no trusted SHA-256 manifest")
+
     target = settings.target
     staging = settings.staging_path(task_id)
     backup = settings.backup_path(task_id)
-    target_is_new = directory_declares_export(target, task_id)
+    staging_exists = staging.exists() or staging.is_symlink()
+    backup_exists = backup.exists() or backup.is_symlink()
+    if staging_exists and backup_exists:
+        raise RuntimeError(
+            f"ambiguous install recovery with staging and backup present: {task_id}"
+        )
 
-    if backup.exists():
-        if staging.exists():
-            raise RuntimeError(
-                f"ambiguous install recovery with staging and backup present: {task_id}"
+    target_is_active = artifact_matches_active_manifest(
+        settings, target, task_id, manifest
+    )
+    staging_is_active = artifact_matches_active_manifest(
+        settings, staging, task_id, manifest
+    )
+    backup_is_active = artifact_matches_active_manifest(
+        settings, backup, task_id, manifest
+    )
+
+    if target_is_active:
+        if staging_exists:
+            staging_declares_active = declared_export_task_id(staging) == task_id
+            action = (
+                "remove_duplicate_staging"
+                if staging_is_active or staging_declares_active
+                else "rollback_staging"
             )
-        backup_is_new = directory_declares_export(backup, task_id)
-        if target_is_new == backup_is_new:
-            raise RuntimeError(f"cannot determine backup orientation for {task_id}")
-        if target_is_new:
-            atomic_exchange(target, backup)
-            fsync_directory(target.parent)
+        elif backup_exists:
+            backup_declares_active = declared_export_task_id(backup) == task_id
+            action = (
+                "remove_duplicate_backup"
+                if backup_is_active or backup_declares_active
+                else "rollback_backup"
+            )
+        else:
+            action = "retain_target"
+        return InstallRecoveryPlan(task_id, action)
+
+    if staging_exists and staging_is_active:
+        return InstallRecoveryPlan(task_id, "staged")
+    if backup_exists and backup_is_active:
+        return InstallRecoveryPlan(task_id, "backup_to_staging")
+    raise RuntimeError(f"cannot locate a manifest-valid install artifact for {task_id}")
+
+
+def apply_interrupted_install_plan(
+    settings: Settings,
+    plan: InstallRecoveryPlan | None,
+) -> None:
+    if plan is None or plan.action in {"retain_target", "staged"}:
+        return
+    task_id = plan.task_id
+    target = settings.target
+    staging = settings.staging_path(task_id)
+    backup = settings.backup_path(task_id)
+    if plan.action == "remove_duplicate_staging":
+        shutil.rmtree(staging)
+    elif plan.action == "remove_duplicate_backup":
+        shutil.rmtree(backup)
+    elif plan.action == "rollback_staging":
+        atomic_exchange(target, staging)
+    elif plan.action == "rollback_backup":
+        atomic_exchange(target, backup)
         backup.rename(staging)
-        fsync_directory(target.parent)
-        return
+    elif plan.action == "backup_to_staging":
+        backup.rename(staging)
+    else:
+        raise RuntimeError(f"unknown install recovery action: {plan.action}")
+    fsync_directory(target.parent)
 
-    if staging.exists():
-        staging_is_new = directory_declares_export(staging, task_id)
-        if target_is_new == staging_is_new:
-            raise RuntimeError(f"cannot determine staging orientation for {task_id}")
-        if target_is_new:
-            atomic_exchange(target, staging)
-            fsync_directory(target.parent)
-        return
 
-    if target_is_new:
-        target.rename(staging)
-        fsync_directory(target.parent)
+def ensure_no_orphaned_target_backup(
+    settings: Settings,
+    state: dict,
+    install_plan: InstallRecoveryPlan | None,
+) -> None:
+    """Fail closed when replayed state hides residue for the canonical target."""
+    target_task_id = declared_export_task_id(settings.target)
+    if target_task_id is None:
+        return
+    backup = settings.backup_path(target_task_id)
+    if not backup.exists() and not backup.is_symlink():
+        return
+    trusted_installed = (
+        state.get("phase") == "installed"
+        and state_has_static_provenance(settings, state)
+        and state.get("task_id") == target_task_id
+        and isinstance(state.get("sha256"), dict)
+    )
+    trusted_installing = (
+        state.get("phase") == "installing"
+        and install_plan is not None
+        and install_plan.task_id == target_task_id
+    )
+    if trusted_installed or trusted_installing:
+        return
+    raise RuntimeError(
+        "canonical target has unresolved backup residue without trusted installed "
+        f"evidence: {backup}"
+    )
 
 
 def finish_install(
@@ -1266,16 +1402,9 @@ def refresh_once(
     state = load_state(settings.state_file)
     phase = state.get("phase")
     resolve_installed_backup(settings, state, remove=True)
-
-    if phase == "installing":
-        try:
-            active_task_id = validate_task_id(state.get("task_id"))
-        except RuntimeError:
-            pass
-        else:
-            restore_interrupted_target(settings, active_task_id)
-            if settings.target.exists():
-                recover_interrupted_install_paths(settings, active_task_id)
+    install_recovery = plan_interrupted_install(settings, state)
+    ensure_no_orphaned_target_backup(settings, state, install_recovery)
+    apply_interrupted_install_plan(settings, install_recovery)
 
     plan = plan_candidate(settings, aws, state, now)
     candidate = plan.candidate
@@ -1370,7 +1499,7 @@ def refresh_once(
                 expected_sha256,
             )
         except RuntimeError:
-            recover_interrupted_install_paths(settings, task_id)
+            pass
         else:
             try:
                 finish_install(settings, task_id, inventory, state, clock)
@@ -1451,6 +1580,8 @@ def dry_run(
     state = load_state(settings.state_file)
     phase = state.get("phase")
     resolve_installed_backup(settings, state, remove=False)
+    install_recovery = plan_interrupted_install(settings, state)
+    ensure_no_orphaned_target_backup(settings, state, install_recovery)
 
     plan = plan_candidate(settings, aws, state, now)
     candidate = plan.candidate
