@@ -240,6 +240,7 @@ class AWSClient:
             ("rds", "describe-export-tasks"),
             ("s3api", "list-objects-v2"),
             ("s3", "sync"),
+            ("s3", "cp"),
         }
         if operation not in allowed:
             raise RuntimeError(
@@ -255,6 +256,55 @@ class AWSClient:
                 raise RuntimeError(
                     "AWS S3 sync must copy from the pinned bucket to disk"
                 )
+        if operation == ("s3", "cp"):
+            expected_source = f"s3://{self.settings.s3_bucket}/"
+            if (
+                len(args) < 4
+                or not args[2].startswith(expected_source)
+                or args[3] != "-"
+            ):
+                raise RuntimeError(
+                    "AWS S3 cp must stream from the pinned bucket to stdout"
+                )
+            relative = args[2].removeprefix(expected_source)
+            try:
+                task_id, name = relative.split("/", maxsplit=1)
+                validate_task_id(task_id)
+            except (ValueError, RuntimeError) as exc:
+                raise RuntimeError(
+                    "AWS S3 cp source is not task-scoped metadata"
+                ) from exc
+            table_pattern = re.compile(
+                rf"export_tables_info_{re.escape(task_id)}_from_[0-9]+_to_[0-9]+\.json"
+            )
+            if (
+                name != f"export_info_{task_id}.json"
+                and table_pattern.fullmatch(name) is None
+            ):
+                raise RuntimeError("AWS S3 cp source is not task-scoped metadata")
+
+    def _run_text(self, *args: str, timeout: int) -> str:
+        self._validate_read_only_command(args)
+        try:
+            result = subprocess.run(
+                self._command(*args),
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                env=self.env,
+                stdin=subprocess.DEVNULL,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise AWSCommandError(
+                f"AWS command timed out after {timeout}s: {' '.join(args[:2])}"
+            ) from exc
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout or "unknown AWS CLI error").strip()
+            raise AWSCommandError(
+                f"AWS command failed ({' '.join(args[:2])}): {detail[:2000]}"
+            )
+        return result.stdout
 
     def get_identity(self) -> dict:
         return self._run("sts", "get-caller-identity", timeout=60)
@@ -308,6 +358,28 @@ class AWSClient:
         )
         return response.get("Contents", [])
 
+    def get_export_metadata(
+        self,
+        task_id: str,
+        names: list[str],
+    ) -> dict[str, object]:
+        documents: dict[str, object] = {}
+        for name in names:
+            source = f"s3://{self.settings.s3_bucket}/{task_id}/{name}"
+            value = self._run_text(
+                "s3",
+                "cp",
+                source,
+                "-",
+                "--only-show-errors",
+                timeout=120,
+            )
+            try:
+                documents[name] = json.loads(value)
+            except json.JSONDecodeError as exc:
+                raise RuntimeError(f"invalid remote export metadata: {name}") from exc
+        return documents
+
     def sync_export(self, task_id: str, destination: Path) -> None:
         self._run(
             "s3",
@@ -325,60 +397,39 @@ class AWSClient:
 
 
 def resolve_aws_binary() -> str:
-    explicit = os.environ.get("WEEKLY_PRODUCTION_DB_AWS_BIN")
-    candidates: list[Path] = []
-    if explicit:
-        candidates.append(Path(explicit))
-    # Prefer a real mise install over a shim because cron has a deliberately
-    # minimal environment and should not depend on interactive shell startup.
-    installs = Path("/root/.local/share/mise/installs/aws")
-    if installs.is_dir():
-        candidates.extend(
-            sorted(
-                installs.glob("*/.mise-bins/aws"),
-                key=lambda path: path.stat().st_mtime,
-                reverse=True,
-            )
-        )
-    candidates.extend(
-        [
-            Path("/root/.local/share/mise/shims/aws"),
-            Path("/usr/local/bin/aws"),
-            Path("/usr/bin/aws"),
-        ]
-    )
-    discovered = shutil.which("aws")
-    if discovered:
-        candidates.append(Path(discovered))
-    for candidate in candidates:
-        if candidate.is_file() and os.access(candidate, os.X_OK):
-            return str(candidate)
-    raise RuntimeError("AWS CLI is not installed or executable")
+    candidate = Path("/root/.local/share/mise/installs/aws/2.36.19/.mise-bins/aws")
+    try:
+        resolved = candidate.resolve(strict=True)
+        metadata = resolved.stat()
+    except OSError as exc:
+        raise RuntimeError(f"trusted AWS CLI is unavailable: {candidate}") from exc
+    if (
+        not resolved.is_file()
+        or not os.access(resolved, os.X_OK)
+        or metadata.st_uid != 0
+        or metadata.st_mode & 0o022
+    ):
+        raise RuntimeError(f"trusted AWS CLI has unsafe ownership or mode: {resolved}")
+    return str(candidate)
 
 
 def clean_aws_environment(settings: Settings) -> dict[str, str]:
-    environment = os.environ.copy()
-    # The follower's AWS subprocess gets an allowlisted environment. Ambient
-    # AWS variables can select credentials, endpoints, trust bundles, account
-    # endpoint modes, or custom service models even when --profile is present.
-    for key in tuple(environment):
-        if key.startswith("AWS_") or key == "BOTO_CONFIG":
-            environment.pop(key, None)
-    environment.update(
-        {
-            "HOME": "/root",
-            "AWS_PROFILE": settings.profile,
-            "AWS_CONFIG_FILE": "/root/.aws/config",
-            "AWS_SHARED_CREDENTIALS_FILE": "/dev/null",
-            "BOTO_CONFIG": "/dev/null",
-            "AWS_REGION": settings.region,
-            "AWS_DEFAULT_REGION": settings.region,
-            "AWS_PAGER": "",
-            "AWS_EC2_METADATA_DISABLED": "true",
-            "PATH": "/root/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin",
-        }
-    )
-    return environment
+    # Build from an allowlist rather than trying to enumerate ambient credential,
+    # proxy, endpoint, custom-CA, service-model, and provider selectors.
+    return {
+        "HOME": "/root",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "AWS_PROFILE": settings.profile,
+        "AWS_CONFIG_FILE": "/root/.aws/config",
+        "AWS_SHARED_CREDENTIALS_FILE": "/dev/null",
+        "BOTO_CONFIG": "/dev/null",
+        "AWS_REGION": settings.region,
+        "AWS_DEFAULT_REGION": settings.region,
+        "AWS_PAGER": "",
+        "AWS_EC2_METADATA_DISABLED": "true",
+        "PATH": "/usr/bin:/bin",
+    }
 
 
 def utc_now() -> datetime:
@@ -602,7 +653,7 @@ def is_allowed_export_data_key(relative: str, export_only: tuple[str, ...]) -> b
     if len(parts) != 4:
         return False
     database, qualified_table, partition, filename = parts
-    if not partition.isdecimal():
+    if re.fullmatch(r"[0-9]+", partition) is None:
         return False
     if filename != "_SUCCESS" and not (
         filename.startswith("part-") and filename.endswith(".parquet")
@@ -628,7 +679,7 @@ def validate_inventory_names(
     expected_info = f"export_info_{task_id}.json"
     table_info_prefix = f"export_tables_info_{task_id}_"
     table_info_pattern = re.compile(
-        rf"{re.escape(table_info_prefix)}from_\d+_to_\d+\.json"
+        rf"{re.escape(table_info_prefix)}from_[0-9]+_to_[0-9]+\.json"
     )
     allowed_data_prefixes = tuple(
         f"{scope.split('.', maxsplit=1)[0]}/{scope.split('.', maxsplit=1)[1]}."
@@ -760,33 +811,34 @@ def discard_untrusted_reusable_files(
     return local
 
 
-def validate_table_metadata(
-    directory: Path,
+def validate_table_metadata_documents(
+    documents: dict[str, object],
     task_id: str,
     export_only: tuple[str, ...],
     object_names: set[str] | dict[str, int],
 ) -> None:
-    paths = sorted(directory.glob(f"export_tables_info_{task_id}_*.json"))
+    table_info_prefix = f"export_tables_info_{task_id}_"
+    table_documents = sorted(
+        (name, document)
+        for name, document in documents.items()
+        if name.startswith(table_info_prefix)
+    )
     seen_targets: set[str] = set()
     incomplete: list[str] = []
-    for path in paths:
-        try:
-            document = json.loads(path.read_text())
-        except (OSError, json.JSONDecodeError) as exc:
-            raise RuntimeError(f"invalid downloaded table metadata: {path}") from exc
+    for name, document in table_documents:
         if not isinstance(document, dict):
             raise RuntimeError(  # noqa: TRY004 - malformed external export metadata
-                f"invalid downloaded table metadata object: {path}"
+                f"invalid downloaded table metadata object: {name}"
             )
         entries = document.get("perTableStatus")
         if not isinstance(entries, list) or not entries:
             raise RuntimeError(
-                f"downloaded table metadata has no table statuses: {path}"
+                f"downloaded table metadata has no table statuses: {name}"
             )
         for entry in entries:
             if not isinstance(entry, dict) or not isinstance(entry.get("target"), str):
                 raise RuntimeError(  # noqa: TRY004 - malformed external export metadata
-                    f"invalid table status in downloaded metadata: {path}"
+                    f"invalid table status in downloaded metadata: {name}"
                 )
             target = entry["target"]
             target_parts = target.split(".")
@@ -851,6 +903,50 @@ def validate_table_metadata(
         )
 
 
+def validate_export_metadata_documents(
+    documents: dict[str, object],
+    task_id: str,
+    export_only: tuple[str, ...],
+    object_names: set[str] | dict[str, int],
+) -> None:
+    info_name = f"export_info_{task_id}.json"
+    info = documents.get(info_name)
+    if not isinstance(info, dict):
+        raise PermanentExportError(
+            f"downloaded export metadata is not an object: {info_name}"
+        )
+    if info.get("exportTaskIdentifier") != task_id or info.get("status") != "COMPLETE":
+        raise PermanentExportError(
+            f"downloaded export metadata does not confirm {task_id}"
+        )
+    try:
+        validate_table_metadata_documents(documents, task_id, export_only, object_names)
+    except RuntimeError as exc:
+        raise PermanentExportError(str(exc)) from exc
+
+
+def read_export_metadata_documents(
+    directory: Path,
+    task_id: str,
+    object_names: set[str] | dict[str, int],
+) -> dict[str, object]:
+    names = sorted(
+        name
+        for name in object_names
+        if name == f"export_info_{task_id}.json"
+        or name.startswith(f"export_tables_info_{task_id}_")
+    )
+    documents: dict[str, object] = {}
+    for name in names:
+        try:
+            documents[name] = json.loads((directory / name).read_text())
+        except (OSError, json.JSONDecodeError) as exc:
+            raise PermanentExportError(
+                f"invalid downloaded export metadata: {name}"
+            ) from exc
+    return documents
+
+
 def validate_download(
     directory: Path,
     task_id: str,
@@ -873,25 +969,8 @@ def validate_download(
             "download does not match S3 inventory "
             f"(missing={missing}, extra={extra}, size_mismatches={mismatched})"
         )
-    info_path = directory / f"export_info_{task_id}.json"
-    try:
-        info = json.loads(info_path.read_text())
-    except (OSError, json.JSONDecodeError) as exc:
-        raise PermanentExportError(
-            f"invalid downloaded export metadata: {info_path}"
-        ) from exc
-    if not isinstance(info, dict):
-        raise PermanentExportError(
-            f"downloaded export metadata is not an object: {info_path}"
-        )
-    if info.get("exportTaskIdentifier") != task_id or info.get("status") != "COMPLETE":
-        raise PermanentExportError(
-            f"downloaded export metadata does not confirm {task_id}"
-        )
-    try:
-        validate_table_metadata(directory, task_id, export_only, local)
-    except RuntimeError as exc:
-        raise PermanentExportError(str(exc)) from exc
+    documents = read_export_metadata_documents(directory, task_id, local)
+    validate_export_metadata_documents(documents, task_id, export_only, local)
     if expected_sha256 is not None:
         manifest = validate_sha256_manifest(expected_sha256, inventory)
         actual = sha256_inventory(directory, inventory.objects)
@@ -1040,29 +1119,35 @@ def describe_candidate(settings: Settings, aws, task_id: str) -> ExportCandidate
 def declared_snapshot_candidates(
     settings: Settings,
     aws,
-    phase: object,
-    active_task_id: str | None = None,
-    excluded_task_ids: set[str] | None = None,
+    trusted_target: ExportCandidate | None = None,
 ) -> list[ExportCandidate]:
-    paths = [settings.target]
-    if phase == "installing" and active_task_id is not None:
-        paths.extend(
-            [
-                settings.staging_path(active_task_id),
-                settings.backup_path(active_task_id),
-            ]
-        )
-    candidates: dict[str, ExportCandidate] = {}
-    excluded = excluded_task_ids or set()
-    for path in paths:
-        task_id = declared_export_task_id(path)
-        if (
-            task_id is not None
-            and task_id not in excluded
-            and task_id not in candidates
-        ):
-            candidates[task_id] = describe_candidate(settings, aws, task_id)
-    return list(candidates.values())
+    task_id = declared_export_task_id(settings.target)
+    if task_id is None:
+        return []
+    if trusted_target is not None and trusted_target.task_id == task_id:
+        return [trusted_target]
+    return [describe_candidate(settings, aws, task_id)]
+
+
+def trusted_target_candidate(
+    settings: Settings,
+    state: dict,
+    install_recovery: InstallRecoveryPlan | None,
+) -> ExportCandidate | None:
+    if not state_has_static_provenance(settings, state):
+        return None
+    try:
+        task_id = validate_task_id(state.get("task_id"))
+    except RuntimeError:
+        return None
+    timestamp = parse_timestamp(state.get("task_timestamp"))
+    if timestamp is None or declared_export_task_id(settings.target) != task_id:
+        return None
+    if state.get("phase") != "installing" or (
+        install_recovery is None or install_recovery.action != "published"
+    ):
+        return None
+    return ExportCandidate(task_id, timestamp, {})
 
 
 def validate_no_downgrade(
@@ -1094,10 +1179,11 @@ def plan_candidate(
     aws,
     state: dict,
     now: datetime,
+    trusted_target: ExportCandidate | None = None,
 ) -> CandidatePlan:
     """Choose resume versus replan with shared execution/dry-run safety gates."""
     phase = state.get("phase")
-    protected: list[ExportCandidate] = []
+    protected = declared_snapshot_candidates(settings, aws, trusted_target)
     if phase == "installed" and state_has_static_provenance(settings, state):
         try:
             installed_task_id = validate_task_id(state.get("task_id"))
@@ -1121,17 +1207,7 @@ def plan_candidate(
             saved_timestamp is not None
             and now - saved_timestamp > settings.max_export_age
         )
-        protected.extend(
-            declared_snapshot_candidates(
-                settings,
-                aws,
-                phase,
-                active_task_id=active_task_id or None,
-                excluded_task_ids={active_task_id}
-                if active_task_id and saved_is_stale
-                else None,
-            )
-        )
+
         if active_task_id and saved_timestamp is not None and saved_is_stale:
             abandoned_task_id = active_task_id
         elif active_task_id and saved_timestamp is not None:
@@ -1190,6 +1266,25 @@ def resolve_installed_backup(
         shutil.rmtree(backup)
         fsync_directory(settings.target.parent)
     return True
+
+
+def validate_checkpoint_artifact_paths(settings: Settings, state: dict) -> None:
+    phase = state.get("phase")
+    if phase not in ACTIVE_PHASES and phase not in {"installed", "rejected"}:
+        return
+    try:
+        task_id = validate_task_id(state.get("task_id"))
+    except RuntimeError:
+        return
+    staging = settings.staging_path(task_id)
+    backup = settings.backup_path(task_id)
+    for label, path in (("staging", staging), ("backup", backup)):
+        if not path.exists() and not path.is_symlink():
+            continue
+        if path.is_symlink() or not path.is_dir():
+            raise RuntimeError(f"refusing to use unsafe {label} path: {path}")
+    if phase != "installing" and phase != "installed" and backup.exists():
+        raise RuntimeError(f"stale replacement backup requires inspection: {backup}")
 
 
 def abandon_active_checkpoint(settings: Settings, task_id: str) -> None:
@@ -1258,24 +1353,7 @@ def plan_interrupted_install(
     )
 
     if target_is_active:
-        if staging_exists:
-            staging_declares_active = declared_export_task_id(staging) == task_id
-            action = (
-                "remove_duplicate_staging"
-                if staging_is_active or staging_declares_active
-                else "rollback_staging"
-            )
-        elif backup_exists:
-            backup_declares_active = declared_export_task_id(backup) == task_id
-            action = (
-                "remove_duplicate_backup"
-                if backup_is_active or backup_declares_active
-                else "rollback_backup"
-            )
-        else:
-            action = "retain_target"
-        return InstallRecoveryPlan(task_id, action)
-
+        return InstallRecoveryPlan(task_id, "published")
     if staging_exists and staging_is_active:
         return InstallRecoveryPlan(task_id, "staged")
     if backup_exists and backup_is_active:
@@ -1287,26 +1365,30 @@ def apply_interrupted_install_plan(
     settings: Settings,
     plan: InstallRecoveryPlan | None,
 ) -> None:
-    if plan is None or plan.action in {"retain_target", "staged"}:
+    if plan is None or plan.action != "backup_to_staging":
         return
-    task_id = plan.task_id
-    target = settings.target
-    staging = settings.staging_path(task_id)
-    backup = settings.backup_path(task_id)
-    if plan.action == "remove_duplicate_staging":
-        shutil.rmtree(staging)
-    elif plan.action == "remove_duplicate_backup":
-        shutil.rmtree(backup)
-    elif plan.action == "rollback_staging":
-        atomic_exchange(target, staging)
-    elif plan.action == "rollback_backup":
-        atomic_exchange(target, backup)
-        backup.rename(staging)
-    elif plan.action == "backup_to_staging":
-        backup.rename(staging)
-    else:
-        raise RuntimeError(f"unknown install recovery action: {plan.action}")
-    fsync_directory(target.parent)
+    backup = settings.backup_path(plan.task_id)
+    staging = settings.staging_path(plan.task_id)
+    backup.rename(staging)
+    fsync_directory(settings.target.parent)
+
+
+def cleanup_published_checkpoint_artifacts(
+    settings: Settings,
+    plan: InstallRecoveryPlan | None,
+) -> None:
+    if plan is None or plan.action != "published":
+        return
+    changed = False
+    for path in (
+        settings.staging_path(plan.task_id),
+        settings.backup_path(plan.task_id),
+    ):
+        if path.exists():
+            shutil.rmtree(path)
+            changed = True
+    if changed:
+        fsync_directory(settings.target.parent)
 
 
 def ensure_no_orphaned_target_backup(
@@ -1401,16 +1483,19 @@ def refresh_once(
     verify_identity(settings, aws.get_identity())
     state = load_state(settings.state_file)
     phase = state.get("phase")
+    validate_checkpoint_artifact_paths(settings, state)
     resolve_installed_backup(settings, state, remove=True)
     install_recovery = plan_interrupted_install(settings, state)
     ensure_no_orphaned_target_backup(settings, state, install_recovery)
-    apply_interrupted_install_plan(settings, install_recovery)
+    trusted_target = trusted_target_candidate(settings, state, install_recovery)
 
-    plan = plan_candidate(settings, aws, state, now)
+    plan = plan_candidate(settings, aws, state, now, trusted_target)
     candidate = plan.candidate
     resume = plan.resume
     if not resume:
         if plan.abandoned_task_id:
+            cleanup_published_checkpoint_artifacts(settings, install_recovery)
+            apply_interrupted_install_plan(settings, install_recovery)
             abandon_active_checkpoint(settings, plan.abandoned_task_id)
 
         if (
@@ -1486,6 +1571,9 @@ def refresh_once(
         if phase != "installing":
             save_rejected_state(settings, state, task_id, clock, exc)
         raise
+
+    if resume:
+        apply_interrupted_install_plan(settings, install_recovery)
 
     # If a prior run crashed after the swap, finish cleanup instead of downloading again.
     if resume and phase == "installing" and settings.target.exists():
@@ -1579,12 +1667,32 @@ def dry_run(
     verify_identity(settings, identity)
     state = load_state(settings.state_file)
     phase = state.get("phase")
+    validate_checkpoint_artifact_paths(settings, state)
     resolve_installed_backup(settings, state, remove=False)
     install_recovery = plan_interrupted_install(settings, state)
     ensure_no_orphaned_target_backup(settings, state, install_recovery)
+    trusted_target = trusted_target_candidate(settings, state, install_recovery)
 
-    plan = plan_candidate(settings, aws, state, now)
+    plan = plan_candidate(settings, aws, state, now, trusted_target)
     candidate = plan.candidate
+    inventory = build_inventory(
+        candidate.task_id,
+        aws.list_export_objects(candidate.task_id),
+        settings.export_only,
+    )
+    metadata_names = sorted(
+        name
+        for name in inventory.objects
+        if name == f"export_info_{candidate.task_id}.json"
+        or name.startswith(f"export_tables_info_{candidate.task_id}_")
+    )
+    documents = aws.get_export_metadata(candidate.task_id, metadata_names)
+    validate_export_metadata_documents(
+        documents,
+        candidate.task_id,
+        settings.export_only,
+        inventory.objects,
+    )
     if plan.resume:
         action = f"resume selected follower task {candidate.task_id} from phase {phase}"
         return (

@@ -131,6 +131,11 @@ class FakeAWS:
             result.append(item)
         return result
 
+    def get_export_metadata(self, task_id, names):
+        objects = self._objects(task_id)
+        prefix = f"{task_id}/"
+        return {name: json.loads(objects[prefix + name]) for name in names}
+
     def sync_export(self, task_id, destination):
         self.synced.append(task_id)
         if self.sync_error:
@@ -353,6 +358,10 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
             "AWS_DATA_PATH": "/tmp/untrusted-models",
             "AWS_FUTURE_PROVIDER_SELECTOR": "ambient",
             "BOTO_CONFIG": "/tmp/untrusted-boto-config",
+            "HTTPS_PROXY": "http://127.0.0.1:9999",
+            "SSL_CERT_FILE": "/tmp/untrusted-cert.pem",
+            "REQUESTS_CA_BUNDLE": "/tmp/untrusted-ca.pem",
+            "CURL_CA_BUNDLE": "/tmp/untrusted-curl-ca.pem",
         }
         with mock.patch.dict(os.environ, ambient, clear=True):
             environment = exporter.clean_aws_environment(self.settings)
@@ -380,6 +389,10 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
             "AWS_CA_BUNDLE",
             "AWS_DATA_PATH",
             "AWS_FUTURE_PROVIDER_SELECTOR",
+            "HTTPS_PROXY",
+            "SSL_CERT_FILE",
+            "REQUESTS_CA_BUNDLE",
+            "CURL_CA_BUNDLE",
         ):
             self.assertNotIn(key, environment)
         self.assertEqual(environment["AWS_PROFILE"], "production")
@@ -397,6 +410,7 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
             "create-grant",
             "retire-grant",
             "revoke-grant",
+            "WEEKLY_PRODUCTION_DB_AWS_BIN",
         ):
             self.assertNotIn(forbidden, source)
         with mock.patch.object(exporter.subprocess, "run") as run:
@@ -410,6 +424,14 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
                     f"s3://{self.settings.s3_bucket}/upload",
                     timeout=1,
                     json_output=False,
+                )
+            with self.assertRaisesRegex(RuntimeError, "pinned bucket to stdout"):
+                client._run_text(
+                    "s3",
+                    "cp",
+                    "/tmp/local-source",
+                    f"s3://{self.settings.s3_bucket}/upload",
+                    timeout=1,
                 )
             run.assert_not_called()
 
@@ -654,7 +676,12 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
             {"version": 1, "phase": "installed", "task_id": LEGACY_TASK},
         )
         aws = FakeAWS(
-            self.settings, sync_error=RuntimeError("simulated follower failure")
+            self.settings,
+            tasks=[
+                FakeAWS(self.settings).task(TASK_PREVIOUS_WEEK),
+                FakeAWS(self.settings).task(TASK_LATEST),
+            ],
+            sync_error=RuntimeError("simulated follower failure"),
         )
 
         with self.assertRaisesRegex(RuntimeError, "simulated follower failure"):
@@ -796,7 +823,9 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
         self.assertEqual(aws.synced, [TASK_LATEST])
         self.assertFalse(staging.exists())
 
-    def test_stale_postswap_install_is_restored_before_replanning(self):
+    def test_stale_postswap_install_keeps_valid_published_target_while_replanning(
+        self,
+    ):
         stale_completed = self.now - self.settings.max_export_age - timedelta(seconds=1)
         aws = FakeAWS(self.settings)
         stale = aws.task(TASK_PREVIOUS_WEEK, completed_at=stale_completed)
@@ -815,7 +844,10 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "new candidate download failed"):
             self.run_refresh(aws)
 
-        self.assertEqual((self.target / "current.txt").read_text(), "keep")
+        self.assertFalse((self.target / "current.txt").exists())
+        self.assertTrue(
+            (self.target / f"export_info_{TASK_PREVIOUS_WEEK}.json").is_file()
+        )
         self.assertFalse(staging.exists())
         self.assertEqual(aws.synced, [TASK_LATEST])
         self.assertEqual(
@@ -1265,12 +1297,24 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
             aws.task(TASK_OLDER, completed_at=OLDER_COMPLETED),
             aws.task(TASK_LATEST, completed_at=LATEST_COMPLETED),
         ]
+        latest = aws.tasks[1]
+        older = aws.tasks[0]
         self.write_installed_state(aws, TASK_LATEST)
-        aws.tasks = [aws.task(TASK_OLDER, completed_at=OLDER_COMPLETED)]
+        aws.tasks = [older]
 
-        with self.assertRaisesRegex(RuntimeError, "refusing a downgrade"):
+        def describe_historical(task_id):
+            aws.described.append(task_id)
+            return latest if task_id == TASK_LATEST else older
+
+        with (
+            mock.patch.object(aws, "describe_export", side_effect=describe_historical),
+            self.assertRaisesRegex(RuntimeError, "refusing a downgrade"),
+        ):
             self.run_refresh(aws)
-        with self.assertRaisesRegex(RuntimeError, "refusing a downgrade"):
+        with (
+            mock.patch.object(aws, "describe_export", side_effect=describe_historical),
+            self.assertRaisesRegex(RuntimeError, "refusing a downgrade"),
+        ):
             exporter.dry_run(self.settings, aws, clock=lambda: self.now)
 
         self.assertEqual(aws.synced, [])
@@ -1304,6 +1348,136 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
             },
             before_target,
         )
+
+    def test_declared_target_blocks_replayed_or_rejected_state_downgrade(self):
+        aws = FakeAWS(self.settings)
+        aws.tasks = [
+            aws.task(TASK_OLDER, completed_at=OLDER_COMPLETED),
+            aws.task(TASK_LATEST, completed_at=LATEST_COMPLETED),
+        ]
+        self.write_installed_state(aws, TASK_LATEST)
+        latest = aws.tasks[1]
+        older = aws.tasks[0]
+        aws.tasks = [older]
+
+        def describe_historical(task_id):
+            aws.described.append(task_id)
+            return latest if task_id == TASK_LATEST else older
+
+        for phase in ("installed", "rejected"):
+            with self.subTest(phase=phase):
+                self.write_active_state(older, phase=phase)
+                with (
+                    mock.patch.object(
+                        aws, "describe_export", side_effect=describe_historical
+                    ),
+                    self.assertRaisesRegex(RuntimeError, "refusing a downgrade"),
+                ):
+                    exporter.dry_run(self.settings, aws, clock=lambda: self.now)
+                with (
+                    mock.patch.object(
+                        aws, "describe_export", side_effect=describe_historical
+                    ),
+                    self.assertRaisesRegex(RuntimeError, "refusing a downgrade"),
+                ):
+                    self.run_refresh(aws)
+                self.assertTrue(
+                    (self.target / f"export_info_{TASK_LATEST}.json").is_file()
+                )
+        self.state_file.unlink()
+        with (
+            mock.patch.object(aws, "describe_export", side_effect=describe_historical),
+            self.assertRaisesRegex(RuntimeError, "refusing a downgrade"),
+        ):
+            self.run_refresh(aws)
+
+    def test_postswap_recovery_finishes_without_describing_expired_predecessor(self):
+        aws = FakeAWS(self.settings)
+        self.target.mkdir()
+        (self.target / "expired-predecessor.txt").write_text("old")
+        staging = self.settings.staging_path(TASK_LATEST)
+        aws.sync_export(TASK_LATEST, staging)
+        manifest = self.checksum_manifest(aws, TASK_LATEST)
+        exporter.atomic_exchange(self.target, staging)
+        self.write_active_state(aws.tasks[0], phase="installing", sha256=manifest)
+        aws.synced.clear()
+
+        result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertEqual(aws.synced, [])
+        self.assertEqual(aws.described, [TASK_LATEST])
+        self.assertFalse((self.target / "expired-predecessor.txt").exists())
+        self.assertFalse(staging.exists())
+
+    def test_partial_duplicate_cleanup_residue_never_replaces_valid_target(self):
+        aws = FakeAWS(self.settings)
+        self.write_installed_state(aws)
+        manifest = self.checksum_manifest(aws, TASK_LATEST)
+        staging = self.settings.staging_path(TASK_LATEST)
+        staging.mkdir()
+        (staging / "partial-after-rmtree").write_text("invalid residue")
+        self.write_active_state(aws.tasks[0], phase="installing", sha256=manifest)
+
+        aws.describe_error = RuntimeError("injected describe failure")
+        with self.assertRaisesRegex(RuntimeError, "injected describe failure"):
+            self.run_refresh(aws)
+        self.assertTrue((self.target / f"export_info_{TASK_LATEST}.json").is_file())
+        self.assertEqual(
+            (staging / "partial-after-rmtree").read_text(), "invalid residue"
+        )
+
+        aws.describe_error = None
+        result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertTrue((self.target / f"export_info_{TASK_LATEST}.json").is_file())
+        self.assertFalse((self.target / "partial-after-rmtree").exists())
+        self.assertFalse(staging.exists())
+
+    def test_downloading_checkpoint_unsafe_staging_fails_in_dry_run_and_execution(self):
+        aws = FakeAWS(self.settings)
+        self.write_active_state(aws.tasks[0], phase="downloading")
+        staging = self.settings.staging_path(TASK_LATEST)
+        staging.write_text("not a directory")
+
+        with self.assertRaisesRegex(RuntimeError, "unsafe staging path"):
+            exporter.dry_run(self.settings, aws, clock=lambda: self.now)
+        with self.assertRaisesRegex(RuntimeError, "unsafe staging path"):
+            self.run_refresh(aws)
+        self.assertEqual(staging.read_text(), "not a directory")
+        self.assertEqual(aws.synced, [])
+
+    def test_dry_run_enforces_remote_inventory_and_metadata_gates(self):
+        for attribute, expected in (
+            ("omit_checksum", "does not expose an S3 checksum"),
+            ("missing_success", "missing _SUCCESS"),
+            ("table_status", "table metadata is incomplete"),
+        ):
+            with self.subTest(attribute=attribute):
+                aws = FakeAWS(self.settings)
+                setattr(
+                    aws, attribute, "FAILED" if attribute == "table_status" else True
+                )
+                with self.assertRaisesRegex(RuntimeError, expected):
+                    exporter.dry_run(self.settings, aws, clock=lambda: self.now)
+                self.assertEqual(aws.synced, [])
+
+    def test_inventory_key_grammar_rejects_unicode_decimal_digits(self):
+        self.assertFalse(
+            exporter.is_allowed_export_data_key(
+                "postgres/public.example/١/_SUCCESS", self.settings.export_only
+            )
+        )
+        with self.assertRaisesRegex(RuntimeError, "unexpected table metadata key"):
+            exporter.validate_inventory_names(
+                TASK_LATEST,
+                {
+                    f"export_info_{TASK_LATEST}.json",
+                    f"export_tables_info_{TASK_LATEST}_from_١_to_2.json",
+                },
+                self.settings.export_only,
+            )
 
     def test_main_dry_run_does_not_create_lock_state_or_target(self):
         aws = FakeAWS(self.settings)
