@@ -506,7 +506,7 @@ def parse_sidecar_timestamp(value: object) -> datetime | None:
 
 
 def timestamps_match_to_sidecar_precision(left: datetime, right: datetime) -> bool:
-    return abs((left - right).total_seconds()) < 1
+    return left.replace(microsecond=0) == right.replace(microsecond=0)
 
 
 def load_state(path: Path) -> dict:
@@ -581,11 +581,11 @@ def verify_identity(settings: Settings, identity: dict) -> None:
 
 
 def task_timestamp(task_id: str, task: dict) -> datetime:
-    for field in ("TaskEndTime", "TaskStartTime"):
-        timestamp = parse_timestamp(task.get(field))
-        if timestamp is not None:
-            return timestamp
-    raise RuntimeError(f"RDS export {task_id} has no valid completion/start timestamp")
+    start = parse_timestamp(task.get("TaskStartTime"))
+    end = parse_timestamp(task.get("TaskEndTime"))
+    if start is None or end is None or start > end:
+        raise RuntimeError(f"RDS export {task_id} has invalid task timestamps")
+    return end
 
 
 def state_provenance(settings: Settings, candidate: ExportCandidate) -> dict:

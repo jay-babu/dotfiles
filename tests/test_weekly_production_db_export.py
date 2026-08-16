@@ -519,6 +519,32 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "invalid task timestamps"):
             exporter.select_latest_completed_export(self.settings, [task], self.now)
 
+    def test_malformed_completed_task_cannot_be_hidden_during_ranking(self):
+        aws = FakeAWS(self.settings)
+        valid = aws.task(
+            TASK_OLDER,
+            started_at=datetime(2026, 8, 16, 11, 0, tzinfo=timezone.utc),
+            completed_at=datetime(2026, 8, 16, 11, 20, tzinfo=timezone.utc),
+        )
+        for task_end in (
+            None,
+            "2026-08-16T11:30:00",
+            "2026-08-16",
+        ):
+            with self.subTest(task_end=task_end):
+                malformed = aws.task(
+                    TASK_LATEST,
+                    started_at=datetime(2026, 8, 16, 11, 10, tzinfo=timezone.utc),
+                )
+                if task_end is None:
+                    del malformed["TaskEndTime"]
+                else:
+                    malformed["TaskEndTime"] = task_end
+                with self.assertRaisesRegex(RuntimeError, "invalid task timestamps"):
+                    exporter.select_latest_completed_export(
+                        self.settings, [malformed, valid], self.now
+                    )
+
     def test_newest_temporal_candidate_must_match_every_provenance_field(self):
         aws = FakeAWS(self.settings)
         mutations = {
@@ -1583,6 +1609,16 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
         )
 
         self.assertIn(TASK_LATEST, report)
+
+        aws.export_info_changes["taskEndTime"] = sidecar_timestamp(
+            (completed + timedelta(seconds=1)).isoformat()
+        )
+        with self.assertRaisesRegex(RuntimeError, "wrong taskEndTime"):
+            exporter.dry_run(
+                self.settings,
+                aws,
+                clock=lambda: completed + timedelta(minutes=1),
+            )
 
     def test_prior_installed_evidence_survives_new_candidate_preflight_failure(self):
         aws = FakeAWS(self.settings)
