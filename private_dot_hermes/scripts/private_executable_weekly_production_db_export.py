@@ -655,8 +655,9 @@ def is_allowed_export_data_key(relative: str, export_only: tuple[str, ...]) -> b
     database, qualified_table, partition, filename = parts
     if re.fullmatch(r"[0-9]+", partition) is None:
         return False
-    if filename != "_SUCCESS" and not (
-        filename.startswith("part-") and filename.endswith(".parquet")
+    if (
+        filename != "_SUCCESS"
+        and re.fullmatch(r"part-[A-Za-z0-9._-]+\.parquet", filename) is None
     ):
         return False
     for scope in export_only:
@@ -906,7 +907,7 @@ def validate_table_metadata_documents(
 def validate_export_metadata_documents(
     documents: dict[str, object],
     task_id: str,
-    export_only: tuple[str, ...],
+    settings: Settings,
     object_names: set[str] | dict[str, int],
 ) -> None:
     info_name = f"export_info_{task_id}.json"
@@ -919,8 +920,31 @@ def validate_export_metadata_documents(
         raise PermanentExportError(
             f"downloaded export metadata does not confirm {task_id}"
         )
+    export_only = info.get("exportOnly")
+    expected_export_only = set(settings.export_only)
+    if (
+        not isinstance(export_only, list)
+        or not all(isinstance(scope, str) for scope in export_only)
+        or len(export_only) != len(expected_export_only)
+        or set(export_only) != expected_export_only
+    ):
+        raise PermanentExportError("downloaded export metadata has wrong export scopes")
+    expected = {
+        "sourceArn": settings.source_arn,
+        "s3Bucket": settings.s3_bucket,
+        "s3Prefix": "",
+        "exportedFilesPath": task_id,
+        "iamRoleArn": settings.iam_role_arn,
+        "kmsKeyId": settings.kms_key_arn,
+        "percentProgress": 100,
+    }
+    for field, value in expected.items():
+        if info.get(field) != value:
+            raise PermanentExportError(f"downloaded export metadata has wrong {field}")
     try:
-        validate_table_metadata_documents(documents, task_id, export_only, object_names)
+        validate_table_metadata_documents(
+            documents, task_id, settings.export_only, object_names
+        )
     except RuntimeError as exc:
         raise PermanentExportError(str(exc)) from exc
 
@@ -951,7 +975,7 @@ def validate_download(
     directory: Path,
     task_id: str,
     inventory: Inventory,
-    export_only: tuple[str, ...],
+    settings: Settings,
     expected_sha256: dict[str, str] | None = None,
 ) -> None:
     if not directory.is_dir() or directory.is_symlink():
@@ -970,7 +994,7 @@ def validate_download(
             f"(missing={missing}, extra={extra}, size_mismatches={mismatched})"
         )
     documents = read_export_metadata_documents(directory, task_id, local)
-    validate_export_metadata_documents(documents, task_id, export_only, local)
+    validate_export_metadata_documents(documents, task_id, settings, local)
     if expected_sha256 is not None:
         manifest = validate_sha256_manifest(expected_sha256, inventory)
         actual = sha256_inventory(directory, inventory.objects)
@@ -999,7 +1023,7 @@ def validate_snapshot_directory(
         directory,
         task_id,
         inventory,
-        settings.export_only,
+        settings,
         manifest,
     )
     return inventory
@@ -1018,18 +1042,47 @@ def validate_installed_snapshot(
     )
 
 
-def ensure_download_space(settings: Settings, inventory: Inventory) -> None:
-    settings.target.parent.mkdir(parents=True, exist_ok=True)
-    free = shutil.disk_usage(settings.target.parent).free
-    # Checksum-aware sync may still redownload manifest-matching files based on
-    # timestamps and writes through temporary files. Reserve the complete export
-    # rather than crediting staging bytes that might coexist with a replacement.
-    required = inventory.total_bytes + settings.free_space_headroom_bytes
+def check_download_space(
+    directory: Path,
+    inventory: Inventory,
+    headroom_bytes: int,
+) -> None:
+    free = shutil.disk_usage(directory).free
+    required = inventory.total_bytes + headroom_bytes
     if free < required:
         raise RuntimeError(
             f"not enough free disk for export: need {required / 1024**3:.2f} GiB, "
             f"have {free / 1024**3:.2f} GiB"
         )
+
+
+def existing_directory(path: Path) -> Path:
+    candidate = path
+    while not candidate.exists():
+        parent = candidate.parent
+        if parent == candidate:
+            break
+        candidate = parent
+    if not candidate.is_dir() or candidate.is_symlink():
+        raise RuntimeError(f"download parent is missing or unsafe: {candidate}")
+    return candidate
+
+
+def ensure_download_space(settings: Settings, inventory: Inventory) -> None:
+    settings.target.parent.mkdir(parents=True, exist_ok=True)
+    check_download_space(
+        settings.target.parent,
+        inventory,
+        settings.free_space_headroom_bytes,
+    )
+
+
+def check_dry_run_download_space(settings: Settings, inventory: Inventory) -> None:
+    check_download_space(
+        existing_directory(settings.target.parent),
+        inventory,
+        settings.free_space_headroom_bytes,
+    )
 
 
 def install_download(settings: Settings, task_id: str, staging: Path) -> None:
@@ -1143,7 +1196,13 @@ def trusted_target_candidate(
     timestamp = parse_timestamp(state.get("task_timestamp"))
     if timestamp is None or declared_export_task_id(settings.target) != task_id:
         return None
-    if state.get("phase") != "installing" or (
+    phase = state.get("phase")
+    if phase == "installed":
+        try:
+            validate_installed_snapshot(settings, task_id, state.get("sha256"))
+        except RuntimeError:
+            return None
+    elif phase != "installing" or (
         install_recovery is None or install_recovery.action != "published"
     ):
         return None
@@ -1437,7 +1496,7 @@ def finish_install(
             settings.target,
             task_id,
             inventory,
-            settings.export_only,
+            settings,
             expected_sha256,
         )
     except Exception:
@@ -1499,7 +1558,22 @@ def refresh_once(
             abandon_active_checkpoint(settings, plan.abandoned_task_id)
 
         if (
+            not force
+            and phase == "installed"
+            and trusted_target is not None
+            and trusted_target.task_id == candidate.task_id
+        ):
+            installed_files = local_inventory(settings.target)
+            return RefreshResult(
+                False,
+                candidate.task_id,
+                len(installed_files),
+                sum(installed_files.values()),
+            )
+
+        if (
             phase == "installed"
+            and trusted_target is None
             and state_has_provenance(settings, state, candidate)
             and state.get("sha256") is not None
         ):
@@ -1583,7 +1657,7 @@ def refresh_once(
                 settings.target,
                 task_id,
                 inventory,
-                settings.export_only,
+                settings,
                 expected_sha256,
             )
         except RuntimeError:
@@ -1625,7 +1699,7 @@ def refresh_once(
             staging,
             task_id,
             inventory,
-            settings.export_only,
+            settings,
             resume_sha256,
         )
     except PermanentExportError as exc:
@@ -1690,10 +1764,17 @@ def dry_run(
     validate_export_metadata_documents(
         documents,
         candidate.task_id,
-        settings.export_only,
+        settings,
         inventory.objects,
     )
     if plan.resume:
+        published = (
+            phase == "installing"
+            and install_recovery is not None
+            and install_recovery.action == "published"
+        )
+        if not published:
+            check_dry_run_download_space(settings, inventory)
         action = f"resume selected follower task {candidate.task_id} from phase {phase}"
         return (
             f"Dry run OK: account {identity['Account']}; would {action}; "
@@ -1701,7 +1782,17 @@ def dry_run(
         )
 
     action = f"download latest follower task {candidate.task_id}"
-    if phase == "installed" and state_has_provenance(settings, state, candidate):
+    if (
+        phase == "installed"
+        and trusted_target is not None
+        and trusted_target.task_id == candidate.task_id
+    ):
+        action = (
+            f"force re-download follower task {candidate.task_id}"
+            if force
+            else f"no-op; latest follower task {candidate.task_id} is installed"
+        )
+    elif phase == "installed" and state_has_provenance(settings, state, candidate):
         manifest = state.get("sha256")
         if manifest is not None:
             try:
@@ -1718,6 +1809,8 @@ def dry_run(
             action = f"migrate untrusted target to {candidate.task_id}"
     elif settings.target.exists() or phase == "installed":
         action = f"migrate existing target to {candidate.task_id}"
+    if not action.startswith("no-op"):
+        check_dry_run_download_space(settings, inventory)
     return (
         f"Dry run OK: account {identity['Account']}; would {action}; "
         f"target {settings.target}"

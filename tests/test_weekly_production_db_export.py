@@ -66,6 +66,7 @@ class FakeAWS:
         self.omit_reference_partition = False
         self.public_metadata_target = "postgres.public.example"
         self.all_tables_empty = False
+        self.export_info_changes: dict[str, object] = {}
 
     def task(
         self,
@@ -158,13 +159,22 @@ class FakeAWS:
             table_statuses.append(
                 {"target": "postgres.private.secret", "status": "COMPLETE"}
             )
+        export_info = {
+            "exportTaskIdentifier": metadata_task,
+            "sourceArn": self.settings.source_arn,
+            "exportOnly": list(reversed(self.settings.export_only)),
+            "s3Bucket": self.settings.s3_bucket,
+            "s3Prefix": "",
+            "exportedFilesPath": task_id,
+            "iamRoleArn": self.settings.iam_role_arn,
+            "kmsKeyId": self.settings.kms_key_arn,
+            "status": "COMPLETE",
+            "percentProgress": 100,
+        }
+        export_info.update(self.export_info_changes)
         objects = {
             prefix + f"export_info_{metadata_task}.json": json.dumps(
-                {
-                    "exportTaskIdentifier": metadata_task,
-                    "status": "COMPLETE",
-                    "exportedFilesPath": task_id,
-                }
+                export_info
             ).encode(),
             prefix + f"export_tables_info_{metadata_task}_from_1_to_2.json": json.dumps(
                 {"perTableStatus": table_statuses}
@@ -1463,6 +1473,67 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
                     exporter.dry_run(self.settings, aws, clock=lambda: self.now)
                 self.assertEqual(aws.synced, [])
 
+    def test_export_info_provenance_fields_are_pinned(self):
+        cases = {
+            "sourceArn": "arn:aws:rds:us-east-1:000000000000:cluster:foreign",
+            "exportOnly": ["postgres.public", "postgres.private"],
+            "s3Bucket": "foreign-bucket",
+            "s3Prefix": "foreign-prefix",
+            "exportedFilesPath": TASK_OLDER,
+            "iamRoleArn": "arn:aws:iam::000000000000:role/foreign",
+            "kmsKeyId": "arn:aws:kms:us-east-1:000000000000:key/foreign",
+            "percentProgress": 99,
+        }
+        for field, value in cases.items():
+            with self.subTest(field=field):
+                aws = FakeAWS(self.settings)
+                aws.export_info_changes[field] = value
+                with self.assertRaisesRegex(
+                    RuntimeError,
+                    "wrong export scopes"
+                    if field == "exportOnly"
+                    else f"wrong {field}",
+                ):
+                    exporter.dry_run(self.settings, aws, clock=lambda: self.now)
+                self.assertEqual(aws.synced, [])
+
+    def test_trusted_installed_snapshot_advances_after_old_rds_task_expires(self):
+        aws = FakeAWS(self.settings)
+        previous = aws.task(TASK_PREVIOUS_WEEK)
+        latest = aws.task(TASK_LATEST)
+        aws.tasks = [previous, latest]
+        self.write_installed_state(aws, TASK_PREVIOUS_WEEK)
+        aws.tasks = [latest]
+
+        result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertEqual(result.task_id, TASK_LATEST)
+        self.assertEqual(aws.synced, [TASK_LATEST])
+        self.assertNotIn(TASK_PREVIOUS_WEEK, aws.described)
+
+    def test_dry_run_checks_capacity_only_when_a_download_is_required(self):
+        aws = FakeAWS(self.settings)
+        with (
+            mock.patch.object(
+                exporter.shutil,
+                "disk_usage",
+                return_value=mock.Mock(free=0),
+            ),
+            self.assertRaisesRegex(RuntimeError, "not enough free disk"),
+        ):
+            exporter.dry_run(self.settings, aws, clock=lambda: self.now)
+        self.assertEqual(aws.synced, [])
+
+        self.write_installed_state(aws)
+        with mock.patch.object(
+            exporter.shutil,
+            "disk_usage",
+            return_value=mock.Mock(free=0),
+        ):
+            report = exporter.dry_run(self.settings, aws, clock=lambda: self.now)
+        self.assertIn("no-op", report.lower())
+
     def test_inventory_key_grammar_rejects_unicode_decimal_digits(self):
         self.assertFalse(
             exporter.is_allowed_export_data_key(
@@ -1478,6 +1549,14 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
                 },
                 self.settings.export_only,
             )
+        for filename in ("part-💣.parquet", "part-line\nbreak.parquet"):
+            with self.subTest(filename=filename):
+                self.assertFalse(
+                    exporter.is_allowed_export_data_key(
+                        f"postgres/public.example/1/{filename}",
+                        self.settings.export_only,
+                    )
+                )
 
     def test_main_dry_run_does_not_create_lock_state_or_target(self):
         aws = FakeAWS(self.settings)
