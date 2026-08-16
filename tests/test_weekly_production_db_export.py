@@ -99,6 +99,7 @@ class FakeAWS:
             "WarningMessage": self.warning_message,
             "TaskStartTime": started_at.isoformat(),
             "TaskEndTime": completed_at.isoformat(),
+            "TotalExtractedDataInGB": 0,
         }
         task.update(changes)
         return task
@@ -151,6 +152,10 @@ class FakeAWS:
     def _objects(self, task_id):
         prefix = f"{task_id}/"
         metadata_task = TASK_FOREIGN if self.foreign_metadata_name else task_id
+        selected_task = next(
+            (task for task in self.tasks if task["ExportTaskIdentifier"] == task_id),
+            self.task(task_id),
+        )
         table_statuses = [
             {"target": self.public_metadata_target, "status": self.table_status},
             {"target": "postgres.reference.example", "status": "COMPLETE"},
@@ -170,6 +175,9 @@ class FakeAWS:
             "kmsKeyId": self.settings.kms_key_arn,
             "status": "COMPLETE",
             "percentProgress": 100,
+            "taskStartTime": selected_task["TaskStartTime"],
+            "taskEndTime": selected_task["TaskEndTime"],
+            "totalExportedDataInGB": selected_task["TotalExtractedDataInGB"] + 0.25,
         }
         export_info.update(self.export_info_changes)
         objects = {
@@ -1198,6 +1206,7 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
                     setattr(aws, attribute, value)
                 with self.assertRaisesRegex(RuntimeError, message):
                     exporter.refresh_once(settings, aws, clock=lambda: self.now)
+                self.assertEqual(aws.synced, [])
                 self.assertEqual((settings.target / "current.txt").read_text(), "keep")
 
     def test_completed_metadata_supports_empty_tables_with_success_markers(self):
@@ -1483,6 +1492,9 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
             "iamRoleArn": "arn:aws:iam::000000000000:role/foreign",
             "kmsKeyId": "arn:aws:kms:us-east-1:000000000000:key/foreign",
             "percentProgress": 99,
+            "taskStartTime": "2026-08-16T10:00:00+00:00",
+            "taskEndTime": "2026-08-16T12:30:00+00:00",
+            "totalExportedDataInGB": 999.0,
         }
         for field, value in cases.items():
             with self.subTest(field=field):
@@ -1496,6 +1508,67 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
                 ):
                     exporter.dry_run(self.settings, aws, clock=lambda: self.now)
                 self.assertEqual(aws.synced, [])
+
+        aws = FakeAWS(self.settings)
+        aws.export_info_changes["percentProgress"] = 100.0
+        with self.assertRaisesRegex(RuntimeError, "wrong percentProgress"):
+            exporter.dry_run(self.settings, aws, clock=lambda: self.now)
+
+    def test_rds_task_provenance_fields_are_type_strict(self):
+        cases = {
+            "ExportOnly": {
+                "postgres.public": True,
+                "postgres.reference": True,
+            },
+            "S3Prefix": False,
+            "PercentProgress": "100",
+            "TotalExtractedDataInGB": "0",
+            "TaskStartTime": {"not": "a timestamp"},
+        }
+        for field, value in cases.items():
+            with self.subTest(field=field):
+                task = FakeAWS(self.settings).task(**{field: value})
+                with self.assertRaisesRegex(
+                    RuntimeError,
+                    "task timestamps" if field == "TaskStartTime" else field,
+                ):
+                    exporter.validate_completed_task(self.settings, TASK_LATEST, task)
+
+    def test_prior_installed_evidence_survives_new_candidate_preflight_failure(self):
+        aws = FakeAWS(self.settings)
+        previous = aws.task(TASK_PREVIOUS_WEEK)
+        latest = aws.task(TASK_LATEST)
+        aws.tasks = [previous, latest]
+        self.write_installed_state(aws, TASK_PREVIOUS_WEEK)
+
+        original_list_objects = aws.list_export_objects
+
+        def fail_inventory(task_id):
+            raise exporter.AWSCommandError(f"injected inventory failure for {task_id}")
+
+        aws.list_export_objects = fail_inventory
+        with self.assertRaisesRegex(RuntimeError, "injected inventory failure"):
+            self.run_refresh(aws)
+        failed_state = json.loads(self.settings.state_file.read_text())
+        self.assertEqual(failed_state["phase"], "complete")
+        self.assertEqual(
+            failed_state["installed_target"]["task_id"], TASK_PREVIOUS_WEEK
+        )
+        self.assertEqual(
+            exporter.declared_export_task_id(self.settings.target), TASK_PREVIOUS_WEEK
+        )
+
+        aws.tasks = [latest]
+        aws.list_export_objects = original_list_objects
+        report = exporter.dry_run(self.settings, aws, clock=lambda: self.now)
+        self.assertIn(TASK_LATEST, report)
+        result = self.run_refresh(aws)
+
+        self.assertTrue(result.changed)
+        self.assertEqual(result.task_id, TASK_LATEST)
+        self.assertNotIn(TASK_PREVIOUS_WEEK, aws.described)
+        installed_state = json.loads(self.settings.state_file.read_text())
+        self.assertNotIn("installed_target", installed_state)
 
     def test_trusted_installed_snapshot_advances_after_old_rds_task_expires(self):
         aws = FakeAWS(self.settings)

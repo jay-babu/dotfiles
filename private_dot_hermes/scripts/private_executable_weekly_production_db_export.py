@@ -17,6 +17,7 @@ import ctypes
 import fcntl
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -163,6 +164,11 @@ class CandidatePlan(NamedTuple):
 class InstallRecoveryPlan(NamedTuple):
     task_id: str
     action: str
+
+
+class TrustedTarget(NamedTuple):
+    candidate: ExportCandidate
+    evidence: dict
 
 
 class AWSCommandError(RuntimeError):
@@ -591,11 +597,17 @@ def validate_completed_task(settings: Settings, task_id: str, task: dict) -> Non
             raise RuntimeError(
                 f"RDS export {task_id} has unexpected {key}: {task.get(key)!r}"
             )
-    if sorted(task.get("ExportOnly", [])) != sorted(settings.export_only):
+    export_only = task.get("ExportOnly")
+    if (
+        not isinstance(export_only, list)
+        or not all(isinstance(scope, str) for scope in export_only)
+        or len(export_only) != len(settings.export_only)
+        or set(export_only) != set(settings.export_only)
+    ):
         raise RuntimeError(
             f"RDS export {task_id} has unexpected ExportOnly: {task.get('ExportOnly')!r}"
         )
-    if (task.get("S3Prefix") or "") != "":
+    if task.get("S3Prefix") != "":
         raise RuntimeError(
             f"RDS export {task_id} has unexpected S3Prefix: {task.get('S3Prefix')!r}"
         )
@@ -603,11 +615,24 @@ def validate_completed_task(settings: Settings, task_id: str, task: dict) -> Non
         raise RuntimeError(
             f"RDS export {task_id} is not complete: {task.get('Status')!r}"
         )
-    if task.get("WarningMessage"):
+    progress = task.get("PercentProgress")
+    if isinstance(progress, bool) or not isinstance(progress, int) or progress != 100:
         raise RuntimeError(
-            f"RDS export {task_id} completed with a warning: "
-            f"{task.get('WarningMessage')}"
+            f"RDS export {task_id} has invalid PercentProgress: {progress!r}"
         )
+    start = parse_timestamp(task.get("TaskStartTime"))
+    end_value = task.get("TaskEndTime")
+    end = start if end_value is None else parse_timestamp(end_value)
+    if start is None or end is None or start > end:
+        raise RuntimeError(f"RDS export {task_id} has invalid task timestamps")
+    total = task.get("TotalExtractedDataInGB")
+    if isinstance(total, bool) or not isinstance(total, int) or total < 0:
+        raise RuntimeError(
+            f"RDS export {task_id} has invalid TotalExtractedDataInGB: {total!r}"
+        )
+    warning = task.get("WarningMessage")
+    if warning not in (None, ""):
+        raise RuntimeError(f"RDS export {task_id} completed with a warning: {warning}")
 
 
 def select_latest_completed_export(
@@ -909,6 +934,8 @@ def validate_export_metadata_documents(
     task_id: str,
     settings: Settings,
     object_names: set[str] | dict[str, int],
+    candidate_task: dict | None = None,
+    expected_task_timestamp: datetime | None = None,
 ) -> None:
     info_name = f"export_info_{task_id}.json"
     info = documents.get(info_name)
@@ -929,6 +956,25 @@ def validate_export_metadata_documents(
         or set(export_only) != expected_export_only
     ):
         raise PermanentExportError("downloaded export metadata has wrong export scopes")
+    progress = info.get("percentProgress")
+    if isinstance(progress, bool) or not isinstance(progress, int) or progress != 100:
+        raise PermanentExportError(
+            "downloaded export metadata has wrong percentProgress"
+        )
+    start = parse_timestamp(info.get("taskStartTime"))
+    end = parse_timestamp(info.get("taskEndTime"))
+    if start is None or end is None or start > end:
+        raise PermanentExportError("downloaded export metadata has invalid task times")
+    total = info.get("totalExportedDataInGB")
+    if (
+        isinstance(total, bool)
+        or not isinstance(total, (int, float))
+        or not math.isfinite(total)
+        or total < 0
+    ):
+        raise PermanentExportError(
+            "downloaded export metadata has invalid totalExportedDataInGB"
+        )
     expected = {
         "sourceArn": settings.source_arn,
         "s3Bucket": settings.s3_bucket,
@@ -936,17 +982,69 @@ def validate_export_metadata_documents(
         "exportedFilesPath": task_id,
         "iamRoleArn": settings.iam_role_arn,
         "kmsKeyId": settings.kms_key_arn,
-        "percentProgress": 100,
     }
     for field, value in expected.items():
         if info.get(field) != value:
             raise PermanentExportError(f"downloaded export metadata has wrong {field}")
+    if candidate_task is not None:
+        expected_start = parse_timestamp(candidate_task.get("TaskStartTime"))
+        task_end_value = candidate_task.get("TaskEndTime")
+        expected_end = (
+            expected_start
+            if task_end_value is None
+            else parse_timestamp(task_end_value)
+        )
+        expected_total = candidate_task.get("TotalExtractedDataInGB")
+        if start != expected_start:
+            raise PermanentExportError(
+                "downloaded export metadata has wrong taskStartTime"
+            )
+        if end != expected_end:
+            raise PermanentExportError(
+                "downloaded export metadata has wrong taskEndTime"
+            )
+        # RDS exposes this value as whole GiB while its sidecar records a
+        # fractional value. Require the sidecar to stay in the selected bin.
+        if (
+            isinstance(expected_total, bool)
+            or not isinstance(expected_total, int)
+            or not expected_total <= total < expected_total + 1
+        ):
+            raise PermanentExportError(
+                "downloaded export metadata has wrong totalExportedDataInGB"
+            )
+    if expected_task_timestamp is not None and end != expected_task_timestamp:
+        raise PermanentExportError(
+            "downloaded export metadata does not match the saved task timestamp"
+        )
     try:
         validate_table_metadata_documents(
             documents, task_id, settings.export_only, object_names
         )
     except RuntimeError as exc:
         raise PermanentExportError(str(exc)) from exc
+
+
+def validate_remote_export_metadata(
+    aws,
+    candidate: ExportCandidate,
+    settings: Settings,
+    inventory: Inventory,
+) -> None:
+    metadata_names = sorted(
+        name
+        for name in inventory.objects
+        if name == f"export_info_{candidate.task_id}.json"
+        or name.startswith(f"export_tables_info_{candidate.task_id}_")
+    )
+    documents = aws.get_export_metadata(candidate.task_id, metadata_names)
+    validate_export_metadata_documents(
+        documents,
+        candidate.task_id,
+        settings,
+        inventory.objects,
+        candidate.task,
+    )
 
 
 def read_export_metadata_documents(
@@ -977,6 +1075,8 @@ def validate_download(
     inventory: Inventory,
     settings: Settings,
     expected_sha256: dict[str, str] | None = None,
+    candidate_task: dict | None = None,
+    expected_task_timestamp: datetime | None = None,
 ) -> None:
     if not directory.is_dir() or directory.is_symlink():
         raise RuntimeError(f"download directory is missing or unsafe: {directory}")
@@ -994,7 +1094,14 @@ def validate_download(
             f"(missing={missing}, extra={extra}, size_mismatches={mismatched})"
         )
     documents = read_export_metadata_documents(directory, task_id, local)
-    validate_export_metadata_documents(documents, task_id, settings, local)
+    validate_export_metadata_documents(
+        documents,
+        task_id,
+        settings,
+        local,
+        candidate_task,
+        expected_task_timestamp,
+    )
     if expected_sha256 is not None:
         manifest = validate_sha256_manifest(expected_sha256, inventory)
         actual = sha256_inventory(directory, inventory.objects)
@@ -1012,6 +1119,7 @@ def validate_snapshot_directory(
     directory: Path,
     task_id: str,
     manifest_value: object,
+    expected_task_timestamp: datetime | None = None,
 ) -> Inventory:
     if not directory.is_dir() or directory.is_symlink():
         raise RuntimeError(f"download directory is missing or unsafe: {directory}")
@@ -1025,6 +1133,7 @@ def validate_snapshot_directory(
         inventory,
         settings,
         manifest,
+        expected_task_timestamp=expected_task_timestamp,
     )
     return inventory
 
@@ -1033,12 +1142,14 @@ def validate_installed_snapshot(
     settings: Settings,
     task_id: str,
     manifest_value: object,
+    expected_task_timestamp: datetime | None = None,
 ) -> Inventory:
     return validate_snapshot_directory(
         settings,
         settings.target,
         task_id,
         manifest_value,
+        expected_task_timestamp,
     )
 
 
@@ -1186,27 +1297,58 @@ def trusted_target_candidate(
     settings: Settings,
     state: dict,
     install_recovery: InstallRecoveryPlan | None,
-) -> ExportCandidate | None:
-    if not state_has_static_provenance(settings, state):
+) -> TrustedTarget | None:
+    target_task_id = declared_export_task_id(settings.target)
+    if target_task_id is None:
         return None
-    try:
-        task_id = validate_task_id(state.get("task_id"))
-    except RuntimeError:
-        return None
-    timestamp = parse_timestamp(state.get("task_timestamp"))
-    if timestamp is None or declared_export_task_id(settings.target) != task_id:
-        return None
-    phase = state.get("phase")
-    if phase == "installed":
+    nested = state.get("installed_target")
+    sources: list[tuple[dict, bool]] = []
+    if isinstance(nested, dict):
+        sources.append((nested, True))
+    sources.append((state, False))
+    for evidence, independent in sources:
+        if not state_has_static_provenance(settings, evidence):
+            continue
         try:
-            validate_installed_snapshot(settings, task_id, state.get("sha256"))
+            task_id = validate_task_id(evidence.get("task_id"))
         except RuntimeError:
-            return None
-    elif phase != "installing" or (
-        install_recovery is None or install_recovery.action != "published"
-    ):
-        return None
-    return ExportCandidate(task_id, timestamp, {})
+            continue
+        timestamp = parse_timestamp(evidence.get("task_timestamp"))
+        if timestamp is None or task_id != target_task_id:
+            continue
+        if not independent:
+            phase = state.get("phase")
+            if phase != "installed" and not (
+                phase == "installing"
+                and install_recovery is not None
+                and install_recovery.action == "published"
+            ):
+                continue
+        try:
+            validate_installed_snapshot(
+                settings,
+                task_id,
+                evidence.get("sha256"),
+                timestamp,
+            )
+        except RuntimeError:
+            continue
+        preserved = {
+            key: evidence.get(key)
+            for key in (
+                "version",
+                "task_id",
+                "task_timestamp",
+                "source_arn",
+                "s3_bucket",
+                "export_only",
+                "iam_role_arn",
+                "kms_key_arn",
+                "sha256",
+            )
+        }
+        return TrustedTarget(ExportCandidate(task_id, timestamp, {}), preserved)
+    return None
 
 
 def validate_no_downgrade(
@@ -1487,6 +1629,7 @@ def finish_install(
     inventory: Inventory,
     state: dict,
     clock: Callable[[], datetime],
+    candidate_task: dict,
 ) -> dict:
     backup = settings.backup_path(task_id)
     staging = settings.staging_path(task_id)
@@ -1498,6 +1641,7 @@ def finish_install(
             inventory,
             settings,
             expected_sha256,
+            candidate_task,
         )
     except Exception:
         rollback_install(settings, task_id)
@@ -1522,6 +1666,7 @@ def finish_install(
         object_count=inventory.object_count,
         total_bytes=inventory.total_bytes,
     )
+    installed.pop("installed_target", None)
     save_state(settings.state_file, installed)
     # Once the new target is validated and persisted as installed, cleanup must
     # never roll it back to an old backup that may already be partially deleted.
@@ -1546,7 +1691,10 @@ def refresh_once(
     resolve_installed_backup(settings, state, remove=True)
     install_recovery = plan_interrupted_install(settings, state)
     ensure_no_orphaned_target_backup(settings, state, install_recovery)
-    trusted_target = trusted_target_candidate(settings, state, install_recovery)
+    trusted_target_proof = trusted_target_candidate(settings, state, install_recovery)
+    trusted_target = (
+        trusted_target_proof.candidate if trusted_target_proof is not None else None
+    )
 
     plan = plan_candidate(settings, aws, state, now, trusted_target)
     candidate = plan.candidate
@@ -1614,12 +1762,15 @@ def refresh_once(
                     shutil.rmtree(rejected_staging)
                     fsync_directory(settings.target.parent)
 
+        selected_fields = state_provenance(settings, candidate)
+        if trusted_target_proof is not None:
+            selected_fields["installed_target"] = trusted_target_proof.evidence
         state = updated_state(
             {},
             clock,
             phase="selected",
             status="COMPLETE",
-            **state_provenance(settings, candidate),
+            **selected_fields,
         )
         save_state(settings.state_file, state)
         phase = "selected"
@@ -1639,6 +1790,7 @@ def refresh_once(
         inventory = build_inventory(
             task_id, aws.list_export_objects(task_id), settings.export_only
         )
+        validate_remote_export_metadata(aws, candidate, settings, inventory)
     except AWSCommandError:
         raise
     except RuntimeError as exc:
@@ -1659,12 +1811,15 @@ def refresh_once(
                 inventory,
                 settings,
                 expected_sha256,
+                candidate.task,
             )
         except RuntimeError:
             pass
         else:
             try:
-                finish_install(settings, task_id, inventory, state, clock)
+                finish_install(
+                    settings, task_id, inventory, state, clock, candidate.task
+                )
             except PermanentExportError as exc:
                 save_rejected_state(settings, state, task_id, clock, exc)
                 raise
@@ -1701,6 +1856,7 @@ def refresh_once(
             inventory,
             settings,
             resume_sha256,
+            candidate.task,
         )
     except PermanentExportError as exc:
         save_rejected_state(settings, state, task_id, clock, exc)
@@ -1722,7 +1878,7 @@ def refresh_once(
     save_state(settings.state_file, state)
     install_download(settings, task_id, staging)
     try:
-        finish_install(settings, task_id, inventory, state, clock)
+        finish_install(settings, task_id, inventory, state, clock, candidate.task)
     except PermanentExportError as exc:
         save_rejected_state(settings, state, task_id, clock, exc)
         raise
@@ -1745,7 +1901,10 @@ def dry_run(
     resolve_installed_backup(settings, state, remove=False)
     install_recovery = plan_interrupted_install(settings, state)
     ensure_no_orphaned_target_backup(settings, state, install_recovery)
-    trusted_target = trusted_target_candidate(settings, state, install_recovery)
+    trusted_target_proof = trusted_target_candidate(settings, state, install_recovery)
+    trusted_target = (
+        trusted_target_proof.candidate if trusted_target_proof is not None else None
+    )
 
     plan = plan_candidate(settings, aws, state, now, trusted_target)
     candidate = plan.candidate
@@ -1754,19 +1913,7 @@ def dry_run(
         aws.list_export_objects(candidate.task_id),
         settings.export_only,
     )
-    metadata_names = sorted(
-        name
-        for name in inventory.objects
-        if name == f"export_info_{candidate.task_id}.json"
-        or name.startswith(f"export_tables_info_{candidate.task_id}_")
-    )
-    documents = aws.get_export_metadata(candidate.task_id, metadata_names)
-    validate_export_metadata_documents(
-        documents,
-        candidate.task_id,
-        settings,
-        inventory.objects,
-    )
+    validate_remote_export_metadata(aws, candidate, settings, inventory)
     if plan.resume:
         published = (
             phase == "installing"
