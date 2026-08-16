@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Refresh /root/dev/production_db from a new production RDS S3 export.
+"""Follow the authoritative production Temporal RDS export into a local snapshot.
 
-The script is designed for a weekly Hermes no-agent cron job. It keeps the
-current local snapshot until a complete replacement has downloaded with S3
+The script is designed for a weekly Hermes no-agent cron job. It never starts or
+mutates an RDS export. It keeps the current local snapshot until a fresh,
+warning-free Temporal export has downloaded with S3
 checksum validation and passed exact key grammar, metadata, size, and local
 SHA-256 manifest checks, then swaps the directories on the same filesystem.
 Successful scheduled runs are silent; failures exit non-zero while preserving
@@ -21,23 +22,21 @@ import re
 import shutil
 import subprocess
 import sys
-import time
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath
 from typing import NamedTuple
 
-TASK_PREFIX = "transformity-production-no-audit-scraper-"
-TASK_ID_PATTERN = re.compile(rf"{re.escape(TASK_PREFIX)}\d{{8}}-\d{{6}}")
+TASK_PREFIX = "transformity-no-audit-scraper-"
+TASK_ID_PATTERN = re.compile(rf"{re.escape(TASK_PREFIX)}[0-9a-f]{{30}}")
 ACTIVE_PHASES = {
-    "starting",
-    "waiting",
+    "selected",
     "complete",
     "downloading",
     "downloaded",
     "installing",
 }
-TERMINAL_FAILURE_STATUSES = {"FAILED", "CANCELED", "CANCELLED"}
+
 AT_FDCWD = -100
 RENAME_EXCHANGE = 2
 
@@ -98,14 +97,13 @@ class Settings:
         account_id: str = "928004597368",
         region: str = "us-east-1",
         profile: str = "production",
+        caller_arn: str | None = None,
         source_arn: str = "arn:aws:rds:us-east-1:928004597368:cluster:transformity-production",
         export_only: tuple[str, ...] = ("postgres.reference", "postgres.public"),
-        s3_bucket: str = "transformity-rds-export-backups",
+        s3_bucket: str = "transformity-rds-export-backups20260728044104962600000001",
         iam_role_arn: str = "arn:aws:iam::928004597368:role/service-role/rds-export",
         kms_key_arn: str = "arn:aws:kms:us-east-1:928004597368:key/af762111-98be-4740-8cc0-04e440913e0f",
-        min_interval: timedelta = timedelta(days=6),
-        poll_interval_seconds: int = 30,
-        export_timeout_seconds: int = 40 * 60,
+        max_export_age: timedelta = timedelta(hours=48),
         sync_timeout_seconds: int = 15 * 60,
         free_space_headroom_bytes: int = 1024**3,
     ):
@@ -115,14 +113,16 @@ class Settings:
         self.account_id = account_id
         self.region = region
         self.profile = profile
+        self.caller_arn = caller_arn or (
+            f"arn:aws:sts::{account_id}:assumed-role/"
+            "HermesAgentReadOnly/hermes-agent-production"
+        )
         self.source_arn = source_arn
         self.export_only = export_only
         self.s3_bucket = s3_bucket
         self.iam_role_arn = iam_role_arn
         self.kms_key_arn = kms_key_arn
-        self.min_interval = min_interval
-        self.poll_interval_seconds = poll_interval_seconds
-        self.export_timeout_seconds = export_timeout_seconds
+        self.max_export_age = max_export_age
         self.sync_timeout_seconds = sync_timeout_seconds
         self.free_space_headroom_bytes = free_space_headroom_bytes
 
@@ -146,6 +146,12 @@ class Inventory(NamedTuple):
     objects: dict[str, int]
     object_count: int
     total_bytes: int
+
+
+class ExportCandidate(NamedTuple):
+    task_id: str
+    timestamp: datetime
+    task: dict
 
 
 class AWSCommandError(RuntimeError):
@@ -218,24 +224,20 @@ class AWSClient:
     def get_identity(self) -> dict:
         return self._run("sts", "get-caller-identity", timeout=60)
 
-    def start_export(self, task_id: str) -> dict:
-        return self._run(
+    def list_export_tasks(self) -> list[dict]:
+        response = self._run(
             "rds",
-            "start-export-task",
-            "--export-task-identifier",
-            task_id,
+            "describe-export-tasks",
             "--source-arn",
             self.settings.source_arn,
-            "--s3-bucket-name",
-            self.settings.s3_bucket,
-            "--iam-role-arn",
-            self.settings.iam_role_arn,
-            "--kms-key-id",
-            self.settings.kms_key_arn,
-            "--export-only",
-            *self.settings.export_only,
             timeout=120,
         )
+        tasks = response.get("ExportTasks")
+        if not isinstance(tasks, list):
+            raise AWSCommandError(
+                "RDS export task listing returned no ExportTasks list"
+            )
+        return tasks
 
     def describe_export(self, task_id: str) -> dict | None:
         try:
@@ -333,10 +335,15 @@ def clean_aws_environment(settings: Settings) -> dict[str, str]:
         "AWS_DEFAULT_PROFILE",
     ):
         environment.pop(key, None)
+    for key in tuple(environment):
+        if key == "AWS_ENDPOINT_URL" or key.startswith("AWS_ENDPOINT_URL_"):
+            environment.pop(key, None)
     environment.update(
         {
             "HOME": "/root",
             "AWS_PROFILE": settings.profile,
+            "AWS_CONFIG_FILE": "/root/.aws/config",
+            "AWS_SHARED_CREDENTIALS_FILE": "/dev/null",
             "AWS_REGION": settings.region,
             "AWS_DEFAULT_REGION": settings.region,
             "AWS_PAGER": "",
@@ -397,7 +404,7 @@ def updated_state(
 ) -> dict:
     result = dict(state)
     result.update(changes)
-    result["version"] = 1
+    result["version"] = 2
     result["updated_at"] = clock().astimezone(timezone.utc).isoformat()
     return result
 
@@ -428,12 +435,69 @@ def verify_identity(settings: Settings, identity: dict) -> None:
             f"expected AWS account {settings.account_id}, got {account or 'unknown'}"
         )
     arn = str(identity.get("Arn", ""))
-    if not arn:
-        raise RuntimeError("AWS caller identity did not include an ARN")
+    if arn != settings.caller_arn:
+        raise RuntimeError(
+            f"expected AWS caller {settings.caller_arn}, got {arn or 'unknown'}"
+        )
 
 
-def new_task_id(now: datetime) -> str:
-    return TASK_PREFIX + now.astimezone(timezone.utc).strftime("%Y%m%d-%H%M%S")
+def task_timestamp(task_id: str, task: dict) -> datetime:
+    for field in ("TaskEndTime", "TaskStartTime"):
+        timestamp = parse_timestamp(task.get(field))
+        if timestamp is not None:
+            return timestamp
+    raise RuntimeError(f"RDS export {task_id} has no valid completion/start timestamp")
+
+
+def state_provenance(settings: Settings, candidate: ExportCandidate) -> dict:
+    return {
+        "task_id": candidate.task_id,
+        "task_timestamp": candidate.timestamp.isoformat(),
+        "source_arn": settings.source_arn,
+        "s3_bucket": settings.s3_bucket,
+        "export_only": list(settings.export_only),
+        "iam_role_arn": settings.iam_role_arn,
+        "kms_key_arn": settings.kms_key_arn,
+    }
+
+
+def state_has_static_provenance(settings: Settings, state: dict) -> bool:
+    expected = {
+        "source_arn": settings.source_arn,
+        "s3_bucket": settings.s3_bucket,
+        "export_only": list(settings.export_only),
+        "iam_role_arn": settings.iam_role_arn,
+        "kms_key_arn": settings.kms_key_arn,
+    }
+    return state.get("version") == 2 and all(
+        state.get(key) == value for key, value in expected.items()
+    )
+
+
+def state_has_provenance(
+    settings: Settings, state: dict, candidate: ExportCandidate
+) -> bool:
+    return (
+        state_has_static_provenance(settings, state)
+        and state.get("task_id") == candidate.task_id
+        and parse_timestamp(state.get("task_timestamp")) == candidate.timestamp
+    )
+
+
+def validate_candidate_freshness(
+    settings: Settings, candidate: ExportCandidate, now: datetime
+) -> None:
+    now = now.astimezone(timezone.utc)
+    age = now - candidate.timestamp
+    if age < timedelta(0):
+        raise RuntimeError(
+            f"latest RDS export {candidate.task_id} has a future task timestamp"
+        )
+    if age > settings.max_export_age:
+        raise RuntimeError(
+            f"latest RDS export {candidate.task_id} is older than "
+            f"{settings.max_export_age.total_seconds() / 3600:g} hours"
+        )
 
 
 def validate_completed_task(settings: Settings, task_id: str, task: dict) -> None:
@@ -466,6 +530,34 @@ def validate_completed_task(settings: Settings, task_id: str, task: dict) -> Non
             f"RDS export {task_id} completed with a warning: "
             f"{task.get('WarningMessage')}"
         )
+
+
+def select_latest_completed_export(
+    settings: Settings,
+    tasks: list[dict],
+    now: datetime,
+) -> ExportCandidate:
+    """Select and validate the newest completed authoritative Temporal export."""
+    candidates: list[ExportCandidate] = []
+    for task in tasks:
+        if not isinstance(task, dict):
+            raise TypeError(f"invalid RDS export task listing entry: {task!r}")
+        task_id = task.get("ExportTaskIdentifier")
+        if not isinstance(task_id, str) or TASK_ID_PATTERN.fullmatch(task_id) is None:
+            continue
+        if task.get("Status") != "COMPLETE":
+            continue
+        if task.get("SourceArn") != settings.source_arn:
+            raise RuntimeError(
+                f"RDS source-scoped listing returned unexpected SourceArn for {task_id}"
+            )
+        candidates.append(ExportCandidate(task_id, task_timestamp(task_id, task), task))
+    if not candidates:
+        raise RuntimeError("no qualifying completed Temporal RDS export exists")
+    selected = max(candidates, key=lambda candidate: candidate.timestamp)
+    validate_completed_task(settings, selected.task_id, selected.task)
+    validate_candidate_freshness(settings, selected, now)
+    return selected
 
 
 def is_allowed_export_data_key(relative: str, export_only: tuple[str, ...]) -> bool:
@@ -940,141 +1032,139 @@ def refresh_once(
     *,
     force: bool = False,
     clock: Callable[[], datetime] = utc_now,
-    sleeper: Callable[[float], None] = time.sleep,
 ) -> RefreshResult:
     now = clock().astimezone(timezone.utc)
     verify_identity(settings, aws.get_identity())
     state = load_state(settings.state_file)
     phase = state.get("phase")
-    saved_task_id = state.get("task_id")
-    if phase in ACTIVE_PHASES or phase in {"installed", "rejected"}:
-        validate_task_id(saved_task_id)
 
-    if phase == "rejected":
-        rejected_task_id = str(saved_task_id)
-        rejected_backup = settings.backup_path(rejected_task_id)
-        if rejected_backup.exists():
-            raise RuntimeError(
-                f"rejected export still has a backup requiring inspection: {rejected_backup}"
-            )
-        rejected_staging = settings.staging_path(rejected_task_id)
-        if rejected_staging.exists():
-            if not rejected_staging.is_dir() or rejected_staging.is_symlink():
+    candidate: ExportCandidate | None = None
+    resume = False
+    if phase in ACTIVE_PHASES:
+        saved_task_id = state.get("task_id")
+        saved_timestamp = parse_timestamp(state.get("task_timestamp"))
+        try:
+            task_id = validate_task_id(saved_task_id)
+        except RuntimeError:
+            task_id = ""
+        if task_id and saved_timestamp is not None:
+            if phase == "installing":
+                restore_interrupted_target(settings, task_id)
+            task = aws.describe_export(task_id)
+            if task is None:
+                raise RuntimeError(f"saved RDS export task no longer exists: {task_id}")
+            validate_completed_task(settings, task_id, task)
+            candidate = ExportCandidate(task_id, task_timestamp(task_id, task), task)
+            if candidate.timestamp != saved_timestamp:
                 raise RuntimeError(
-                    f"refusing to remove unsafe rejected staging: {rejected_staging}"
+                    f"saved timestamp for RDS export {task_id} no longer matches AWS"
                 )
-            shutil.rmtree(rejected_staging)
-            fsync_directory(settings.target.parent)
+            if not state_has_provenance(settings, state, candidate):
+                candidate = None
+            else:
+                resume = True
 
-    if phase == "installed":
-        installed_at = parse_timestamp(state.get("installed_at"))
-        installed_task_id = str(state.get("task_id", ""))
-        backup = settings.backup_path(installed_task_id)
-        checksum_state = state.get("sha256")
-        if checksum_state is None:
-            raise RuntimeError(
-                "installed state does not have a trusted local SHA-256 manifest; "
-                "refusing to bless the current snapshot without a verified transfer"
-            )
-        # The committed local manifest is the proof for the installed snapshot.
-        # Do not couple local availability to RDS task history or S3 objects that
-        # may have been removed later by the independently managed lifecycle rule.
-        validate_installed_snapshot(settings, installed_task_id, checksum_state)
-        if backup.exists():
-            shutil.rmtree(backup)
-            fsync_directory(settings.target.parent)
+    if candidate is None:
+        candidate = select_latest_completed_export(
+            settings, aws.list_export_tasks(), now
+        )
+
+        if phase == "installed" and state_has_static_provenance(settings, state):
+            installed_task_id = state.get("task_id")
+            installed_timestamp = parse_timestamp(state.get("task_timestamp"))
+            try:
+                validate_task_id(installed_task_id)
+            except RuntimeError:
+                installed_timestamp = None
+            if (
+                installed_timestamp is not None
+                and installed_timestamp > candidate.timestamp
+            ):
+                raise RuntimeError(
+                    "latest listed RDS export is older than the installed task; "
+                    "refusing a downgrade"
+                )
+
         if (
-            not force
-            and installed_at is not None
-            and now - installed_at < settings.min_interval
+            phase == "installed"
+            and state_has_provenance(settings, state, candidate)
+            and state.get("sha256") is not None
         ):
-            return RefreshResult(False, installed_task_id)
+            try:
+                inventory = validate_installed_snapshot(
+                    settings, candidate.task_id, state.get("sha256")
+                )
+            except RuntimeError:
+                # An untrusted or mismatched current target is migration input,
+                # never proof. Preserve it until a fresh transfer is published.
+                pass
+            else:
+                backup = settings.backup_path(candidate.task_id)
+                if backup.exists():
+                    shutil.rmtree(backup)
+                    fsync_directory(settings.target.parent)
+                if not force:
+                    return RefreshResult(
+                        False,
+                        candidate.task_id,
+                        inventory.object_count,
+                        inventory.total_bytes,
+                    )
 
-    task_id = str(state.get("task_id", "")) if phase in ACTIVE_PHASES else ""
-    task = None
-    if task_id:
-        if phase == "installing":
-            restore_interrupted_target(settings, task_id)
-        task = aws.describe_export(task_id)
-        if task is None and phase != "starting":
-            raise RuntimeError(f"saved RDS export task no longer exists: {task_id}")
+        if phase == "rejected":
+            rejected_id = state.get("task_id")
+            try:
+                rejected_id = validate_task_id(rejected_id)
+            except RuntimeError:
+                rejected_id = ""
+            if rejected_id:
+                rejected_staging = settings.staging_path(rejected_id)
+                if rejected_staging.exists():
+                    if not rejected_staging.is_dir() or rejected_staging.is_symlink():
+                        raise RuntimeError(
+                            f"refusing to remove unsafe rejected staging: {rejected_staging}"
+                        )
+                    shutil.rmtree(rejected_staging)
+                    fsync_directory(settings.target.parent)
 
-    if not task_id:
-        task_id = new_task_id(now)
         state = updated_state(
             {},
             clock,
-            phase="starting",
-            task_id=task_id,
-            started_at=now.isoformat(),
+            phase="selected",
+            status="COMPLETE",
+            **state_provenance(settings, candidate),
         )
         save_state(settings.state_file, state)
+        phase = "selected"
+    else:
+        # A crash-resume checkpoint is valid only while its selected upstream
+        # export remains fresh. Do not finish publishing a week-old download.
+        validate_candidate_freshness(settings, candidate, now)
 
-    if task is None:
-        task = aws.start_export(task_id)
-        state = updated_state(state, clock, phase="waiting", status=task.get("Status"))
-        save_state(settings.state_file, state)
-
-    deadline = time.monotonic() + settings.export_timeout_seconds
-    while task.get("Status") != "COMPLETE":
-        status = str(task.get("Status", "UNKNOWN"))
-        if status in TERMINAL_FAILURE_STATUSES:
-            state = updated_state(
-                state,
-                clock,
-                phase="failed",
-                status=status,
-                failure_cause=task.get("FailureCause"),
-            )
-            save_state(settings.state_file, state)
-            raise RuntimeError(
-                f"RDS export {task_id} ended in {status}: "
-                f"{task.get('FailureCause') or 'no failure cause supplied'}"
-            )
-        if time.monotonic() >= deadline:
-            raise RuntimeError(
-                f"RDS export {task_id} did not finish within "
-                f"{settings.export_timeout_seconds}s (status={status})"
-            )
+    task_id = candidate.task_id
+    try:
+        validate_completed_task(settings, task_id, candidate.task)
+        completion_phase = "installing" if phase == "installing" else "complete"
         state = updated_state(
             state,
             clock,
-            phase="waiting",
-            status=status,
-            percent_progress=task.get("PercentProgress"),
+            phase=completion_phase,
+            status="COMPLETE",
+            **state_provenance(settings, candidate),
         )
-        save_state(settings.state_file, state)
-        sleeper(settings.poll_interval_seconds)
-        task = aws.describe_export(task_id)
-        if task is None:
-            raise RuntimeError(f"RDS export task disappeared while waiting: {task_id}")
-
-    try:
-        validate_completed_task(settings, task_id, task)
-        # Preserve the transactional recovery checkpoint. Downgrading
-        # "installing" to "complete" here can strand a published target beside
-        # its backup if the process exits before finish_install records success.
-        completion_phase = "installing" if phase == "installing" else "complete"
-        state = updated_state(state, clock, phase=completion_phase, status="COMPLETE")
         save_state(settings.state_file, state)
         inventory = build_inventory(
             task_id, aws.list_export_objects(task_id), settings.export_only
         )
     except AWSCommandError:
-        # AWS CLI failures are transient. Preserve the current checkpoint so a
-        # retry can resume the same task and, for installing, retain the old
-        # snapshot until publication has been durably validated.
         raise
     except RuntimeError as exc:
-        # An installing checkpoint may be between atomic rename steps. Marking
-        # it rejected could make the rejected-state cleanup delete the only old
-        # snapshot still parked under the staging name.
         if phase != "installing":
             save_rejected_state(settings, state, task_id, clock, exc)
         raise
 
     # If a prior run crashed after the swap, finish cleanup instead of downloading again.
-    if phase == "installing" and settings.target.exists():
+    if resume and phase == "installing" and settings.target.exists():
         try:
             expected_sha256 = validate_sha256_manifest(state.get("sha256"), inventory)
             validate_download(
@@ -1101,15 +1191,12 @@ def refresh_once(
     if staging.exists():
         if not staging.is_dir() or staging.is_symlink():
             raise RuntimeError(f"refusing to use unsafe staging path: {staging}")
-        # Reject nested symlinks before allowing AWS CLI to reuse the directory.
         staging_inventory = local_inventory(staging)
 
     resume_sha256: dict[str, str] | None = None
     if state.get("sha256") is not None:
         resume_sha256 = validate_sha256_manifest(state.get("sha256"), inventory)
-    # AWS CLI can skip equal-size/equal-mtime files even in checksum mode. Only
-    # retain complete staging files when a trusted manifest proves their bytes.
-    staging_inventory = discard_untrusted_reusable_files(
+    discard_untrusted_reusable_files(
         staging,
         staging_inventory,
         inventory,
@@ -1120,8 +1207,6 @@ def refresh_once(
     staging.mkdir(parents=True, exist_ok=True)
     state = updated_state(state, clock, phase="downloading")
     save_state(settings.state_file, state)
-    # Always invoke checksum-aware sync, even for a size-complete staging tree.
-    # A same-size corruption after an interrupted run must not bypass S3 checksums.
     aws.sync_export(task_id, staging)
     try:
         validate_download(
@@ -1158,23 +1243,63 @@ def refresh_once(
     return RefreshResult(True, task_id, inventory.object_count, inventory.total_bytes)
 
 
-def dry_run(settings: Settings, aws, clock: Callable[[], datetime] = utc_now) -> str:
+def dry_run(
+    settings: Settings,
+    aws,
+    clock: Callable[[], datetime] = utc_now,
+    *,
+    force: bool = False,
+) -> str:
     now = clock().astimezone(timezone.utc)
     identity = aws.get_identity()
     verify_identity(settings, identity)
     state = load_state(settings.state_file)
     phase = state.get("phase")
-    task_id = str(state.get("task_id", ""))
-    if phase in ACTIVE_PHASES and task_id:
-        action = f"resume {task_id} from phase {phase}"
-    elif phase == "installed":
-        installed_at = parse_timestamp(state.get("installed_at"))
-        if installed_at is not None and now - installed_at < settings.min_interval:
-            action = f"skip recent installed export {task_id}"
+
+    if phase in ACTIVE_PHASES:
+        task_id = state.get("task_id")
+        timestamp = parse_timestamp(state.get("task_timestamp"))
+        try:
+            task_id = validate_task_id(task_id)
+        except RuntimeError:
+            task_id = ""
+        if task_id and timestamp is not None:
+            task = aws.describe_export(task_id)
+            if task is None:
+                raise RuntimeError(f"saved RDS export task no longer exists: {task_id}")
+            validate_completed_task(settings, task_id, task)
+            candidate = ExportCandidate(task_id, task_timestamp(task_id, task), task)
+            if candidate.timestamp != timestamp:
+                raise RuntimeError(
+                    f"saved timestamp for RDS export {task_id} no longer matches AWS"
+                )
+            if state_has_provenance(settings, state, candidate):
+                validate_candidate_freshness(settings, candidate, now)
+                action = f"resume selected follower task {task_id} from phase {phase}"
+                return (
+                    f"Dry run OK: account {identity['Account']}; would {action}; "
+                    f"target {settings.target}"
+                )
+
+    candidate = select_latest_completed_export(settings, aws.list_export_tasks(), now)
+    action = f"download latest follower task {candidate.task_id}"
+    if phase == "installed" and state_has_provenance(settings, state, candidate):
+        manifest = state.get("sha256")
+        if manifest is not None:
+            try:
+                validate_installed_snapshot(settings, candidate.task_id, manifest)
+            except RuntimeError:
+                action = f"migrate untrusted target to {candidate.task_id}"
+            else:
+                action = (
+                    f"force re-download follower task {candidate.task_id}"
+                    if force
+                    else f"no-op; latest follower task {candidate.task_id} is installed"
+                )
         else:
-            action = f"start {new_task_id(now)}"
-    else:
-        action = f"start {new_task_id(now)}"
+            action = f"migrate untrusted target to {candidate.task_id}"
+    elif settings.target.exists() or phase == "installed":
+        action = f"migrate existing target to {candidate.task_id}"
     return (
         f"Dry run OK: account {identity['Account']}; would {action}; "
         f"target {settings.target}"
@@ -1191,14 +1316,23 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="start a new export even when the last installation is less than six days old",
+        help="force a follower re-download of the latest completed export",
     )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = parse_args(argv or sys.argv[1:])
+    args = parse_args(sys.argv[1:] if argv is None else argv)
     settings = Settings()
+    if args.dry_run:
+        try:
+            aws = AWSClient(settings)
+            print(dry_run(settings, aws, force=args.force))
+            return 0
+        except Exception as exc:  # noqa: BLE001 - dry-run must surface every failure.
+            print(f"Weekly production DB follower failed: {exc}", file=sys.stderr)
+            return 1
+
     settings.lock_file.parent.mkdir(parents=True, exist_ok=True)
     with settings.lock_file.open("a+") as lock:
         try:
@@ -1207,14 +1341,11 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         try:
             aws = AWSClient(settings)
-            if args.dry_run:
-                print(dry_run(settings, aws))
-                return 0
             refresh_once(settings, aws, force=args.force)
             # no-agent cron treats empty stdout as success without delivery.
             return 0
         except Exception as exc:  # noqa: BLE001 - cron must surface every hard failure.
-            print(f"Weekly production DB export failed: {exc}", file=sys.stderr)
+            print(f"Weekly production DB follower failed: {exc}", file=sys.stderr)
             return 1
 
 

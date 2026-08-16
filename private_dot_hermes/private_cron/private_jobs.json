@@ -274,7 +274,7 @@
     {
       "id": "74cd4bc9ba5d",
       "name": "Weekly production DB RDS export refresh",
-      "prompt": "Failure-only weekly production database snapshot refresh. Run the managed script to verify AWS account 928004597368; export postgres.reference and postgres.public from transformity-production; wait for a warning-free, fully complete export; download with S3 checksum validation; verify all table statuses plus the exact S3 object inventory; and atomically replace /root/dev/production_db. Successful runs intentionally emit no output and must not be delivered. Non-zero failures must be delivered to the origin Slack thread.",
+      "prompt": "Failure-only weekly follower for the authoritative production Temporal RDS export. Run the managed script to pin the exact HermesAgentReadOnly assumed role; discover the newest fresh, warning-free COMPLETE Temporal export of postgres.reference and postgres.public from transformity-production in the production backup bucket; download with S3 checksum validation; verify exact task provenance, metadata, table statuses, object inventory, and local SHA-256 manifest; then atomically replace /root/dev/production_db. Successful no-op and refresh runs intentionally emit no output and must not be delivered. Non-zero failures must be delivered to the origin Slack thread.",
       "skills": [],
       "skill": null,
       "model": null,
@@ -287,24 +287,15 @@
       "context_from": null,
       "schedule": {
         "kind": "cron",
-        "expr": "0 7 * * 0",
-        "display": "0 7 * * 0"
+        "expr": "0 9 * * 0",
+        "display": "0 9 * * 0"
       },
-      "schedule_display": "0 7 * * 0",
+      "schedule_display": "0 9 * * 0",
       "repeat": {
-        "times": null,
-        "completed": 5
+        "times": null
       },
       "enabled": true,
-      "state": "scheduled",
-      "paused_at": null,
-      "paused_reason": null,
       "created_at": "2026-07-24T16:24:57.886637-04:00",
-      "next_run_at": "2026-08-09T07:00:00-04:00",
-      "last_run_at": "2026-08-02T07:25:31.235375-04:00",
-      "last_status": "ok",
-      "last_error": null,
-      "last_delivery_error": null,
       "deliver": "origin",
       "origin": {
         "platform": "slack",
@@ -314,8 +305,7 @@
         "user_id": "U068K4E4DFC"
       },
       "enabled_toolsets": null,
-      "workdir": null,
-      "fire_claim": null
+      "workdir": null
     },
     {
       "id": "e4ec265558c9",
