@@ -36,6 +36,30 @@ LATEST_COMPLETED = datetime(2026, 8, 16, 11, 19, 26, tzinfo=timezone.utc)
 OLDER_COMPLETED = datetime(2026, 8, 16, 11, 0, 0, tzinfo=timezone.utc)
 
 
+def sidecar_timestamp(value: str) -> str:
+    parsed = datetime.fromisoformat(value).astimezone(timezone.utc)
+    months = (
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    )
+    hour = parsed.hour % 12 or 12
+    meridiem = "AM" if parsed.hour < 12 else "PM"
+    return (
+        f"{months[parsed.month - 1]} {parsed.day}, {parsed.year}, "
+        f"{hour}:{parsed.minute:02d}:{parsed.second:02d} {meridiem}"
+    )
+
+
 class FakeAWS:
     def __init__(self, settings, *, tasks=None, sync_error=None, identity_arn=None):
         self.settings = settings
@@ -99,7 +123,7 @@ class FakeAWS:
             "WarningMessage": self.warning_message,
             "TaskStartTime": started_at.isoformat(),
             "TaskEndTime": completed_at.isoformat(),
-            "TotalExtractedDataInGB": 0,
+            "TotalExtractedDataInGB": 1,
         }
         task.update(changes)
         return task
@@ -175,9 +199,9 @@ class FakeAWS:
             "kmsKeyId": self.settings.kms_key_arn,
             "status": "COMPLETE",
             "percentProgress": 100,
-            "taskStartTime": selected_task["TaskStartTime"],
-            "taskEndTime": selected_task["TaskEndTime"],
-            "totalExportedDataInGB": selected_task["TotalExtractedDataInGB"] + 0.25,
+            "taskStartTime": sidecar_timestamp(selected_task["TaskStartTime"]),
+            "taskEndTime": sidecar_timestamp(selected_task["TaskEndTime"]),
+            "totalExportedDataInGB": selected_task["TotalExtractedDataInGB"] - 0.75,
         }
         export_info.update(self.export_info_changes)
         objects = {
@@ -488,17 +512,12 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "share the newest timestamp"):
             exporter.select_latest_completed_export(self.settings, tasks, self.now)
 
-    def test_candidate_uses_start_timestamp_when_completion_timestamp_is_absent(self):
+    def test_completed_candidate_requires_end_timestamp(self):
         aws = FakeAWS(self.settings)
         task = aws.task(TASK_LATEST)
         del task["TaskEndTime"]
-        selected = exporter.select_latest_completed_export(
-            self.settings, [task], self.now
-        )
-        self.assertEqual(
-            selected.timestamp,
-            datetime.fromisoformat(task["TaskStartTime"]).astimezone(timezone.utc),
-        )
+        with self.assertRaisesRegex(RuntimeError, "invalid task timestamps"):
+            exporter.select_latest_completed_export(self.settings, [task], self.now)
 
     def test_newest_temporal_candidate_must_match_every_provenance_field(self):
         aws = FakeAWS(self.settings)
@@ -1492,8 +1511,8 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
             "iamRoleArn": "arn:aws:iam::000000000000:role/foreign",
             "kmsKeyId": "arn:aws:kms:us-east-1:000000000000:key/foreign",
             "percentProgress": 99,
-            "taskStartTime": "2026-08-16T10:00:00+00:00",
-            "taskEndTime": "2026-08-16T12:30:00+00:00",
+            "taskStartTime": "Aug 16, 2026, 10:00:00 AM",
+            "taskEndTime": "Aug 16, 2026, 12:30:00 PM",
             "totalExportedDataInGB": 999.0,
         }
         for field, value in cases.items():
@@ -1533,6 +1552,37 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
                     "task timestamps" if field == "TaskStartTime" else field,
                 ):
                     exporter.validate_completed_task(self.settings, TASK_LATEST, task)
+
+        for field, value in (
+            ("TaskStartTime", "2026-08-16T10:59:26"),
+            ("TaskEndTime", "2026-08-16"),
+        ):
+            with self.subTest(field=field, value=value):
+                task = FakeAWS(self.settings).task(**{field: value})
+                with self.assertRaisesRegex(RuntimeError, "task timestamps"):
+                    exporter.validate_completed_task(self.settings, TASK_LATEST, task)
+
+    def test_production_sidecar_time_and_size_precision_matches_rds_task(self):
+        aws = FakeAWS(self.settings)
+        started = datetime(2026, 8, 9, 11, 9, 14, 987654, tzinfo=timezone.utc)
+        completed = datetime(2026, 8, 9, 11, 29, 14, 654321, tzinfo=timezone.utc)
+        aws.tasks = [
+            aws.task(
+                TASK_LATEST,
+                started_at=started,
+                completed_at=completed,
+                TotalExtractedDataInGB=100,
+            )
+        ]
+        aws.export_info_changes["totalExportedDataInGB"] = 99.44363403320312
+
+        report = exporter.dry_run(
+            self.settings,
+            aws,
+            clock=lambda: completed + timedelta(minutes=1),
+        )
+
+        self.assertIn(TASK_LATEST, report)
 
     def test_prior_installed_evidence_survives_new_candidate_preflight_failure(self):
         aws = FakeAWS(self.settings)

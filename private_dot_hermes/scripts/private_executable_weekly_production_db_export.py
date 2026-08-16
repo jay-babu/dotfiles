@@ -449,9 +449,64 @@ def parse_timestamp(value: object) -> datetime | None:
         parsed = datetime.fromisoformat(value)
     except ValueError:
         return None
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        return None
     return parsed.astimezone(timezone.utc)
+
+
+SIDECAR_TIMESTAMP_PATTERN = re.compile(
+    r"^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) "
+    r"([1-9]|[12][0-9]|3[01]), ([0-9]{4}), "
+    r"([1-9]|1[0-2]):([0-5][0-9]):([0-5][0-9]) (AM|PM)$"
+)
+SIDECAR_MONTHS = {
+    month: index
+    for index, month in enumerate(
+        (
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ),
+        start=1,
+    )
+}
+
+
+def parse_sidecar_timestamp(value: object) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    match = SIDECAR_TIMESTAMP_PATTERN.fullmatch(value)
+    if match is None:
+        return None
+    month_name, day, year, hour, minute, second, meridiem = match.groups()
+    hour_value = int(hour) % 12
+    if meridiem == "PM":
+        hour_value += 12
+    try:
+        return datetime(
+            int(year),
+            SIDECAR_MONTHS[month_name],
+            int(day),
+            hour_value,
+            int(minute),
+            int(second),
+            tzinfo=timezone.utc,
+        )
+    except ValueError:
+        return None
+
+
+def timestamps_match_to_sidecar_precision(left: datetime, right: datetime) -> bool:
+    return abs((left - right).total_seconds()) < 1
 
 
 def load_state(path: Path) -> dict:
@@ -621,8 +676,7 @@ def validate_completed_task(settings: Settings, task_id: str, task: dict) -> Non
             f"RDS export {task_id} has invalid PercentProgress: {progress!r}"
         )
     start = parse_timestamp(task.get("TaskStartTime"))
-    end_value = task.get("TaskEndTime")
-    end = start if end_value is None else parse_timestamp(end_value)
+    end = parse_timestamp(task.get("TaskEndTime"))
     if start is None or end is None or start > end:
         raise RuntimeError(f"RDS export {task_id} has invalid task timestamps")
     total = task.get("TotalExtractedDataInGB")
@@ -961,8 +1015,8 @@ def validate_export_metadata_documents(
         raise PermanentExportError(
             "downloaded export metadata has wrong percentProgress"
         )
-    start = parse_timestamp(info.get("taskStartTime"))
-    end = parse_timestamp(info.get("taskEndTime"))
+    start = parse_sidecar_timestamp(info.get("taskStartTime"))
+    end = parse_sidecar_timestamp(info.get("taskEndTime"))
     if start is None or end is None or start > end:
         raise PermanentExportError("downloaded export metadata has invalid task times")
     total = info.get("totalExportedDataInGB")
@@ -988,32 +1042,34 @@ def validate_export_metadata_documents(
             raise PermanentExportError(f"downloaded export metadata has wrong {field}")
     if candidate_task is not None:
         expected_start = parse_timestamp(candidate_task.get("TaskStartTime"))
-        task_end_value = candidate_task.get("TaskEndTime")
-        expected_end = (
-            expected_start
-            if task_end_value is None
-            else parse_timestamp(task_end_value)
-        )
+        expected_end = parse_timestamp(candidate_task.get("TaskEndTime"))
         expected_total = candidate_task.get("TotalExtractedDataInGB")
-        if start != expected_start:
+        if expected_start is None or not timestamps_match_to_sidecar_precision(
+            start, expected_start
+        ):
             raise PermanentExportError(
                 "downloaded export metadata has wrong taskStartTime"
             )
-        if end != expected_end:
+        if expected_end is None or not timestamps_match_to_sidecar_precision(
+            end, expected_end
+        ):
             raise PermanentExportError(
                 "downloaded export metadata has wrong taskEndTime"
             )
-        # RDS exposes this value as whole GiB while its sidecar records a
-        # fractional value. Require the sidecar to stay in the selected bin.
+        # RDS rounds this value up to whole GiB while its sidecar retains the
+        # fractional value.
         if (
             isinstance(expected_total, bool)
             or not isinstance(expected_total, int)
-            or not expected_total <= total < expected_total + 1
+            or math.ceil(total) != expected_total
         ):
             raise PermanentExportError(
                 "downloaded export metadata has wrong totalExportedDataInGB"
             )
-    if expected_task_timestamp is not None and end != expected_task_timestamp:
+    if (
+        expected_task_timestamp is not None
+        and not timestamps_match_to_sidecar_precision(end, expected_task_timestamp)
+    ):
         raise PermanentExportError(
             "downloaded export metadata does not match the saved task timestamp"
         )
