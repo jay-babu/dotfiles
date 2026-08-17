@@ -686,3 +686,9 @@ session_reset:
   idle_minutes: 1440
   mode: both
 worktree: true
+mcp_servers:
+  attio:
+    url: https://mcp.attio.com/mcp
+    connect_timeout: 60.0
+    auth: oauth
+    enabled: true
