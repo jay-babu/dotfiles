@@ -692,3 +692,9 @@ mcp_servers:
     connect_timeout: 60.0
     auth: oauth
     enabled: true
+  pagerduty:
+    url: https://mcp.pagerduty.com/mcp
+    headers:
+      Authorization: "Token token=${PAGERDUTY_API_TOKEN}"
+    connect_timeout: 60
+    enabled: true
