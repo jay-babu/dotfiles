@@ -1,23 +1,21 @@
-Jay: concise/PR-ready; Browser Use for browser automation; whole-object assertions; Kotlin throwable logger overload.
+Jay: concise/action-first/PR-ready; raw PR URLs; whole-object asserts; Kotlin throwable logs; mocks>prod seams; CI>gateway checks.
 §
-Prefers mise/uv, existing auth/StackReferences, CLI `pulumi import`; bootstraps IaC manually—no persistent grants. IAM: `getPolicyDocument` + account-bound confused-deputy controls.
+Prefers mise/uv, existing auth/StackRefs, CLI `pulumi import`; manually bootstraps IaC—no persistent grants. IAM: `getPolicyDocument` + account-bound confused-deputy controls.
 §
-Architecture-first; low-maint/minimal-admin; one PR/artifact per rollout phase. TypeSpec-only: named bodies + exhaustive Body/Headers; no postprocessors/per-op tests/OpenSpec.
+Architecture-first/low-admin; one artifact/phase; approve scope growth.
 §
-POS/Kurama: exact parsing/nullability; cohort auth; nested/exploded expands; total_pages; CRUD; Bob joins; row-scoped writes.
+POS/Kurama: exact parsing/nullability; cohort auth; nested/exploded expands; total_pages; CRUD; Bob joins; scoped writes.
 §
-Final reviews tag <@U068K4E4DFC>; webhooks/crons untagged. Rebase PRs on main; verify mergeability.
+Final reviews tag <@U068K4E4DFC>; never tag cron/webhooks. Rebase main; verify mergeable.
 §
-DB: direct migrations; one concurrent CREATE INDEX/file; avoid broad Squawk concurrency ignores; no tests for metadata-only PRs/role guards unless asked.
+DB: direct migrations; one concurrent index/file; no broad Squawk concurrency ignores; no tests for metadata-only PRs/role guards unless asked.
 §
-Prefers direct ownership and generated APIs over wrapper/sync abstractions; narrow paths—not core/common/helper/utils.
+Prefers direct ownership over wrapper/sync abstractions and narrow paths. Authority locks belong on protected connection.
 §
-Approved work stays tracked to done/deferred; new wins don't replace it.
+Network: 500 stores incl Curtis MA. Paid brand pushes; prior sales prove lift. Cite distributor; no bypass/joint-call framing.
 §
-Prod defects: use production-faithful gamma fixtures + DB-verified A/B; never run transaction reports in prod.
+Prod defects: gamma-faithful fixtures + DB-verified A/B; no prod transaction reports.
 §
-Public config names/values must exactly match the requested contract.
+Logical commits; reviews pushed PRs only; frontend migrations need authenticated E2E green before readiness.
 §
-Logical commits; reviews pushed PRs only.
-§
-Shortlists: no national brands; like-for-like flavors; locked picks need approval.
+Shortlists: nonnational/like-for-like; approve locked picks; subs +$3–5, ≤10%. “Do same” outreach=research/dedupe/send/verify/Attio; one channel; form if no verified email.

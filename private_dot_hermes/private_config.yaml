@@ -17,6 +17,7 @@ agent:
   environment_probe: true
   environment_hint: ''
   coding_context: auto
+  verify_on_stop: false
   gateway_timeout_warning: 900
   clarify_timeout: 600
   gateway_notify_interval: 600
@@ -62,7 +63,6 @@ agent:
       >w<
   reasoning_effort: high
   verbose: false
-  verify_on_stop: false
 terminal:
   backend: local
   modal_mode: auto
@@ -77,6 +77,7 @@ terminal:
   singularity_image: docker://nikolaik/python-nodejs:python3.11-nodejs20
   modal_image: nikolaik/python-nodejs:python3.11-nodejs20
   daytona_image: nikolaik/python-nodejs:python3.11-nodejs20
+  vercel_runtime: node24
   container_cpu: 1
   container_memory: 5120
   container_disk: 51200
@@ -87,7 +88,6 @@ terminal:
   docker_run_as_host_user: false
   persistent_shell: true
   lifetime_seconds: 300
-  vercel_runtime: node24
   shell: fish
 web:
   backend: exa
@@ -120,8 +120,8 @@ checkpoints:
   max_file_size_mb: 10
   auto_prune: false
   retention_days: 7
-  delete_orphans: true
   min_interval_hours: 24
+  delete_orphans: true
 file_read_max_chars: 100000
 mcp_discovery_timeout: 1.5
 tool_output:
@@ -149,17 +149,6 @@ compression:
   abort_on_summary_failure: false
   codex_gpt55_autoraise: false
   in_place: false
-kanban:
-  dispatch_in_gateway: true
-  dispatch_interval_seconds: 60
-  failure_limit: 2
-  worker_log_rotate_bytes: 2097152
-  worker_log_backup_count: 1
-  orchestrator_profile: ''
-  default_assignee: ''
-  auto_decompose: true
-  auto_decompose_per_tick: 3
-  dispatch_stale_timeout_seconds: 14400
 prompt_caching:
   cache_ttl: 5m
 openrouter:
@@ -513,6 +502,17 @@ cron:
     expected_audience: ''
     nas_jwks_url: ''
   wrap_response: true
+kanban:
+  dispatch_in_gateway: true
+  dispatch_interval_seconds: 60
+  failure_limit: 2
+  worker_log_rotate_bytes: 2097152
+  worker_log_backup_count: 1
+  orchestrator_profile: ''
+  default_assignee: ''
+  auto_decompose: true
+  auto_decompose_per_tick: 3
+  dispatch_stale_timeout_seconds: 14400
 code_execution:
   mode: project
   max_tool_calls: 50
@@ -695,6 +695,21 @@ mcp_servers:
   pagerduty:
     url: https://mcp.pagerduty.com/mcp
     headers:
-      Authorization: "Token token=${PAGERDUTY_API_TOKEN}"
+      Authorization: Token token=${PAGERDUTY_API_TOKEN}
+    connect_timeout: 60
+    enabled: true
+  slack:
+    url: https://mcp.slack.com/mcp
+    auth: oauth
+    oauth:
+      client_id: ${SLACK_MCP_CLIENT_ID}
+      client_secret: ${SLACK_MCP_CLIENT_SECRET}
+      scope: search:read.public search:read.private search:read.mpim search:read.im
+        search:read.files files:read emoji:read search:read.users chat:write channels:history
+        groups:history mpim:history im:history channels:write groups:write im:write
+        mpim:write reactions:write canvases:read canvases:write users:read users:read.email
+        channels:read groups:read mpim:read
+      redirect_host: localhost
+      redirect_port: 8765
     connect_timeout: 60
     enabled: true

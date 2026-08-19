@@ -207,6 +207,13 @@ After sending, verify with the returned Gmail message `id`/`threadId` using
 also useful, but search result metadata may be sparse for some sent messages;
 the returned id is the strongest handle.
 
+For some API-originated Sent messages, `google_api.py gmail get` can return the
+body and labels while leaving `from`, `to`, and `subject` blank. Do not treat
+blank wrapper headers as proof those headers are absent. Use the Gmail API
+`users.messages.get` endpoint directly with `format='metadata'` and
+`metadataHeaders=['From','To','Cc','Subject','Date','Message-ID']`, then compare
+those headers with the message ID, thread ID, `SENT` label, and body.
+
 ```bash
 # Reply (automatically threads and sets In-Reply-To)
 $GAPI gmail reply MESSAGE_ID --body "Thanks, that works for me."

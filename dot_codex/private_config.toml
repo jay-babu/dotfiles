@@ -143,6 +143,12 @@ trust_level = "trusted"
 [projects."/root/code/sales-channel-inventory-processor"]
 trust_level = "trusted"
 
+[projects."/root/code/Adv360-Pro-ZMK"]
+trust_level = "trusted"
+
+[projects."/root/code/DrinksPOS-Mobile"]
+trust_level = "trusted"
+
 [mcp_servers.linear]
 url = "https://mcp.linear.app/mcp"
 

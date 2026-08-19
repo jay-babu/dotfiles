@@ -8,22 +8,22 @@ StartLimitIntervalSec=0
 Type=simple
 User=root
 Group=root
-ExecStart=/usr/local/lib/hermes-agent/venv/bin/python -m hermes_cli.main gateway run --replace
-WorkingDirectory=/usr/local/lib/hermes-agent
+ExecStart=/usr/local/lib/hermes-agent/venv/bin/python -m hermes_cli.main gateway run
+WorkingDirectory=/root/.hermes
 Environment="HOME=/root"
 Environment="USER=root"
 Environment="LOGNAME=root"
-Environment="PATH=/usr/local/lib/hermes-agent/venv/bin:/usr/local/lib/hermes-agent/node_modules/.bin:/root/.local/share/mise/installs/node/24.15.0/bin:/root/.local/bin:/root/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PATH=/root/.local/share/mise/installs/node/26/bin:/usr/local/lib/hermes-agent/venv/bin:/usr/local/lib/hermes-agent/node_modules/.bin:/root/.local/bin:/root/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 Environment="VIRTUAL_ENV=/usr/local/lib/hermes-agent/venv"
 Environment="HERMES_HOME=/root/.hermes"
 Restart=always
 RestartSec=5
-RestartMaxDelaySec=300
-RestartSteps=5
 RestartForceExitStatus=75
+RestartPreventExitStatus=78
 KillMode=mixed
 KillSignal=SIGTERM
 ExecReload=/bin/kill -USR1 $MAINPID
+ExecStopPost=-/usr/local/lib/hermes-agent/venv/bin/python -m gateway.cgroup_cleanup
 TimeoutStopSec=210
 StandardOutput=journal
 StandardError=journal

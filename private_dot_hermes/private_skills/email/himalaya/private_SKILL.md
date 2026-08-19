@@ -277,11 +277,13 @@ Save attachments from a message:
 himalaya attachment download 42
 ```
 
-Save to specific directory:
+Save to a specific directory (Himalaya v1.2+):
 
 ```bash
-himalaya attachment download 42 --dir ~/Downloads
+himalaya attachment download 42 --downloads-dir ~/Downloads
 ```
+
+The older `--dir` option is not accepted by current Himalaya releases.
 
 ## Output Formats
 
