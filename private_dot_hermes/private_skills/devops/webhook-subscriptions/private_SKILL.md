@@ -156,6 +156,8 @@ hermes webhook subscribe alerts \
 
 ### PagerDuty incident remediation
 
+**Before triaging any incident class below, load `references/remediation-rules.md` and run its fix-class dedup pre-flight. Its fix-shape, verify-the-path, blast-radius, behavior-change, ownership, and validation gates apply to every playbook in this registry. If a proposed remediation fails a gate, post a diagnostic PagerDuty note instead of opening a PR.**
+
 - references/posbackend-alb-generated-5xx-incidents.md — POSBackend CloudWatch incidents titled like `PRODUCTION POS Backend ALB Generated 5xx`; distinguish intentional default listener `503` responses from actionable ALB-origin `502`s using ALB access logs (`target=-`, `target_status=-`, processing times `-1`) and CloudWatch `HTTPCode_ELB_502_Count`/`503_Count` before changing app code.
 - references/posbackend-sales-history-latency-p90-incidents.md — POSBackend CloudWatch `PRODUCTION <env> Sales history Latency P90`: successful `GET /transactions` p90 dimensions, exact duplicate guards, PR #1854 recurrence/no-duplicate-note patterns. See pd11668, pd11689, pd11691, and pd11697 for recent beta/PR #1854 recurrence variants.
 - references/transformity-pos-invoice-upload-notreadableerror-incidents.md — TransformityPOSFrontend invoice upload `NotReadableError: The requested file could not be read...` incidents involving `UploadInvoiceModal.tsx` / `handleUpload`, `/invoices/`, and generic `TransformitySentry.captureException`; includes duplicate-guard and UI/component reproduction hints.
@@ -447,6 +449,16 @@ For webhook failures, check: gateway process/systemd status, local `curl http://
 ### Approval prompts from webhook runs
 
 Before branch/file edits or more than a blocker/duplicate note, run the exact-ID/worktree duplicate guard for the PagerDuty incident. Re-run it immediately before code changes and after context compaction/resume. Exact `pd-<number>` / `PD #<number>` branch/worktree hits are stop signals even if PagerDuty notes are empty. If a matching worktree/branch exists, re-fetch notes, add at most one concise duplicate-work note naming it, and do not modify that worktree. If you already created a second duplicate worktree/branch, stop using it; do not delete/force-remove it without explicit user cleanup approval.
+
+#### Duplicate sibling-PR prevention
+
+The exact incident-ID guard does not catch sibling alerts caused by the same defect. Before the first edit:
+
+1. Derive a deterministic fix-class slug from the matched incident playbook/root cause, not the PagerDuty number.
+2. Search the target repository's open, closed, and merged PRs for that fix class, likely branch names, primary changed paths, and equivalent behavior.
+3. Reuse or stop for an existing branch/PR that already owns the fix; do not create a sibling remediation PR merely because the incident ID differs.
+4. Key new branch names and remediation notes on the fix class so later sibling alerts collide with the same work.
+5. Re-run the fix-class search immediately before opening a PR and follow the detailed gates in `references/remediation-rules.md`.
 
 ```bash
 hermes webhook list
