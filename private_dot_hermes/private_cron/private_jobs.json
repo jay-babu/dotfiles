@@ -20,15 +20,15 @@
       "schedule_display": "0 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 12
+        "completed": 14
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:04:19.883907-04:00",
-      "next_run_at": "2026-08-10T09:00:00-04:00",
-      "last_run_at": "2026-08-03T09:00:48.656898-04:00",
+      "next_run_at": "2026-08-24T09:00:00-04:00",
+      "last_run_at": "2026-08-17T09:01:10.266112-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -66,15 +66,15 @@
       "schedule_display": "5 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 10
+        "completed": 12
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:13:56.866960-04:00",
-      "next_run_at": "2026-08-10T09:05:00-04:00",
-      "last_run_at": "2026-08-03T09:05:31.553753-04:00",
+      "next_run_at": "2026-08-24T09:05:00-04:00",
+      "last_run_at": "2026-08-17T09:05:52.242160-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -112,17 +112,17 @@
       "schedule_display": "10 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 11
+        "completed": 13
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:18:07.212763-04:00",
-      "next_run_at": "2026-08-10T09:10:00-04:00",
-      "last_run_at": "2026-08-03T09:10:38.858869-04:00",
+      "next_run_at": "2026-08-24T09:10:00-04:00",
+      "last_run_at": "2026-08-17T09:10:55.618568-04:00",
       "last_status": "error",
-      "last_error": "Script exited with code 1\nstderr:\nInstalled 12 packages in 23ms\nTraceback (most recent call last):\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 277, in <module>\n    main()\n    ~~~~^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 268, in main\n    upload_to_slack(path, summary_text)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 239, in upload_to_slack\n    raise RuntimeError('SLACK_BOT_TOKEN not found for Slack image upload')\nRuntimeError: SLACK_BOT_TOKEN not found for Slack image upload",
+      "last_error": "Script exited with code 1\nstderr:\nTraceback (most recent call last):\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 277, in <module>\n    main()\n    ~~~~^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 268, in main\n    upload_to_slack(path, summary_text)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 239, in upload_to_slack\n    raise RuntimeError('SLACK_BOT_TOKEN not found for Slack image upload')\nRuntimeError: SLACK_BOT_TOKEN not found for Slack image upload",
       "last_delivery_error": null,
       "deliver": "slack:C059SQ4H88H",
       "origin": {
@@ -158,15 +158,15 @@
       "schedule_display": "0 6 * * *",
       "repeat": {
         "times": null,
-        "completed": 58
+        "completed": 69
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-06-11T11:30:43.346515-04:00",
-      "next_run_at": "2026-08-09T06:00:00-04:00",
-      "last_run_at": "2026-08-08T06:00:45.490960-04:00",
+      "next_run_at": "2026-08-20T06:00:00-04:00",
+      "last_run_at": "2026-08-19T06:00:31.736632-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -247,15 +247,15 @@
       "schedule_display": "33 3 * * *",
       "repeat": {
         "times": null,
-        "completed": 21
+        "completed": 32
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-07-21T13:00:27.280045-04:00",
-      "next_run_at": "2026-08-09T03:33:00-04:00",
-      "last_run_at": "2026-08-08T03:36:13.668571-04:00",
+      "next_run_at": "2026-08-20T03:33:00-04:00",
+      "last_run_at": "2026-08-19T03:35:35.624630-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -270,42 +270,6 @@
       "enabled_toolsets": null,
       "workdir": null,
       "fire_claim": null
-    },
-    {
-      "id": "74cd4bc9ba5d",
-      "name": "Weekly production DB RDS export refresh",
-      "prompt": "Failure-only weekly follower for the authoritative production Temporal RDS export. Run the managed script to pin the exact HermesAgentReadOnly assumed role; discover the newest fresh, warning-free COMPLETE Temporal export of postgres.reference and postgres.public from transformity-production in the production backup bucket; download with S3 checksum validation; verify exact task provenance, metadata, table statuses, object inventory, and local SHA-256 manifest; then atomically replace /root/dev/production_db. Successful no-op and refresh runs intentionally emit no output and must not be delivered. Non-zero failures must be delivered to the origin Slack thread.",
-      "skills": [],
-      "skill": null,
-      "model": null,
-      "provider": null,
-      "provider_snapshot": null,
-      "model_snapshot": null,
-      "base_url": null,
-      "script": "weekly_production_db_export.py",
-      "no_agent": true,
-      "context_from": null,
-      "schedule": {
-        "kind": "cron",
-        "expr": "0 9 * * 0",
-        "display": "0 9 * * 0"
-      },
-      "schedule_display": "0 9 * * 0",
-      "repeat": {
-        "times": null
-      },
-      "enabled": true,
-      "created_at": "2026-07-24T16:24:57.886637-04:00",
-      "deliver": "origin",
-      "origin": {
-        "platform": "slack",
-        "chat_id": "D0B19N5SA4V",
-        "chat_name": "D0B19N5SA4V",
-        "thread_id": "1784924062.178179",
-        "user_id": "U068K4E4DFC"
-      },
-      "enabled_toolsets": null,
-      "workdir": null
     },
     {
       "id": "e4ec265558c9",
@@ -360,5 +324,5 @@
       "workdir": "/root/code/zeus/main"
     }
   ],
-  "updated_at": "2026-08-08T06:00:45.491909-04:00"
+  "updated_at": "2026-08-19T06:00:31.737667-04:00"
 }

@@ -314,38 +314,12 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
         state.update(changes)
         exporter.save_state(self.state_file, state)
 
-    def test_managed_cron_job_has_follower_contract_without_runtime_state(self):
+    def test_managed_cron_job_remains_absent_before_operational_approval(self):
         payload = json.loads(CRON_JOBS.read_text())
-        job = next(
-            job
-            for job in payload["jobs"]
-            if job["name"] == "Weekly production DB RDS export refresh"
+        self.assertNotIn(
+            "Weekly production DB RDS export refresh",
+            {job["name"] for job in payload["jobs"]},
         )
-
-        self.assertEqual(
-            job["schedule"],
-            {"kind": "cron", "expr": "0 9 * * 0", "display": "0 9 * * 0"},
-        )
-        self.assertEqual(job["schedule_display"], "0 9 * * 0")
-        self.assertEqual(job["repeat"], {"times": None})
-        self.assertTrue(job["enabled"])
-        self.assertTrue(job["no_agent"])
-        self.assertEqual(job["deliver"], "origin")
-        self.assertIn("follower", job["prompt"].lower())
-        self.assertIn("Temporal", job["prompt"])
-        self.assertNotIn("start", job["prompt"].lower())
-        for key in (
-            "next_run_at",
-            "last_run_at",
-            "last_status",
-            "last_error",
-            "last_delivery_error",
-            "fire_claim",
-            "state",
-            "paused_at",
-            "paused_reason",
-        ):
-            self.assertNotIn(key, job)
 
     def test_temporal_task_identifier_grammar_is_exact(self):
         self.assertEqual(exporter.validate_task_id(TASK_LATEST), TASK_LATEST)
@@ -1720,9 +1694,20 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
     def test_main_dry_run_does_not_create_lock_state_or_target(self):
         aws = FakeAWS(self.settings)
         stdout = io.StringIO()
+        real_dry_run = exporter.dry_run
+
+        def dry_run_at_test_time(settings, client, *, force=False):
+            return real_dry_run(
+                settings,
+                client,
+                clock=lambda: self.now,
+                force=force,
+            )
+
         with (
             mock.patch.object(exporter, "Settings", return_value=self.settings),
             mock.patch.object(exporter, "AWSClient", return_value=aws),
+            mock.patch.object(exporter, "dry_run", side_effect=dry_run_at_test_time),
             contextlib.redirect_stdout(stdout),
         ):
             self.assertEqual(exporter.main(["--dry-run"]), 0)
@@ -1736,9 +1721,22 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
         aws = FakeAWS(self.settings)
         stdout = io.StringIO()
         stderr = io.StringIO()
+        real_refresh_once = exporter.refresh_once
+
+        def refresh_at_test_time(settings, client, *, force=False):
+            return real_refresh_once(
+                settings,
+                client,
+                force=force,
+                clock=lambda: self.now,
+            )
+
         with (
             mock.patch.object(exporter, "Settings", return_value=self.settings),
             mock.patch.object(exporter, "AWSClient", return_value=aws),
+            mock.patch.object(
+                exporter, "refresh_once", side_effect=refresh_at_test_time
+            ),
             contextlib.redirect_stdout(stdout),
             contextlib.redirect_stderr(stderr),
         ):
@@ -1754,6 +1752,9 @@ class WeeklyProductionDBFollowerTests(unittest.TestCase):
         with (
             mock.patch.object(exporter, "Settings", return_value=self.settings),
             mock.patch.object(exporter, "AWSClient", return_value=bad),
+            mock.patch.object(
+                exporter, "refresh_once", side_effect=refresh_at_test_time
+            ),
             contextlib.redirect_stderr(stderr),
         ):
             self.assertEqual(exporter.main([]), 1)
