@@ -20,15 +20,15 @@
       "schedule_display": "0 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 14
+        "completed": 15
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:04:19.883907-04:00",
-      "next_run_at": "2026-08-24T09:00:00-04:00",
-      "last_run_at": "2026-08-17T09:01:10.266112-04:00",
+      "next_run_at": "2026-08-31T09:00:00-04:00",
+      "last_run_at": "2026-08-24T09:00:33.775037-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -66,15 +66,15 @@
       "schedule_display": "5 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 12
+        "completed": 13
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:13:56.866960-04:00",
-      "next_run_at": "2026-08-24T09:05:00-04:00",
-      "last_run_at": "2026-08-17T09:05:52.242160-04:00",
+      "next_run_at": "2026-08-31T09:05:00-04:00",
+      "last_run_at": "2026-08-24T09:05:25.305651-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -112,15 +112,15 @@
       "schedule_display": "10 9 * * 1",
       "repeat": {
         "times": null,
-        "completed": 13
+        "completed": 14
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-28T14:18:07.212763-04:00",
-      "next_run_at": "2026-08-24T09:10:00-04:00",
-      "last_run_at": "2026-08-17T09:10:55.618568-04:00",
+      "next_run_at": "2026-08-31T09:10:00-04:00",
+      "last_run_at": "2026-08-24T09:10:29.744059-04:00",
       "last_status": "error",
       "last_error": "Script exited with code 1\nstderr:\nTraceback (most recent call last):\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 277, in <module>\n    main()\n    ~~~~^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 268, in main\n    upload_to_slack(path, summary_text)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 239, in upload_to_slack\n    raise RuntimeError('SLACK_BOT_TOKEN not found for Slack image upload')\nRuntimeError: SLACK_BOT_TOKEN not found for Slack image upload",
       "last_delivery_error": null,
@@ -158,15 +158,15 @@
       "schedule_display": "0 6 * * *",
       "repeat": {
         "times": null,
-        "completed": 69
+        "completed": 75
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-06-11T11:30:43.346515-04:00",
-      "next_run_at": "2026-08-20T06:00:00-04:00",
-      "last_run_at": "2026-08-19T06:00:31.736632-04:00",
+      "next_run_at": "2026-08-26T06:00:00-04:00",
+      "last_run_at": "2026-08-25T06:00:41.536774-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -247,15 +247,15 @@
       "schedule_display": "33 3 * * *",
       "repeat": {
         "times": null,
-        "completed": 32
+        "completed": 39
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-07-21T13:00:27.280045-04:00",
-      "next_run_at": "2026-08-20T03:33:00-04:00",
-      "last_run_at": "2026-08-19T03:35:35.624630-04:00",
+      "next_run_at": "2026-08-26T03:33:00-04:00",
+      "last_run_at": "2026-08-25T03:36:56.393671-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -322,7 +322,55 @@
         "file"
       ],
       "workdir": "/root/code/zeus/main"
+    },
+    {
+      "id": "40459660ec8f",
+      "name": "Five Farms \u2014 follow up with Johnny Harte",
+      "prompt": "Execute the scheduled Five Farms follow-up for Jay Patel.\n\nContext and immutable identifiers:\n- Recipient: Johnny Harte <jharte@fivefarmsirishcream.com>, Founder / Director of Five Farms Irish Cream.\n- Original Gmail message ID/thread ID: 1a0206b8614b41ec / 1a0206b8614b41ec.\n- Original subject: Five Farms x Margin.\n- Original first touch was sent 2026-08-20 and explained that Margin has already grown Five Farms at Curtis Liquors, works with 500 U.S. stores, and offers performance-based retail sell-through programs.\n- Johnny's OOO auto-reply is Gmail message ID 1a0206b990403769, in a separate auto-reply thread, and contains only: \"I am currently out of the office.\" Treat it as non-substantive.\n- Attio deal: Five Farms \u2014 Margin outreach, record ID aad5faab-90a5-467b-a25b-134fee03f010. Johnny's Attio person ID: 64bd6816-3fc1-4e42-92bc-31db3fde10a2.\n\nRequired execution:\n1. Search Gmail All Mail for all messages involving jharte@fivefarmsirishcream.com and subject terms \"Five Farms x Margin\" since 2026-08-20. Read the full messages, not snippets.\n2. If Johnny has sent any substantive reply beyond the known OOO auto-reply, OR if Jay has already sent a later follow-up after the original message, do not send a duplicate. Report exactly what prevented the send.\n3. Otherwise send this concise follow-up in the ORIGINAL Gmail thread, not the separate OOO thread:\n\nHi Johnny,\n\nI wanted to follow up on my note below. Given the success we have already had growing Five Farms at Curtis Liquors, I would love to discuss where a performance-based retail program could help drive additional sell-through.\n\nWould you be open to a 20-minute call next week?\n\nBest regards,\nJay Patel\nMargin\n\n4. Follow the gmail-threaded-followups procedure: fetch the original raw message's RFC Message-ID; send with explicit external To jharte@fivefarmsirishcream.com, subject \"Re: Five Farms x Margin\", In-Reply-To and References set to the original RFC Message-ID, and Gmail threadId 1a0206b8614b41ec. Do not trust a generic reply helper to choose the recipient from Jay's own Sent message.\n5. Verify the sent message has the SENT label, exact external To, original thread ID, correct subject/body, and nonempty In-Reply-To/References. Search All Mail for immediate bounces.\n6. If sent, attach one idempotent note to the existing Attio deal with recipient, subject, Gmail message/thread IDs, verification, and bounce status. Preserve both existing associated contacts and keep stage Reached out. Read the deal and note back; do not create a new deal/company/contact.\n7. Return a concise user-facing result stating whether the follow-up was sent or suppressed and why. Never claim delivery; say no immediate bounce observed when applicable.",
+      "skills": [
+        "google-workspace",
+        "brand-outreach-campaign-operations"
+      ],
+      "skill": "google-workspace",
+      "model": null,
+      "provider": null,
+      "provider_snapshot": "openai-codex",
+      "model_snapshot": "gpt-5.6-sol",
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-08-27T14:30:45-04:00",
+        "display": "once at 2026-08-27 14:30"
+      },
+      "schedule_display": "once at 2026-08-27 14:30",
+      "repeat": {
+        "times": 1,
+        "completed": 0
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-08-20T14:31:20.454727-04:00",
+      "next_run_at": "2026-08-27T14:30:45-04:00",
+      "last_run_at": null,
+      "last_status": null,
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "slack",
+        "chat_id": "D0B19N5SA4V",
+        "chat_name": "D0B19N5SA4V",
+        "thread_id": "1787002161.884189",
+        "user_id": "U068K4E4DFC"
+      },
+      "enabled_toolsets": null,
+      "workdir": null
     }
   ],
-  "updated_at": "2026-08-19T06:00:31.737667-04:00"
+  "updated_at": "2026-08-25T06:00:41.537519-04:00"
 }
