@@ -1,10 +1,10 @@
-approvals_reviewer = "guardian_subagent"
+approvals_reviewer = "user"
 plan_mode_reasoning_effort = "high"
-model = "gpt-5.6-terra"
-model_reasoning_effort = "xhigh"
-service_tier = "fast"
-approval_policy = "on-request"
-sandbox_mode = "workspace-write"
+model = "gpt-6.1-sol"
+model_reasoning_effort = "high"
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
+service_tier = "default"
 [projects."/home/jay/code"]
 trust_level = "trusted"
 
@@ -155,25 +155,77 @@ trust_level = "trusted"
 [projects."/root/.config/mise"]
 trust_level = "trusted"
 
-[mcp_servers.linear]
-url = "https://mcp.linear.app/mcp"
+[projects."/root/dev/production_db"]
+trust_level = "trusted"
+
+[projects."/root/code/transformity-circuit"]
+trust_level = "trusted"
+
+[projects."/root/dev/production_db/wine_completeness_research"]
+trust_level = "trusted"
+
+[projects."/root/code/athena"]
+trust_level = "trusted"
+
+[projects."/root/code/harlequin-column-jump"]
+trust_level = "trusted"
 
 [mcp_servers.github]
 url = "https://api.githubcopilot.com/mcp/"
 bearer_token_env_var = "GITHUB_TOKEN"
 
-[mcp_servers.sentry]
-url = "https://mcp.sentry.dev/mcp"
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
+
+[mcp_servers.margin]
+url = "https://kurama.usemargin.com/mcp"
+
+[mcp_servers.margin-dev]
+url = "https://kurama.usemargin.dev/mcp"
+
+[mcp_servers.pagerduty]
+command = "/root/.local/share/mise/installs/node/26/bin/node"
+args = ["/root/.codex/tools/pagerduty-mcp/node_modules/mcp-remote/dist/proxy.js", "https://mcp.pagerduty.com/mcp", "8765", "--host", "127.0.0.1", "--callback-path", "/callback/pwVZZeN0b3pE", "--static-oauth-client-info", "@/root/.codex/tools/pagerduty-mcp/client.json", "--static-oauth-client-metadata", "@/root/.codex/tools/pagerduty-mcp/metadata.json", "--auth-timeout", "600", "--transport", "http-only"]
+startup_timeout_sec = 30
+env = { MCP_REMOTE_CONFIG_DIR = "/root/.codex/tools/pagerduty-mcp/auth" }
+
+[mcp_servers.statsig]
+url = "https://api.statsig.com/v3/mcp"
 
 [features]
 js_repl = true
+code_mode_host = true
 guardian_approval = true
 prevent_idle_sleep = true
 memories = true
 
+[tui]
+screen_reader_detection_done = true
+
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 "gpt-5.6-sol" = 4
+gpt-6-astra = 4
+"gpt-6.1-sol" = 4
 
 [plugins."github@openai-curated"]
 enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."aurora-postgres-iam@transformity"]
+enabled = true
+
+[marketplaces.openai-bundled]
+source_type = "local"
+source = "/root/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.transformity]
+source_type = "git"
+source = "https://github.com/Transformity/agent-plugins.git"
+ref = "main"
+
+[shell_environment_policy]
+inherit = "all"
+ignore_default_excludes = true

@@ -141,7 +141,11 @@ set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
 
 if test -x ~/.local/bin/mise
-    ~/.local/bin/mise activate fish | source
+    if status is-interactive
+        ~/.local/bin/mise activate fish | source
+    else
+        ~/.local/bin/mise activate fish --shims | source
+    end
 end
 
 if type -q starship

@@ -1,21 +1,21 @@
-Jay: concise/action-first; raw PR URLs; whole asserts; throwable logs; mocks>seams; targeted tests; CI owns full suite/lint.
+Jay: concise/action-first; raw PR URLs; whole asserts; throwable logs; mocks>seams; focused/full CI; date-fns. Voice: audio E2E/screenshots, seeded stress, latency A/Bs; keys post-code.
 §
-Prefers mise/uv, existing auth/StackRefs, CLI `pulumi import`; manually bootstraps IaC—no persistent grants. IAM: `getPolicyDocument` + account-bound confused-deputy controls.
+Infra: mise/uv, existing auth/StackRefs, `pulumi import`; manual bootstrap/no persistent grants; IAM `getPolicyDocument` + account-bound confused-deputy controls.
 §
-Scope: literal requests; address all reported defects; one change at a time; push/send PR; no unasked cleanup/review/CI.
+Literal scope; one defect at a time; live-head reviews; push/send PR; no unasked cleanup/review/CI; don't run golangci-lint. Standalone docs.
 §
-POS/Kurama: exact parsing/nullability; cohort auth; nested/exploded expands; total_pages; CRUD; Bob joins; scoped writes.
+POS/Kurama: exact nulls; cohort auth; Bob/genreadapi; owning interfaces; /user/{user_id} self-only.
 §
-Final reviews tag <@U068K4E4DFC>, not cron/webhooks. Rebase main; verify mergeable.
+Final reviews tag <@U068K4E4DFC>; no cron/webhooks. Rebase main; verify mergeable.
 §
-DB: direct migrations; one concurrent index/file; no broad Squawk concurrency ignores; no tests for metadata-only PRs/role guards unless asked.
+Narrow ownership; shared code in libs/atlas, not services. Authority locks use protected connections.
 §
-Direct ownership/narrow paths; shared code in libs/atlas, not service imports. Authority locks use protected connections.
+Network: 500 stores incl Curtis MA. Paid pushes need prior-sales lift; cite distributor; no bypass/joint-call framing.
 §
-Network: 500 stores incl Curtis MA. Paid brand pushes; prior sales prove lift. Cite distributor; no bypass/joint-call framing.
+Prod defects: gamma-faithful fixtures + DB A/B; no prod txn reports.
 §
-Prod defects: gamma-faithful fixtures + DB A/B; no prod transaction reports.
+Logical commits; pushed reviews; screenshots; auth E2E; expects automatic material wins/no perf tradeoffs; persists.
 §
-Logical commits; review pushed only; screenshots in PR comments, not repo; authenticated frontend E2E green.
+Shortlists: nonnational/like-for-like; locked; subs +$3–5, ≤10%. “Do same”=research/dedupe/send/verify/Attio; form absent verified email.
 §
-Shortlists: nonnational/like-for-like; locked picks; subs +$3–5, ≤10%. “Do same”=research/dedupe/send/verify/Attio; form if no verified email.
+DB: canonical/no temp migrations; one concurrent index/file; narrow Squawk ignores. POS tests: behavior only; no reflection/metadata.

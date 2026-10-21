@@ -258,6 +258,10 @@ $GAPI calendar delete EVENT_ID
 
 When asked to auto-enable recording/transcription/Gemini notes for Calendar events, use the Meet API `spaces` resource rather than trying to patch the Calendar event itself. Calendar provides the Meet code/link; artifact toggles live in `Space.config.artifactConfig`. Required scope: `https://www.googleapis.com/auth/meetings.space.settings`, and the OAuth project must have the Google Meet API enabled. See `references/google-meet-auto-artifacts.md` for the verified patch body, update mask, caption limitation, and cron/webhook automation pattern.
 
+### Google Meet co-hosts
+
+Meet co-host assignments use `spaces.members` with role `COHOST`. Resolve a meeting code with `meet spaces get` first and use the returned canonical `spaces/<id>` name for member list/create/patch calls; member endpoints can reject the human-readable meeting code even when `spaces.get` accepts it. These member writes require `https://www.googleapis.com/auth/meetings.space.created`. That scope only permits writes to spaces created by the OAuth app. Calendar-created Meet spaces remain readable with `meetings.space.readonly`, but member creation returns `403 Permission denied on resource Member` even when the authenticated user organized the Calendar event. Do not retry or claim success; use the Calendar/Meet web UI for those co-host assignments.
+
 #### Google Meet recording/transcript/Gemini notes for Calendar events
 
 Calendar event fields can identify the Meet link/code and organizer, but the UI toggles for **Record the meeting**, **Transcribe the meeting**, and **Take notes with Gemini** are configured through the Google Meet API `spaces` resource. This requires the extra scope `https://www.googleapis.com/auth/meetings.space.settings`; a 403 `ACCESS_TOKEN_SCOPE_INSUFFICIENT` from `meet.googleapis.com/v2/spaces/...` means re-authorize with that scope rather than trying to patch Calendar event fields. See `references/calendar-meet-auto-artifacts.md` for the full one-event verification and patch workflow.

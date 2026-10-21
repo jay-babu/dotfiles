@@ -291,6 +291,35 @@ Pitfalls:
 - Avoid shell-quoting bugs for long PR bodies: write the body to a temp file and have a short Python/JSON script read it and call the REST API, rather than interpolating multiline Markdown into a shell JSON string.
 - If the terminal wrapper blocks or times out while running a long inline/temp-file Python PR creation script, clean up the temp file and retry the minimal REST call with `execute_code`. Keep the same secret-handling rules: read `git credential fill` internally, print only PR number/URL/SHA, and never echo tokens or raw credential-helper output.
 
+### Uploading PR screenshots without committing artifacts
+
+For screenshots in a PR body, keep generated images outside the repository and upload them to GitHub user attachments. GitHub currently exposes an undocumented bearer-token fast path for image/video uploads when the token has push access to the repository:
+
+```bash
+REPO=owner/repo
+FILE=/tmp/screenshot.png
+REPO_ID=$(gh api "repos/$REPO" --jq .id)
+TOKEN=$(gh auth token)
+RESPONSE=$(curl --fail-with-body --silent --show-error \
+  "https://uploads.github.com/user-attachments/assets?name=$(basename "$FILE")&content_type=image/png&repository_id=$REPO_ID" \
+  -X POST \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/json" \
+  -H "Content-Type: image/png" \
+  --data-binary "@$FILE")
+URL=$(printf '%s' "$RESPONSE" | jq -er .url)
+printf '%s\n' "$URL"
+```
+
+Embed `URL` in Markdown and update the PR with `gh pr edit --body-file`. For private repositories, verifying the uploaded asset may require the same bearer header; an unauthenticated download can return 404 even when the PR renders it for authorized viewers:
+
+```bash
+curl -fsSL -H "Authorization: Bearer $TOKEN" "$URL" -o /tmp/uploaded.png
+cmp "$FILE" /tmp/uploaded.png
+```
+
+Do not print the token. Treat this endpoint as undocumented: fail clearly rather than claiming upload success, and verify the PR's rendered `body_html` contains the expected image count after editing.
+
 ## 4. Monitoring CI Status
 
 ### Addressing PR review comments and conversation threads

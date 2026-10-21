@@ -182,6 +182,7 @@ current.
 - Overpass API can be slow during peak hours; the script automatically
   falls back between mirrors (overpass-api.de → overpass.kumi.systems)
 - `distance` and `directions` use `--to` flag for the destination (not positional)
+- The public OSRM backend may ignore `walking`/`cycling` profiles and return car-speed durations even when the road distance is usable. Sanity-check non-driving times (for walking, roughly 75–85 m/min) and use a transit planner for transit trips; do not present an implausible OSRM duration as walking time.
 - If a zip code alone gives ambiguous results globally, include country/state
 
 ## Verification

@@ -1,144 +1,6 @@
 {
   "jobs": [
     {
-      "id": "88d55da69130",
-      "name": "Weekly Tito's vs Temper tracker",
-      "prompt": "Script-only weekly POS tracker for Tito's vs Temper Vodka 1.75L. The attached script queries the production read-replica read-only, generates Cohasset and Weymouth weekly tracker charts, and writes the exact Slack message with MEDIA attachments to stdout.",
-      "skills": [],
-      "skill": null,
-      "model": null,
-      "provider": null,
-      "base_url": null,
-      "script": "titos_temper_weekly_tracker.sh",
-      "no_agent": true,
-      "context_from": null,
-      "schedule": {
-        "kind": "cron",
-        "expr": "0 9 * * 1",
-        "display": "0 9 * * 1"
-      },
-      "schedule_display": "0 9 * * 1",
-      "repeat": {
-        "times": null,
-        "completed": 15
-      },
-      "enabled": true,
-      "state": "scheduled",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-05-28T14:04:19.883907-04:00",
-      "next_run_at": "2026-08-31T09:00:00-04:00",
-      "last_run_at": "2026-08-24T09:00:33.775037-04:00",
-      "last_status": "ok",
-      "last_error": null,
-      "last_delivery_error": null,
-      "deliver": "slack:C059SQ4H88H",
-      "origin": {
-        "platform": "slack",
-        "chat_id": "C09V8QSAACT",
-        "chat_name": "C09V8QSAACT",
-        "thread_id": "1779986049.994249"
-      },
-      "enabled_toolsets": [
-        "terminal"
-      ],
-      "workdir": null,
-      "profile": null,
-      "fire_claim": null
-    },
-    {
-      "id": "c1e2a3ca5e4a",
-      "name": "Weekly Decoy vs Aviary tracker - Cohasset",
-      "prompt": "Script-only weekly POS tracker for Cohasset comparing Decoy Cabernet Sauvignon 750ML (https://pos.usemargin.com/item/2618447) vs Aviary Napa Valley Cabernet Sauvignon 750ML (https://pos.usemargin.com/item/2640428). The attached script queries production POS read-only data for entity 86 / Cohasset using SUCCESS transactions only, builds 8 rolling 7-day weekly buckets ending at runtime, generates the approved actuals-first chart with Aviary unit share, weekly unit mix, weekly gross profit comparison, and Aviary minus Decoy gross profit, then prints Slack-ready summary text and a MEDIA line for the chart image. Run every Monday at 9am ET and deliver to Slack channel C059SQ4H88H.",
-      "skills": [],
-      "skill": null,
-      "model": null,
-      "provider": null,
-      "base_url": null,
-      "script": "decoy_aviary_cohasset_weekly_tracker.sh",
-      "no_agent": true,
-      "context_from": null,
-      "schedule": {
-        "kind": "cron",
-        "expr": "5 9 * * 1",
-        "display": "5 9 * * 1"
-      },
-      "schedule_display": "5 9 * * 1",
-      "repeat": {
-        "times": null,
-        "completed": 13
-      },
-      "enabled": true,
-      "state": "scheduled",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-05-28T14:13:56.866960-04:00",
-      "next_run_at": "2026-08-31T09:05:00-04:00",
-      "last_run_at": "2026-08-24T09:05:25.305651-04:00",
-      "last_status": "ok",
-      "last_error": null,
-      "last_delivery_error": null,
-      "deliver": "slack:C059SQ4H88H",
-      "origin": {
-        "platform": "slack",
-        "chat_id": "C09V8QSAACT",
-        "chat_name": "C09V8QSAACT",
-        "thread_id": "1779986049.994249"
-      },
-      "enabled_toolsets": [
-        "terminal"
-      ],
-      "workdir": null,
-      "profile": null,
-      "fire_claim": null
-    },
-    {
-      "id": "e20b62fb21db",
-      "name": "Weekly Kim Crawford vs Kuranui tracker - Cohasset",
-      "prompt": "Script-only weekly POS tracker for Cohasset comparing Kim Crawford Sauvignon Blanc 750ML (https://pos.usemargin.com/item/2618467) vs Kuranui Sauvignon Blanc 750ML (https://pos.usemargin.com/item/2635331). The attached script queries production POS read-only data for entity 86 / Cohasset using SUCCESS transactions only, builds 8 rolling 7-day weekly buckets ending at runtime, generates the approved actuals-first chart with Kuranui unit share, weekly unit mix, weekly gross profit comparison, and Kuranui minus Kim Crawford gross profit, then prints Slack-ready summary text and a MEDIA line for the chart image. Run every Monday at 9am ET and deliver to Slack channel C059SQ4H88H.",
-      "skills": [],
-      "skill": null,
-      "model": null,
-      "provider": null,
-      "base_url": null,
-      "script": "kim_kuranui_cohasset_weekly_tracker.sh",
-      "no_agent": true,
-      "context_from": null,
-      "schedule": {
-        "kind": "cron",
-        "expr": "10 9 * * 1",
-        "display": "10 9 * * 1"
-      },
-      "schedule_display": "10 9 * * 1",
-      "repeat": {
-        "times": null,
-        "completed": 14
-      },
-      "enabled": true,
-      "state": "scheduled",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-05-28T14:18:07.212763-04:00",
-      "next_run_at": "2026-08-31T09:10:00-04:00",
-      "last_run_at": "2026-08-24T09:10:29.744059-04:00",
-      "last_status": "error",
-      "last_error": "Script exited with code 1\nstderr:\nTraceback (most recent call last):\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 277, in <module>\n    main()\n    ~~~~^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 268, in main\n    upload_to_slack(path, summary_text)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.hermes/scripts/kim_kuranui_cohasset_weekly_tracker_impl.py\", line 239, in upload_to_slack\n    raise RuntimeError('SLACK_BOT_TOKEN not found for Slack image upload')\nRuntimeError: SLACK_BOT_TOKEN not found for Slack image upload",
-      "last_delivery_error": null,
-      "deliver": "slack:C059SQ4H88H",
-      "origin": {
-        "platform": "slack",
-        "chat_id": "C09V8QSAACT",
-        "chat_name": "C09V8QSAACT",
-        "thread_id": "1779986049.994249"
-      },
-      "enabled_toolsets": [
-        "terminal"
-      ],
-      "workdir": null,
-      "profile": null,
-      "fire_claim": null
-    },
-    {
       "id": "72be28b02e54",
       "name": "Google Meet auto recording/transcription/notes for hosted events",
       "prompt": "Run the Google Meet auto-artifacts script to enable recording, transcription, and Gemini smart notes for same-day and next-day Google Calendar events where Jay is the organizer/host. Script is authoritative and prints only changes/errors.",
@@ -158,15 +20,15 @@
       "schedule_display": "0 6 * * *",
       "repeat": {
         "times": null,
-        "completed": 75
+        "completed": 131
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-06-11T11:30:43.346515-04:00",
-      "next_run_at": "2026-08-26T06:00:00-04:00",
-      "last_run_at": "2026-08-25T06:00:41.536774-04:00",
+      "next_run_at": "2026-10-21T06:00:00-04:00",
+      "last_run_at": "2026-10-20T06:01:08.747919-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -180,7 +42,14 @@
       "enabled_toolsets": null,
       "workdir": null,
       "profile": null,
-      "fire_claim": null
+      "fire_claim": null,
+      "failure_streak": 0,
+      "last_dispatch": {
+        "scheduled_at": "2026-10-20T06:00:00-04:00",
+        "dispatched_at": "2026-10-20T06:00:58.018346-04:00",
+        "lateness_seconds": 58.0,
+        "kind": "on_time"
+      }
     },
     {
       "id": "37f7a1b79ced",
@@ -247,15 +116,15 @@
       "schedule_display": "33 3 * * *",
       "repeat": {
         "times": null,
-        "completed": 39
+        "completed": 95
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-07-21T13:00:27.280045-04:00",
-      "next_run_at": "2026-08-26T03:33:00-04:00",
-      "last_run_at": "2026-08-25T03:36:56.393671-04:00",
+      "next_run_at": "2026-10-21T03:33:00-04:00",
+      "last_run_at": "2026-10-20T03:39:03.182820-04:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -269,108 +138,15 @@
       },
       "enabled_toolsets": null,
       "workdir": null,
-      "fire_claim": null
-    },
-    {
-      "id": "e4ec265558c9",
-      "name": "Remove legacy Temporal RDS export path",
-      "prompt": "Create a PR in Transformity/zeus to remove the legacy Temporal RDS export compatibility path, but only if it is now replay-safe to do so.\n\nContext:\n- PR #770 (merge commit d470c5d122a9d52b8344e94a667f9299a33fd0fa) changed RDS export polling from the legacy long-running heartbeat activity to short StartRDSExportBackup / CheckRDSExportBackup activities separated by durable 10-minute workflow timers.\n- The shared task queue remains app.TaskQueue / campaign-queue.\n- Gamma's Temporal namespace was margin-dev.saeka with 30-day retention. Its latest known pre-refactor execution closed at 2026-07-29T02:55:31Z, making 2026-08-28T02:55:31Z the earliest gamma-only cleanup point.\n- Production deployment was still waiting for approval on 2026-07-29, so do not assume production is safe based only on gamma's date.\n- Repo manager: /root/code/zeus, canonical main worktree: /root/code/zeus/main.\n\nSafety gate before editing:\n1. Fetch latest origin/main and inspect the current code; do not assume filenames or code are unchanged.\n2. Verify current gamma AND production deployments and query both live Temporal namespaces for RDSExportBackupWorkflow executions, namespace retention, open histories, and any pre-refactor histories still inside retention/reset risk. Retrieve Temporal endpoints/API keys through the existing environment-specific Pulumi configuration without printing secrets. Verify no legacy activity execution can still need replay or retry.\n3. If either environment is not safe, do not modify code or open a PR. Report the exact blocker and earliest defensible cleanup date.\n\nIf safe:\n1. Create a clean worktree under /root/code/zeus from current origin/main on branch refactor/remove-legacy-rds-export-path. Do not modify unrelated dirty files in /root/code/zeus/main.\n2. Remove only obsolete compatibility machinery, including as applicable: the workflow.GetVersion/default-version branch, legacy RDSExportBackup long-running activity, its registration in main.go, legacy polling/heartbeat/timeout constants and wait injection, and tests that exist solely for the legacy branch. Preserve the current Start -> Check -> workflow durable timer behavior, schedule contract, app.TaskQueue, IAM, metrics, and deployment configuration.\n3. Follow repository TDD/conventions and keep the diff narrow. Run focused and full Temporal tests, race tests, go vet, formatting, lint/checks used by the repo, Linux/arm64 build if appropriate, and git diff --check.\n4. Rebase on latest origin/main before publishing. Commit logically, push, and open a PR with a clear replay-retention rationale and verification evidence. Do not merge it.\n5. Verify the remote PR head, mergeability/conflicts, and CI. Address failures caused by the change; report unrelated blockers honestly.\n6. Return a concise final summary with the PR URL, exact removed legacy pieces, live replay-safety evidence for both environments, tests/checks run, and CI state. Tag <@U068K4E4DFC> in the final review summary.",
-      "skills": [
-        "temporal-application-engineering",
-        "github-pr-workflow",
-        "test-driven-development"
-      ],
-      "skill": "temporal-application-engineering",
-      "model": null,
-      "provider": null,
-      "provider_snapshot": "openai-codex",
-      "model_snapshot": "gpt-5.6-sol",
-      "base_url": null,
-      "script": null,
-      "no_agent": false,
-      "context_from": null,
-      "schedule": {
-        "kind": "once",
-        "run_at": "2026-08-29T15:21:25+00:00",
-        "display": "once at 2026-08-29 15:21"
-      },
-      "schedule_display": "once at 2026-08-29 15:21",
-      "repeat": {
-        "times": 1,
-        "completed": 0
-      },
-      "enabled": true,
-      "state": "scheduled",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-07-29T11:21:51.881310-04:00",
-      "next_run_at": "2026-08-29T15:21:25+00:00",
-      "last_run_at": null,
-      "last_status": null,
-      "last_error": null,
-      "last_delivery_error": null,
-      "deliver": "origin",
-      "origin": {
-        "platform": "slack",
-        "chat_id": "D0B19N5SA4V",
-        "chat_name": "D0B19N5SA4V",
-        "thread_id": "1785182765.749499",
-        "user_id": "U068K4E4DFC"
-      },
-      "enabled_toolsets": [
-        "terminal",
-        "file"
-      ],
-      "workdir": "/root/code/zeus/main"
-    },
-    {
-      "id": "40459660ec8f",
-      "name": "Five Farms \u2014 follow up with Johnny Harte",
-      "prompt": "Execute the scheduled Five Farms follow-up for Jay Patel.\n\nContext and immutable identifiers:\n- Recipient: Johnny Harte <jharte@fivefarmsirishcream.com>, Founder / Director of Five Farms Irish Cream.\n- Original Gmail message ID/thread ID: 1a0206b8614b41ec / 1a0206b8614b41ec.\n- Original subject: Five Farms x Margin.\n- Original first touch was sent 2026-08-20 and explained that Margin has already grown Five Farms at Curtis Liquors, works with 500 U.S. stores, and offers performance-based retail sell-through programs.\n- Johnny's OOO auto-reply is Gmail message ID 1a0206b990403769, in a separate auto-reply thread, and contains only: \"I am currently out of the office.\" Treat it as non-substantive.\n- Attio deal: Five Farms \u2014 Margin outreach, record ID aad5faab-90a5-467b-a25b-134fee03f010. Johnny's Attio person ID: 64bd6816-3fc1-4e42-92bc-31db3fde10a2.\n\nRequired execution:\n1. Search Gmail All Mail for all messages involving jharte@fivefarmsirishcream.com and subject terms \"Five Farms x Margin\" since 2026-08-20. Read the full messages, not snippets.\n2. If Johnny has sent any substantive reply beyond the known OOO auto-reply, OR if Jay has already sent a later follow-up after the original message, do not send a duplicate. Report exactly what prevented the send.\n3. Otherwise send this concise follow-up in the ORIGINAL Gmail thread, not the separate OOO thread:\n\nHi Johnny,\n\nI wanted to follow up on my note below. Given the success we have already had growing Five Farms at Curtis Liquors, I would love to discuss where a performance-based retail program could help drive additional sell-through.\n\nWould you be open to a 20-minute call next week?\n\nBest regards,\nJay Patel\nMargin\n\n4. Follow the gmail-threaded-followups procedure: fetch the original raw message's RFC Message-ID; send with explicit external To jharte@fivefarmsirishcream.com, subject \"Re: Five Farms x Margin\", In-Reply-To and References set to the original RFC Message-ID, and Gmail threadId 1a0206b8614b41ec. Do not trust a generic reply helper to choose the recipient from Jay's own Sent message.\n5. Verify the sent message has the SENT label, exact external To, original thread ID, correct subject/body, and nonempty In-Reply-To/References. Search All Mail for immediate bounces.\n6. If sent, attach one idempotent note to the existing Attio deal with recipient, subject, Gmail message/thread IDs, verification, and bounce status. Preserve both existing associated contacts and keep stage Reached out. Read the deal and note back; do not create a new deal/company/contact.\n7. Return a concise user-facing result stating whether the follow-up was sent or suppressed and why. Never claim delivery; say no immediate bounce observed when applicable.",
-      "skills": [
-        "google-workspace",
-        "brand-outreach-campaign-operations"
-      ],
-      "skill": "google-workspace",
-      "model": null,
-      "provider": null,
-      "provider_snapshot": "openai-codex",
-      "model_snapshot": "gpt-5.6-sol",
-      "base_url": null,
-      "script": null,
-      "no_agent": false,
-      "context_from": null,
-      "schedule": {
-        "kind": "once",
-        "run_at": "2026-08-27T14:30:45-04:00",
-        "display": "once at 2026-08-27 14:30"
-      },
-      "schedule_display": "once at 2026-08-27 14:30",
-      "repeat": {
-        "times": 1,
-        "completed": 0
-      },
-      "enabled": true,
-      "state": "scheduled",
-      "paused_at": null,
-      "paused_reason": null,
-      "created_at": "2026-08-20T14:31:20.454727-04:00",
-      "next_run_at": "2026-08-27T14:30:45-04:00",
-      "last_run_at": null,
-      "last_status": null,
-      "last_error": null,
-      "last_delivery_error": null,
-      "deliver": "origin",
-      "origin": {
-        "platform": "slack",
-        "chat_id": "D0B19N5SA4V",
-        "chat_name": "D0B19N5SA4V",
-        "thread_id": "1787002161.884189",
-        "user_id": "U068K4E4DFC"
-      },
-      "enabled_toolsets": null,
-      "workdir": null
+      "fire_claim": null,
+      "failure_streak": 0,
+      "last_dispatch": {
+        "scheduled_at": "2026-10-20T03:33:00-04:00",
+        "dispatched_at": "2026-10-20T03:33:58.021282-04:00",
+        "lateness_seconds": 58.0,
+        "kind": "on_time"
+      }
     }
   ],
-  "updated_at": "2026-08-25T06:00:41.537519-04:00"
+  "updated_at": "2026-10-20T06:01:08.785604-04:00"
 }

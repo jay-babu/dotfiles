@@ -2,9 +2,8 @@
 actionlint = "latest"
 atlas = "latest"
 aws = { version = "latest", symlink_bins = "true" }
-btop = "1.4.5"
+btop = "1.4.7"
 bun = "latest"
-codex = "0.146"
 fzf = "latest"
 gdu = "latest"
 github-cli = { version = "latest", postinstall = "gh auth setup-git" }
@@ -27,7 +26,8 @@ uv = "latest"
 act = "latest"
 lazygit = "latest"
 "pipx:visidata" = { version = "latest", uvx_args = "--with openpyxl" }
-"pipx:harlequin" = { version = "latest", extras = "postgres" }
+# Harlequin PR #977: Vim editor support, pinned to the reviewed PR head.
+"pipx:Dking08/harlequin" = { version = "9755dc4427654235260e6e5638da6f97791fc11e", extras = "postgres", uvx_args = "--python 3.14", postinstall = '"$MISE_TOOL_INSTALL_PATH/harlequin/bin/python" "$HOME/.config/mise/hooks/harlequin-steady-cursor.py" && "$MISE_TOOL_INSTALL_PATH/harlequin/bin/python" "$HOME/.config/mise/hooks/harlequin-column-jump.py" && mkdir -p "$HOME/.config/fish/completions" && env _HARLEQUIN_COMPLETE=fish_source harlequin > "$HOME/.config/fish/completions/harlequin.fish"' }
 ffmpeg = "latest"
 chezmoi = "latest"
 amazon-ecr-credential-helper = "latest"
@@ -43,7 +43,7 @@ caddy = "latest"
 yq = "latest"
 jq = "latest"
 "pipx:nano-pdf" = "latest"
-"cargo:himalaya" = { version = "latest", features = "oauth2" }
+"cargo:himalaya" = "latest"
 "npm:@googleworkspace/cli" = "latest"
 "go:github.com/air-verse/air" = "latest"
 "go:github.com/charmbracelet/glow/v2" = "latest"
@@ -62,3 +62,9 @@ ghcup = "latest"
 "http:kotlin-lsp" = { version = "262.9593.0", url = "https://download-cdn.jetbrains.com/language-server/kotlin-server/{{ version }}/kotlin-server-{{ version }}.tar.gz" }
 "npm:@earendil-works/pi-coding-agent" = "latest"
 fd = "latest"
+"npm:@openai/codex" = "latest"
+prek = "latest"
+
+# Wrap the selected Codex version, including after mise upgrades.
+[wrappers.codex]
+command = "/root/.config/mise/wrappers/codex-bws"
