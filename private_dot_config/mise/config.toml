@@ -2,7 +2,7 @@
 actionlint = "latest"
 atlas = "latest"
 aws = { version = "latest", symlink_bins = "true" }
-btop = "1.4.7"
+btop = "1.4.8"
 bun = "latest"
 fzf = "latest"
 gdu = "latest"
@@ -26,8 +26,8 @@ uv = "latest"
 act = "latest"
 lazygit = "latest"
 "pipx:visidata" = { version = "latest", uvx_args = "--with openpyxl" }
-# Harlequin PR #977: Vim editor support, pinned to the reviewed PR head.
-"pipx:Dking08/harlequin" = { version = "9755dc4427654235260e6e5638da6f97791fc11e", extras = "postgres", uvx_args = "--python 3.14", postinstall = '"$MISE_TOOL_INSTALL_PATH/harlequin/bin/python" "$HOME/.config/mise/hooks/harlequin-steady-cursor.py" && "$MISE_TOOL_INSTALL_PATH/harlequin/bin/python" "$HOME/.config/mise/hooks/harlequin-column-jump.py" && mkdir -p "$HOME/.config/fish/completions" && env _HARLEQUIN_COMPLETE=fish_source harlequin > "$HOME/.config/fish/completions/harlequin.fish"' }
+# Personal build: closed-buffer restoration (PR #1194) and Vim support (PR #977).
+"pipx:jay-babu/harlequin" = { version = "73b7b8d1a99c440ca4efbbcd5533be639f8bfa55", extras = "postgres", uvx_args = "--python 3.14", postinstall = '"$MISE_TOOL_INSTALL_PATH/harlequin/bin/python" "$HOME/.config/mise/hooks/harlequin-steady-cursor.py" && mkdir -p "$HOME/.config/fish/completions" && env _HARLEQUIN_COMPLETE=fish_source "$MISE_TOOL_INSTALL_PATH/harlequin/bin/harlequin" > "$HOME/.config/fish/completions/harlequin.fish"' }
 ffmpeg = "latest"
 chezmoi = "latest"
 amazon-ecr-credential-helper = "latest"
@@ -64,7 +64,18 @@ ghcup = "latest"
 fd = "latest"
 "npm:@openai/codex" = "latest"
 prek = "latest"
+temporal = "latest"
 
 # Wrap the selected Codex version, including after mise upgrades.
 [wrappers.codex]
 command = "/root/.config/mise/wrappers/codex-bws"
+
+# Keep the shared server aligned with the mise-selected CLI.
+# Updating the daemon restarts it and interrupts active Codex work.
+[tasks.codex-upgrade]
+description = "Upgrade Codex CLI and shared daemon together (interrupts active chats)"
+run = [
+  "mise upgrade npm:@openai/codex --no-prune -y",
+  "codex app-server daemon update --from-cli --yes",
+  "codex app-server daemon version",
+]

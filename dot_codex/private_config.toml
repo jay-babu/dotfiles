@@ -1,7 +1,7 @@
 approvals_reviewer = "user"
 plan_mode_reasoning_effort = "high"
 model = "gpt-6.1-sol"
-model_reasoning_effort = "high"
+model_reasoning_effort = "medium"
 approval_policy = "never"
 sandbox_mode = "danger-full-access"
 service_tier = "default"
@@ -193,6 +193,8 @@ env = { MCP_REMOTE_CONFIG_DIR = "/root/.codex/tools/pagerduty-mcp/auth" }
 url = "https://api.statsig.com/v3/mcp"
 
 [features]
+# Share one background server across local and mobile clients.
+daemon_auto_start = true
 js_repl = true
 code_mode_host = true
 guardian_approval = true
@@ -215,6 +217,12 @@ enabled = true
 enabled = true
 
 [plugins."aurora-postgres-iam@transformity"]
+enabled = true
+
+[plugins."pos-db-batch-commits@transformity"]
+enabled = true
+
+[plugins."brand-ambassador-outreach@transformity"]
 enabled = true
 
 [marketplaces.openai-bundled]

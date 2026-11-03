@@ -20,18 +20,18 @@
       "schedule_display": "0 6 * * *",
       "repeat": {
         "times": null,
-        "completed": 131
+        "completed": 144
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-06-11T11:30:43.346515-04:00",
-      "next_run_at": "2026-10-21T06:00:00-04:00",
-      "last_run_at": "2026-10-20T06:01:08.747919-04:00",
-      "last_status": "ok",
-      "last_error": null,
-      "last_delivery_error": null,
+      "next_run_at": "2026-11-03T06:00:00-05:00",
+      "last_run_at": "2026-11-02T06:00:24.281790-05:00",
+      "last_status": "error",
+      "last_error": "Script exited with code 1\nstderr:\nTraceback (most recent call last):\n  File \"<string>\", line 16, in <module>\n    exec(code, main.__dict__)\n    ~~~~^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.hermes/scripts/google_meet_auto_artifacts.py\", line 26, in <module>\n    from google_api import build_service, get_credentials  # noqa: E402\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nModuleNotFoundError: No module named 'google_api'",
+      "last_delivery_error": "live adapter send failed: The request to the Slack API failed. (url: https://slack.com/api/chat.postMessage, status: 200)\nThe server responded with: {'ok': False, 'error': 'is_archived'}; live adapter delivery to slack:C09V8QSAACT failed: The request to the Slack API failed. (url: https://slack.com/api/chat.postMessage, status: 200)\nThe server responded with: {'ok': False, 'error': 'is_archived'}; delivery error: Adapter send failed: The request to the Slack API failed. (url: https://slack.com/api/chat.postMessage, status: 200)\nThe server responded with: {'ok': False, 'error': 'is_archived'} (target slack:C09V8QSAACT)",
       "deliver": "origin",
       "origin": {
         "platform": "slack",
@@ -43,12 +43,16 @@
       "workdir": null,
       "profile": null,
       "fire_claim": null,
-      "failure_streak": 0,
+      "failure_streak": 8,
       "last_dispatch": {
-        "scheduled_at": "2026-10-20T06:00:00-04:00",
-        "dispatched_at": "2026-10-20T06:00:58.018346-04:00",
-        "lateness_seconds": 58.0,
+        "scheduled_at": "2026-11-02T06:00:00-05:00",
+        "dispatched_at": "2026-11-02T06:00:16.214417-05:00",
+        "lateness_seconds": 16.2,
         "kind": "on_time"
+      },
+      "last_failure": {
+        "at": "2026-11-02T06:00:24.281790-05:00",
+        "detail": "Script exited with code 1\nstderr:\nTraceback (most recent call last):\n  File \"<string>\", line 16, in <module>\n    exec(code, main.__dict__)\n    ~~~~^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.hermes/scripts/google_meet_auto_artifacts.py\", line 26, in <module>\n    from google_api import build_service, get_credentials  # noqa: E402\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nModuleNotFoundError: No module named 'google_api'"
       }
     },
     {
@@ -116,15 +120,15 @@
       "schedule_display": "33 3 * * *",
       "repeat": {
         "times": null,
-        "completed": 95
+        "completed": 108
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-07-21T13:00:27.280045-04:00",
-      "next_run_at": "2026-10-21T03:33:00-04:00",
-      "last_run_at": "2026-10-20T03:39:03.182820-04:00",
+      "next_run_at": "2026-11-03T03:33:00-05:00",
+      "last_run_at": "2026-11-02T03:38:00.167698-05:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -141,12 +145,12 @@
       "fire_claim": null,
       "failure_streak": 0,
       "last_dispatch": {
-        "scheduled_at": "2026-10-20T03:33:00-04:00",
-        "dispatched_at": "2026-10-20T03:33:58.021282-04:00",
-        "lateness_seconds": 58.0,
+        "scheduled_at": "2026-11-02T03:33:00-05:00",
+        "dispatched_at": "2026-11-02T03:33:16.195075-05:00",
+        "lateness_seconds": 16.2,
         "kind": "on_time"
       }
     }
   ],
-  "updated_at": "2026-10-20T06:01:08.785604-04:00"
+  "updated_at": "2026-11-02T06:00:24.326471-05:00"
 }
