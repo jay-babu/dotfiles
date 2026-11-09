@@ -36,11 +36,11 @@ return {
     opts = function(_, opts)
       opts.ensure_installed = opts.ensure_installed or {}
       opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqlfluff" end, opts.ensure_installed)
-      table.insert(opts.ensure_installed, "golangci_lint")
 
       opts.handlers = opts.handlers or {}
       opts.handlers.sqlfluff = function() end
       opts.handlers.clang_format = function() end
+      opts.handlers.golangci_lint = function() end
     end,
   },
   {
@@ -51,7 +51,6 @@ return {
       opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqlfluff" end, opts.ensure_installed)
       opts.ensure_installed = vim.tbl_filter(function(server) return server ~= "sqls" end, opts.ensure_installed)
       table.insert(opts.ensure_installed, "pgformatter")
-      table.insert(opts.ensure_installed, "golangci-lint")
     end,
   },
   {
@@ -60,7 +59,7 @@ return {
     opts = function(_, opts)
       opts.linters_by_ft = opts.linters_by_ft or {}
       opts.linters_by_ft.python = { "ruff", "mypy" }
-      opts.linters_by_ft.go = { "golangcilint" }
+      opts.linters_by_ft.go = {}
       opts.linters = opts.linters or {}
       opts.linters.mypy = vim.tbl_deep_extend("force", opts.linters.mypy or {}, {
         condition = function(ctx)

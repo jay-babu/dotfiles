@@ -602,39 +602,85 @@ Pitfalls:
 - Avoid printing gist contents during audits; public gists may contain secrets.
 ```
 
-## 10. Local Worktree Cleanup
+## 11. Local Branch and Worktree Cleanup
 
-Use this when the user asks to clean old local git worktrees. Treat deletion as a filesystem mutation: produce a dry run first unless the user already approved a specific list.
+Use this for stale local branches, remote branches, clones, or registered worktrees. Keep branch deletion and filesystem deletion as separate decisions: an audit request is read-only, and destructive cleanup starts only when the user approves the exact candidates or explicitly asks to perform it.
 
-A reusable dry-run script is available at `scripts/worktree_cleanup_dry_run.py`. It searches `/root/code` and `/usr/local/lib`, treats `old` as no relevant file mtime or last commit activity within 14 days, skips bare repos and primary `main/master/develop/trunk` worktrees, and proposes only clean non-primary worktrees.
+Standing gates:
+
+- Never delete branches named exactly `main`, `beta`, or `release`, locally or remotely. Exclude them before classification rather than relying on a later confirmation.
+- Age and a clean worktree make an item reviewable, not deletable. Verify live PR state and whether the ref contains unique work before recommending deletion.
+- Keep open-PR branches, closed-but-unmerged branches, unpushed/no-PR branches with unique commits, dirty worktrees, and local backup branches unless the user explicitly selects them.
+
+### Worktree dry run
+
+`scripts/worktree_cleanup_dry_run.py` searches `/root/code` and `/usr/local/lib`, defines `old` as no relevant file or commit activity within 14 days, excludes protected/primary branches, and proposes only clean non-primary worktrees.
 
 ```bash
 python3 /root/.hermes/skills/github/github-repo-management/scripts/worktree_cleanup_dry_run.py
 ```
 
-Cleanup workflow:
+Define activity as the newer of the last commit and relevant file mtimes; ignore generated/cache trees such as `node_modules`, `.git`, `.next`, `build`, `dist`, `target`, `.venv`, and `.pytest-cache`.
 
-1. Get the current date/time with `date` before applying an age cutoff.
-2. Discover worktrees with `git worktree list --porcelain` from each repo/bare repo rather than relying only on directory names.
-3. Define activity as the newer of last commit time and relevant file mtimes; ignore heavy/generated/cache dirs such as `node_modules`, `.git`, `.next`, `build`, `dist`, `target`, `.venv`, `.pytest-cache`.
-4. Dry-run output should separate:
-   - proposed clean removals,
-   - old dirty/unknown worktrees that are not proposed unless explicitly forced,
-   - primary/bare repos kept.
-5. After approval, remove true worktrees with the owning repo or bare repo:
+### Branch audit procedure
+
+1. Record the current time with `date` before applying an age cutoff.
+2. Discover repositories and registered worktrees with `git worktree list --porcelain`. Group paths by `git rev-parse --path-format=absolute --git-common-dir` so the same repository is not audited once per worktree.
+3. Enumerate every local branch, including branches not attached to a worktree:
 
 ```bash
-git -C /path/to/repo-or-bare worktree remove /path/to/worktree
+git for-each-ref \
+  --format='%(refname:short)|%(committerdate:unix)|%(objectname)|%(subject)' \
+  refs/heads
 ```
 
-6. If a proposed entry turns out to be a standalone clone rather than a registered worktree, do not force `git worktree remove`; remove the directory with `rm -rf -- <path>` only when the user's approval clearly covered that path.
-7. Verify every approved path is gone with `[ ! -e <path> ]` and report the exact verified result.
+4. Exclude `main`, `beta`, and `release`, then associate remaining refs with worktree paths and `git status --porcelain` results.
+5. Resolve the live default branch and exact PR state rather than trusting stale remote-tracking refs:
+
+```bash
+default=$(gh repo view OWNER/REPO --json defaultBranchRef --jq '.defaultBranchRef.name')
+gh pr list --repo OWNER/REPO --state all --head "$branch" --limit 20 \
+  --json number,state,isDraft,mergedAt,closedAt,url,title,headRefName,baseRefName
+gh api "repos/OWNER/REPO/git/ref/heads/$branch" --jq '.object.sha'
+```
+
+6. Classify a branch as a cleanup candidate only when its matching PR is merged and no matching PR is open. A squash-merged branch tip can legitimately diverge from the default branch, so PR `MERGED` state is authoritative; do not reject it merely because `merge-base --is-ancestor` or the compare API says `diverged`.
+7. Separate the proposed actions in the dry run: local branch deletion, remote branch deletion, linked-worktree removal, and standalone-clone handling. Report raw PR URLs beside merged candidates and summarize why every retained class was kept.
+8. Distinguish layouts before applying cleanup:
+   - For a clean registered secondary worktree, remove it through its owning common repository, then delete the local branch.
+   - For a standalone clone whose stale branch is checked out, switch to the default branch and delete only the branch. Do not delete the clone directory unless directory removal was explicitly approved.
+   - For a branch not checked out anywhere, delete the local ref directly after approval.
+
+```bash
+# Registered secondary worktree
+git -C /path/to/owning/repo worktree remove /path/to/worktree
+git -C /path/to/owning/repo branch -D "$branch"
+
+# Standalone clone
+git -C /path/to/clone switch "$default"
+git -C /path/to/clone branch -D "$branch"
+
+# Remote ref, only when specifically approved
+git -C /path/to/repo push origin --delete "$branch"
+```
+
+`-D` is expected for verified squash-merged PR branches because Git cannot infer GitHub's squash relationship. Never use it without the live PR-state gate above.
+
+9. Verify each approved effect before reporting success:
+
+```bash
+! git -C /path/to/repo show-ref --verify --quiet "refs/heads/$branch"
+! git -C /path/to/repo ls-remote --exit-code --heads origin "$branch"
+git -C /path/to/owning/repo worktree list --porcelain
+```
 
 Pitfalls:
 
-- Running `git -C <parent-dir> worktree remove ...` fails when the parent is not itself a Git repo. Use the actual owning worktree/bare repo from `git worktree list --porcelain`.
-- Bare repos can appear as `/repo/.bare` or as a bare root directory. Do not delete them as stale worktrees.
-- Local generated files/logs can make an old branch look active; include the activity definition in the dry run so the user can judge the cutoff.
+- Run worktree removal from the actual owning repository/common directory; a directory's parent is not necessarily a Git repository.
+- Do not run `git worktree remove` against a standalone clone. Switch branches there, or remove the directory only when that distinct filesystem action was approved.
+- Do not use `git fetch --prune` merely to audit live state; pruning mutates remote-tracking refs. Query GitHub or `ls-remote` instead.
+- Bare repositories can appear as `/repo/.bare` or as bare roots. Keep them out of stale-worktree candidates.
+- Do not delete an old local backup branch because it lacks a remote PR; its commits may be the only recovery copy.
 
 ## Quick Reference Table
 

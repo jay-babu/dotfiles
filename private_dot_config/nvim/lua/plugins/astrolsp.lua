@@ -31,6 +31,7 @@ return {
           -- "go",
         },
         ignore_filetypes = { -- disable format on save for specified filetypes
+          "go",
           -- "python",
         },
         filter = should_autoformat,
@@ -46,7 +47,7 @@ return {
       end,
     },
     -- enable servers that you already have installed without mason
-    servers = { "postgres_lsp" },
+    servers = { "postgres_lsp", "gopls" },
     -- Customize language server configuration options passed to `vim.lsp.config`.
     ---@diagnostic disable: missing-fields
     config = {

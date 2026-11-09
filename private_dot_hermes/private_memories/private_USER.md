@@ -2,7 +2,7 @@ Jay: concise/action-first; raw PR URLs; whole asserts; throwable logs; mocks>sea
 §
 Infra: mise/uv, existing auth/StackRefs, `pulumi import`; manual bootstrap/no persistent grants; IAM `getPolicyDocument` + account-bound confused-deputy controls.
 §
-Literal scope; one defect at a time; live-head reviews; push/send PR; no unasked cleanup/review/CI; don't run golangci-lint. Standalone docs.
+Literal scope; one defect; live-head review; push/send PR; no unasked cleanup/review/CI/golangci-lint. Standalone docs. Keep main/beta/release.
 §
 POS/Kurama: exact nulls; cohort auth; Bob/genreadapi; owning interfaces; /user/{user_id} self-only.
 §

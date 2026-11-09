@@ -4,7 +4,7 @@ model = "gpt-6.1-sol"
 model_reasoning_effort = "medium"
 approval_policy = "never"
 sandbox_mode = "danger-full-access"
-service_tier = "default"
+service_tier = "priority"
 [projects."/home/jay/code"]
 trust_level = "trusted"
 
@@ -170,6 +170,9 @@ trust_level = "trusted"
 [projects."/root/code/harlequin-column-jump"]
 trust_level = "trusted"
 
+[projects."/root/code/shelf-talker-service"]
+trust_level = "trusted"
+
 [mcp_servers.github]
 url = "https://api.githubcopilot.com/mcp/"
 bearer_token_env_var = "GITHUB_TOKEN"
@@ -222,7 +225,7 @@ enabled = true
 [plugins."pos-db-batch-commits@transformity"]
 enabled = true
 
-[plugins."brand-ambassador-outreach@transformity"]
+[plugins."product-catalog@transformity"]
 enabled = true
 
 [marketplaces.openai-bundled]
